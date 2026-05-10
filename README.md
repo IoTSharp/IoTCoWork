@@ -56,6 +56,17 @@ dotnet run --project IoTClaw.App -- --headless --urls http://127.0.0.1:5186
 
 详见 [ROADMAP.md](ROADMAP.md)。
 
+## AI 工作台草案
+
+参考 Cowork 的任务工作流模式，已经开始整理一版 IoTClaw 的 AI 工作台架构草案： [docs/ai-workbench-architecture-draft.md](docs/ai-workbench-architecture-draft.md)
+
+继续拆分后的可执行稿：
+
+- [信息架构](docs/ai-workbench-information-architecture.md)
+- [组件映射](docs/ai-workbench-component-mapping.md)
+- [插件与工具契约](docs/ai-workbench-plugin-tool-contract.md)
+- [物联网业务方案蓝图](docs/iot-workspace-business-model.md)
+
 ## 许可证
 
 Apache-2.0（待补 LICENSE 文件）。
