@@ -14,19 +14,20 @@
 
 | 里程碑 | 状态 | 描述 |
 | --- | --- | --- |
-| L0 | ⬜ | 仓库骨架、Blazor Hybrid 宿主可启动 |
+| L0 | ✅ | 仓库骨架、Blazor Hybrid 宿主可启动 |
 | L1 | ⬜ | 插件 SDK 1.0、设备/协议/点位编辑器 MVP |
 | L2 | ⬜ | 协议调试实验室（串口/TCP/MQTT/Modbus） |
 | L3 | ⬜ | 本地构建与下发（C# AOT / Linux C / BASIC 脚本） |
 | L4 | ⬜ | 插件市场对接（开源插件目录） |
 
-## 2. Phase A — 工作台骨架　⬜
+## 2. Phase A — 工作台骨架　🚧
 
 | 编号 | 状态 | 顺序 | 任务 |
 | --- | --- | --- | --- |
-| A1 | ⬜ | [串行] | 初始化 .NET 解决方案：`IoTClaw.App` / `IoTClaw.Workbench` / `IoTClaw.PluginSdk` |
+| A0 | ✅ | [串行] | 参考 VSCopilotSwitch 接入 OmniHost：`IoTClaw.App` 桌面宿主 + `IoTClaw.Workbench` Blazor WebAssembly 本地客户端 |
+| A1 | 🚧 | [依赖: A0] | 初始化 .NET 解决方案：`IoTClaw.App` / `IoTClaw.Workbench` 已完成，`IoTClaw.PluginSdk` 待补齐 |
 | A2 | ⬜ | [并行 ‖ A1] | 选择并固化 UI 框架（AntDesign Blazor / Fluent UI 等） |
-| A3 | ⬜ | [依赖: A1] | 宿主：本地文件、命令、插件加载、配置目录 |
+| A3 | 🚧 | [依赖: A1] | 宿主：OmniHost 启动、本地 API、WASM 静态资源服务已接入；本地文件、命令、插件加载、配置目录待补齐 |
 | A4 | ⬜ | [依赖: A1] | 工程模型本地存储与读写（与上游契约 `IoTSharp.Contracts` 对齐） |
 
 ## 3. Phase B — 插件 SDK & 编辑器　⬜

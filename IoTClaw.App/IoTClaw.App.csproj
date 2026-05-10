@@ -1,9 +1,22 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>WinExe</OutputType>
+    <AssemblyName>IoTClaw.App</AssemblyName>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <NoWarn>MSB3277</NoWarn>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.7" />
+    <ProjectReference Include="..\IoTClaw.Workbench\IoTClaw.Workbench.csproj" />
+    <ProjectReference Include="..\external\OmniHost\src\OmniHost\OmniHost.csproj" />
+    <ProjectReference Include="..\external\OmniHost\src\OmniHost.Windows\OmniHost.Windows.csproj" />
+    <ProjectReference Include="..\external\OmniHost\src\OmniHost.NativeWebView2\OmniHost.NativeWebView2.csproj" />
+  </ItemGroup>
 
 </Project>
