@@ -1,4 +1,4 @@
-# IoTClaw AI 工作台插件与工具契约草案 v0.1
+# IoTCoWork AI 工作台插件与工具契约草案 v0.1
 
 > 目标：把设备、协议、边缘、分析和 AI 动作统一成可注册、可审计、可扩展的契约。
 
@@ -36,7 +36,7 @@
 业务方案对象用于描述完整数据链路：
 
 - `DataReceiver`：IoTSharp、ThingsBoard、阿里云 IoT 平台、时序数据库或业务应用接口
-- `Collector`：自研采集器、IoTClaw Edge、第三方网关或设备直连代码
+- `Collector`：自研采集器、IoTCoWork Edge、第三方网关或设备直连代码
 - `SourceSpec`：来源类型、物理链路、协议、地址和点位表
 - `CodecRule`：字节序、Word 顺序、缩放、偏移、枚举和公式
 - `UplinkRoute`：MQTT、HTTP、数据库写入或其他上传方式

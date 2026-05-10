@@ -35,7 +35,7 @@ var app = builder
     .ConfigureDesktop((options, webApp) =>
     {
         var serverUrl = ResolveStartedServerUrl(webApp, listenUrl);
-        options.Title = "IoTClaw";
+        options.Title = "IoTCoWork";
         options.StartUrl = serverUrl;
         options.Width = 1280;
         options.Height = 820;
@@ -45,12 +45,12 @@ var app = builder
         options.ScrollBarMode = OmniScrollBarMode.Auto;
         options.UserDataFolder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "IoTClaw",
+            "IoTCoWork",
             "WebView2");
     })
     .UseAdapter(new NativeWebView2AdapterFactory())
     .UseRuntime(new Win32Runtime())
-    .UseDesktopApp(webApp => new IoTClawDesktopApp(
+    .UseDesktopApp(webApp => new IoTCoWorkDesktopApp(
         () => ResolveStartedServerUrl(webApp, listenUrl),
         startedAt))
     .Build();
@@ -67,13 +67,13 @@ static void ConfigureWebApplication(
     webApp.UseStaticFiles();
 
     webApp.MapGet("/health", () => Results.Ok(new WorkbenchHealthResponse(
-        "IoTClaw",
+        "IoTCoWork",
         "ok",
         serverUrlResolver(),
         startedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss"))));
 
     webApp.MapGet("/api/workbench/shell", () => Results.Ok(new WorkbenchShellResponse(
-        "IoTClaw",
+        "IoTCoWork",
         "OmniHost + Win32Runtime",
         "Blazor WebAssembly client",
         serverUrlResolver(),
@@ -87,7 +87,7 @@ static string ResolveListenUrl(IConfiguration configuration)
     var candidate = FirstNonEmpty(
         configuration["urls"],
         Environment.GetEnvironmentVariable("ASPNETCORE_URLS"),
-        configuration["IoTClaw:Url"]);
+        configuration["IoTCoWork:Url"]);
 
     if (string.IsNullOrWhiteSpace(candidate))
     {
@@ -168,7 +168,7 @@ static int GetFreeTcpPort()
     return ((IPEndPoint)listener.LocalEndpoint).Port;
 }
 
-sealed class IoTClawDesktopApp(Func<string> serverUrlResolver, DateTimeOffset startedAt) : IWindowAwareDesktopApp
+sealed class IoTCoWorkDesktopApp(Func<string> serverUrlResolver, DateTimeOffset startedAt) : IWindowAwareDesktopApp
 {
     public Task OnStartAsync(IWebViewAdapter adapter, CancellationToken cancellationToken = default)
     {

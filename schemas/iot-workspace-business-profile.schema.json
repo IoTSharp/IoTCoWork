@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://iotclaw.local/schemas/iot-workspace-business-profile.schema.json",
-  "title": "IoTClaw BusinessProfile",
+  "$id": "https://iotcowork.local/schemas/iot-workspace-business-profile.schema.json",
+  "title": "IoTCoWork BusinessProfile",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -170,7 +170,7 @@
           "type": "string",
           "enum": [
             "DirectDeviceCode",
-            "IoTClawEdgeCollector",
+            "IoTCoWorkEdgeCollector",
             "ThirdPartyGateway",
             "Hybrid"
           ]

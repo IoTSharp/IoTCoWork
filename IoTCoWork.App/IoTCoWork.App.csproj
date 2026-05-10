@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <AssemblyName>IoTClaw.App</AssemblyName>
+    <AssemblyName>IoTCoWork.App</AssemblyName>
     <TargetFramework>net10.0-windows</TargetFramework>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -13,7 +13,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.7" />
-    <ProjectReference Include="..\IoTClaw.Workbench\IoTClaw.Workbench.csproj" />
+    <ProjectReference Include="..\IoTCoWork.Workbench\IoTCoWork.Workbench.csproj" />
     <ProjectReference Include="..\external\OmniHost\src\OmniHost\OmniHost.csproj" />
     <ProjectReference Include="..\external\OmniHost\src\OmniHost.Windows\OmniHost.Windows.csproj" />
     <ProjectReference Include="..\external\OmniHost\src\OmniHost.NativeWebView2\OmniHost.NativeWebView2.csproj" />

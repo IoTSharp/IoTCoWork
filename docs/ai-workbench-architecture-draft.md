@@ -1,18 +1,18 @@
-# IoTClaw AI 工作台架构草案 v0.1
+# IoTCoWork AI 工作台架构草案 v0.1
 
-> 目标：参考 Claude Cowork 的工作方式，构建 IoTClaw 的本地 AI 工作台，用于控制 IoTSharp、边缘模块和本地工程资产，形成“分析 - 规划 - 执行 - 归档”的闭环。
+> 目标：参考 Claude Cowork 的工作方式，构建 IoTCoWork 的本地 AI 工作台，用于控制 IoTSharp、边缘模块和本地工程资产，形成“分析 - 规划 - 执行 - 归档”的闭环。
 
 ## 1. 草案结论
 
-IoTClaw 不应做成单纯聊天窗口，而应做成“任务工作台”。
+IoTCoWork 不应做成单纯聊天窗口，而应做成“任务工作台”。
 
 推荐架构是：
 
-- `IoTClaw.App` 继续承担本地宿主、API、静态资源和桌面启动。
-- `IoTClaw.Workbench` 作为统一前端工作台。
+- `IoTCoWork.App` 继续承担本地宿主、API、静态资源和桌面启动。
+- `IoTCoWork.Workbench` 作为统一前端工作台。
 - `AntDesign Blazor` 负责全部业务型工作台界面。
 - `AntDesignXBlazor` 负责 AI 交互面、会话面、提示词面和思维链面。
-- `IoTClaw.PluginSdk` 负责把设备、协议、边缘、分析能力抽象成可扩展插件。
+- `IoTCoWork.PluginSdk` 负责把设备、协议、边缘、分析能力抽象成可扩展插件。
 
 这条路线的核心原则是：
 
@@ -33,7 +33,7 @@ Cowork 的关键不是聊天，而是把任务组织成可执行系统。
 - 可审计：所有动作能回看、能追踪、能确认。
 - 本地优先：敏感文件和操作尽量留在本机工作区。
 
-对 IoTClaw 来说，对应关系是：
+对 IoTCoWork 来说，对应关系是：
 
 - Project -> 站点、产线、设备群或交付包。
 - Task -> 采集、建模、调试、下发、诊断、分析。
@@ -45,7 +45,7 @@ Cowork 的关键不是聊天，而是把任务组织成可执行系统。
 
 ### 3.1 宿主层
 
-`IoTClaw.App` 负责：
+`IoTCoWork.App` 负责：
 
 - 启动桌面宿主
 - 托管本机 ASP.NET Core 服务
@@ -56,7 +56,7 @@ Cowork 的关键不是聊天，而是把任务组织成可执行系统。
 
 ### 3.2 工作台层
 
-`IoTClaw.Workbench` 负责：
+`IoTCoWork.Workbench` 负责：
 
 - 左侧导航
 - 顶部命令区
@@ -64,11 +64,11 @@ Cowork 的关键不是聊天，而是把任务组织成可执行系统。
 - AI 任务区
 - 数据表、表单、树、抽屉、弹窗、详情页
 
-它是整个 IoTClaw 的唯一前端入口。
+它是整个 IoTCoWork 的唯一前端入口。
 
 ### 3.3 能力层
 
-`IoTClaw.PluginSdk` 负责：
+`IoTCoWork.PluginSdk` 负责：
 
 - 能力注册
 - 命令注册
@@ -89,7 +89,7 @@ IoTSharp 与边缘模块负责：
 - 规则执行
 - 本地推理或预处理
 
-IoTClaw 负责配置、编排、调试、监控与回放。
+IoTCoWork 负责配置、编排、调试、监控与回放。
 
 ## 4. UI 策略
 

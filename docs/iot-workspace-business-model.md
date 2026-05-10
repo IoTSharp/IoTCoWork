@@ -1,10 +1,10 @@
-# IoTClaw 物联网业务方案蓝图 v0.1
+# IoTCoWork 物联网业务方案蓝图 v0.1
 
 > 目标：把一个 workspace 的业务上下文固定下来，确保它始终回答五个问题：数据给谁、谁采、从哪采、怎么转、怎么传。
 
 ## 1. 结论
 
-一个 IoTClaw workspace 必须内置一份业务方案。
+一个 IoTCoWork workspace 必须内置一份业务方案。
 
 这份方案不是描述性文字，而是可校验、可生成、可下发的结构，至少包含：
 
@@ -52,7 +52,7 @@
 可选模式：
 
 - `DirectDeviceCode`：设备自己写代码采集
-- `IoTClawEdgeCollector`：使用我们的边缘采集
+- `IoTCoWorkEdgeCollector`：使用我们的边缘采集
 - `ThirdPartyGateway`：使用第三方网关
 - `Hybrid`：部分点位直采，部分点位由网关转发
 
@@ -196,7 +196,7 @@
     "topicOrPath": "v1/devices/me/telemetry"
   },
   "collector": {
-    "collectorType": "IoTClawEdgeCollector",
+    "collectorType": "IoTCoWorkEdgeCollector",
     "deploymentLocation": "EdgeGateway",
     "syncMode": "Poll",
     "bufferingEnabled": true,
@@ -275,14 +275,14 @@
 
 ### 4.2 边缘采集后上云
 
-- 设备先接入 IoTClaw Edge 或第三方网关
+- 设备先接入 IoTCoWork Edge 或第三方网关
 - 网关负责采集、转换、缓存、重试
 - 再把数据发到平台或 TSDB
 
 ### 4.3 第三方网关接管
 
 - 使用 ThingsBoard IoT Gateway、ThingsGateway 等现成网关
-- IoTClaw 主要负责配置、调试、观察和统一建模
+- IoTCoWork 主要负责配置、调试、观察和统一建模
 
 ### 4.4 直接入时序数据库
 
@@ -304,7 +304,7 @@
 4. Modbus / OPC UA / BACnet 这类工业协议必须显式定义字节序和映射规则。
 5. MQTT / HTTP 这类上传通道必须明确认证、重试和批量策略。
 
-## 6. 对 IoTClaw 的实现含义
+## 6. 对 IoTCoWork 的实现含义
 
 这份业务方案将直接驱动：
 

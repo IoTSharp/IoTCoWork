@@ -1,4 +1,4 @@
-# IoTClaw 物联网业务方案字段表 v0.1
+# IoTCoWork 物联网业务方案字段表 v0.1
 
 > 目标：把 workspace 的物联网业务方案拆成可直接喂给表单、持久化和 AI 生成器的字段清单。
 
@@ -42,7 +42,7 @@
 
 | 字段路径 | 类型 | 必填 | 说明 | 示例 |
 | --- | --- | --- | --- | --- |
-| `collector.collectorType` | enum | 是 | 采集模式。 | `IoTClawEdgeCollector` |
+| `collector.collectorType` | enum | 是 | 采集模式。 | `IoTCoWorkEdgeCollector` |
 | `collector.runtime` | enum | 否 | 运行环境。 | `CSharp` |
 | `collector.deploymentLocation` | enum | 是 | 部署位置。 | `EdgeGateway` |
 | `collector.collectorId` | string | 否 | 采集器实例 ID。 | `edge-01` |

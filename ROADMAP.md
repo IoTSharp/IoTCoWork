@@ -1,4 +1,4 @@
-# IoTClaw 路线图
+# IoTCoWork 路线图
 
 > 状态：✅ 已完成 ｜ 🚧 进行中 ｜ ⏳ 计划中 ｜ ⬜ 未开始 ｜ 🔁 持续维护
 >
@@ -7,7 +7,7 @@
 ## 0. 范围与原则
 
 - 本仓库只承载**开源外壳**：宿主、UI 框架、插件 SDK、本地调试器、本地工程模型编辑器。
-- 商业功能（Copilot 编排、计费、企业交付）位于上层 `IoTSharp.SaaS/src/IoTClaw.*`，通过插件接口加载。
+- 商业功能（Copilot 编排、计费、企业交付）位于上层 `IoTSharp.SaaS/src/IoTCoWork.*`，通过插件接口加载。
 - 任何在本仓库内的代码必须保持开源属性，不得夹带商业逻辑或租户隔离逻辑。
 
 ## 1. 里程碑
@@ -24,8 +24,8 @@
 
 | 编号 | 状态 | 顺序 | 任务 |
 | --- | --- | --- | --- |
-| A0 | ✅ | [串行] | 参考 VSCopilotSwitch 接入 OmniHost：`IoTClaw.App` 桌面宿主 + `IoTClaw.Workbench` Blazor WebAssembly 本地客户端 |
-| A1 | 🚧 | [依赖: A0] | 初始化 .NET 解决方案：`IoTClaw.App` / `IoTClaw.Workbench` 已完成，`IoTClaw.PluginSdk` 待补齐 |
+| A0 | ✅ | [串行] | 参考 VSCopilotSwitch 接入 OmniHost：`IoTCoWork.App` 桌面宿主 + `IoTCoWork.Workbench` Blazor WebAssembly 本地客户端 |
+| A1 | 🚧 | [依赖: A0] | 初始化 .NET 解决方案：`IoTCoWork.App` / `IoTCoWork.Workbench` 已完成，`IoTCoWork.PluginSdk` 待补齐 |
 | A2 | 🚧 | [并行 ‖ A1] | 草案推荐：`AntDesign Blazor` + `AntDesignXBlazor`；优先子模块化接入，必要时直接修改子模块源码 |
 | A3 | 🚧 | [依赖: A1] | 宿主：OmniHost 启动、本地 API、WASM 静态资源服务已接入；本地文件、命令、插件加载、配置目录待补齐 |
 | A4 | ⬜ | [依赖: A1] | 工程模型本地存储与读写（与上游契约 `IoTSharp.Contracts` 对齐） |
