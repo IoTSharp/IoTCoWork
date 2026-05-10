@@ -183,31 +183,82 @@
 
 ```json
 {
+  "schemaVersion": "0.1",
   "workspaceId": "ws-demo",
+  "workspaceName": "一号产线能耗采集",
+  "displayName": "A-Line Energy",
   "receiver": {
     "targetType": "ThingsBoard",
     "endpoint": "https://tb.example.com",
-    "authMode": "access-token",
-    "protocol": "MQTT"
+    "authMode": "AccessToken",
+    "protocol": "MQTT",
+    "payloadFormat": "JSON",
+    "topicOrPath": "v1/devices/me/telemetry"
   },
   "collector": {
     "collectorType": "IoTClawEdgeCollector",
-    "deploymentLocation": "edge-box-01"
+    "deploymentLocation": "EdgeGateway",
+    "syncMode": "Poll",
+    "bufferingEnabled": true,
+    "offlineCache": true
   },
   "source": {
-    "protocol": "ModbusTCP",
-    "transport": "Ethernet",
-    "address": "192.168.1.20"
+    "sourceType": "PLC",
+    "transport": "Serial",
+    "protocol": "ModbusRTU",
+    "physicalLink": "RS485",
+    "address": "COM3",
+    "pollingMode": "Poll",
+    "pollIntervalMs": 1000,
+    "points": [
+      {
+        "key": "temperature",
+        "name": "温度",
+        "address": "40001",
+        "registerType": "HoldingRegister",
+        "dataType": "Float32",
+        "length": 2,
+        "byteOrder": "Little",
+        "wordOrder": "Reversed",
+        "signedness": "Unsigned",
+        "scale": 0.1,
+        "offset": 0,
+        "unit": "°C",
+        "enabled": true
+      }
+    ]
   },
   "codec": {
     "byteOrder": "Little",
-    "wordOrder": "Big",
-    "scale": 0.1,
-    "offset": 0
+    "wordOrder": "Reversed",
+    "signedness": "Unsigned",
+    "defaultScale": 0.1,
+    "defaultOffset": 0,
+    "ruleMode": "PointOverrides"
   },
   "uplink": {
     "uplinkType": "MQTT",
-    "topicOrPath": "v1/devices/me/telemetry"
+    "endpoint": "mqtt://tb.example.com:1883",
+    "topicOrPath": "v1/devices/me/telemetry",
+    "authMode": "AccessToken",
+    "payloadFormat": "JSON",
+    "qos": 1,
+    "batchSize": 100,
+    "timeoutMs": 5000,
+    "retryPolicy": {
+      "maxAttempts": 5,
+      "backoffMs": 500,
+      "maxBackoffMs": 30000,
+      "jitterEnabled": true
+    },
+    "routeMode": "Single"
+  },
+  "governance": {
+    "approvalMode": "PerRun",
+    "riskLevel": "Medium",
+    "auditEnabled": true,
+    "dataRetentionDays": 30,
+    "notifyOnFailure": true
   }
 }
 ```
@@ -283,3 +334,8 @@
 - Alibaba Cloud IoT MQTT protocol: https://www.alibabacloud.com/help/en/iot/user-guide/mqtt-protocol
 - Alibaba Cloud IoT MQTT gateway: https://www.alibabacloud.com/help/en/iot/user-guide/mqtt-gateways
 - ThingsGateway: https://github.com/ThingsGateway/ThingsGateway
+
+## 8. 可执行契约
+
+- 字段表: [iot-workspace-business-profile-fields.md](iot-workspace-business-profile-fields.md)
+- JSON Schema: [../schemas/iot-workspace-business-profile.schema.json](../schemas/iot-workspace-business-profile.schema.json)

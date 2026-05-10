@@ -1,0 +1,861 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://iotclaw.local/schemas/iot-workspace-business-profile.schema.json",
+  "title": "IoTClaw BusinessProfile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "workspaceId",
+    "workspaceName",
+    "receiver",
+    "collector",
+    "source",
+    "codec",
+    "uplink"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "0.1"
+    },
+    "workspaceId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workspaceName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "displayName": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "receiver": {
+      "$ref": "#/$defs/receiver"
+    },
+    "collector": {
+      "$ref": "#/$defs/collector"
+    },
+    "source": {
+      "$ref": "#/$defs/source"
+    },
+    "codec": {
+      "$ref": "#/$defs/codec"
+    },
+    "uplink": {
+      "$ref": "#/$defs/uplink"
+    },
+    "governance": {
+      "$ref": "#/$defs/governance"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "receiver": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "targetType",
+        "endpoint",
+        "authMode",
+        "protocol",
+        "payloadFormat"
+      ],
+      "properties": {
+        "targetType": {
+          "type": "string",
+          "enum": [
+            "IoTSharp",
+            "ThingsBoard",
+            "AlibabaCloudIoTPlatform",
+            "TimeSeriesDatabase",
+            "CustomApplicationApi",
+            "CustomBrokerOrQueue"
+          ]
+        },
+        "vendor": {
+          "type": "string"
+        },
+        "instanceId": {
+          "type": "string"
+        },
+        "tenantOrProject": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "authMode": {
+          "type": "string",
+          "enum": [
+            "None",
+            "AccessToken",
+            "UsernamePassword",
+            "Certificate",
+            "ApiKey",
+            "ConnectionString",
+            "Token",
+            "Custom"
+          ]
+        },
+        "credentialRef": {
+          "type": "string"
+        },
+        "protocol": {
+          "type": "string",
+          "enum": [
+            "MQTT",
+            "HTTP",
+            "HTTPS",
+            "DatabaseWrite",
+            "CoAP",
+            "AMQP",
+            "Kafka",
+            "Custom"
+          ]
+        },
+        "payloadFormat": {
+          "type": "string",
+          "enum": [
+            "JSON",
+            "Protobuf",
+            "Binary",
+            "LineProtocol",
+            "InfluxLine",
+            "Custom"
+          ]
+        },
+        "topicOrPath": {
+          "type": "string"
+        },
+        "retentionPolicy": {
+          "type": "string"
+        },
+        "ackMode": {
+          "type": "string",
+          "enum": [
+            "FireAndForget",
+            "AtLeastOnce",
+            "ExactlyOnce",
+            "Custom"
+          ]
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    },
+    "collector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "collectorType",
+        "deploymentLocation",
+        "syncMode"
+      ],
+      "properties": {
+        "collectorType": {
+          "type": "string",
+          "enum": [
+            "DirectDeviceCode",
+            "IoTClawEdgeCollector",
+            "ThirdPartyGateway",
+            "Hybrid"
+          ]
+        },
+        "runtime": {
+          "type": "string",
+          "enum": [
+            "CSharp",
+            "Cpp",
+            "Python",
+            "NodeJS",
+            "Java",
+            "Firmware",
+            "ManagedGateway",
+            "None",
+            "Custom"
+          ]
+        },
+        "deploymentLocation": {
+          "type": "string",
+          "enum": [
+            "Device",
+            "EdgeGateway",
+            "LocalPC",
+            "Server",
+            "Cloud",
+            "Custom"
+          ]
+        },
+        "collectorId": {
+          "type": "string"
+        },
+        "bufferingEnabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "offlineCache": {
+          "type": "boolean",
+          "default": true
+        },
+        "syncMode": {
+          "type": "string",
+          "enum": [
+            "Push",
+            "Poll",
+            "Subscribe",
+            "Hybrid"
+          ]
+        },
+        "owner": {
+          "type": "string"
+        },
+        "gatewayVendor": {
+          "type": "string"
+        },
+        "gatewayProduct": {
+          "type": "string"
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceType",
+        "transport",
+        "protocol",
+        "physicalLink",
+        "pollingMode",
+        "points"
+      ],
+      "properties": {
+        "sourceType": {
+          "type": "string",
+          "enum": [
+            "Sensor",
+            "PLC",
+            "Instrument",
+            "DeviceController",
+            "Database",
+            "ExternalApi",
+            "FileStream",
+            "Custom"
+          ]
+        },
+        "transport": {
+          "type": "string",
+          "enum": [
+            "Ethernet",
+            "Serial",
+            "Fieldbus",
+            "IP",
+            "Wireless",
+            "LocalBus",
+            "Custom"
+          ]
+        },
+        "protocol": {
+          "type": "string",
+          "enum": [
+            "HTTP",
+            "HTTPS",
+            "MQTT",
+            "ModbusTCP",
+            "ModbusRTU",
+            "OPCUA",
+            "BACnetIP",
+            "BACnetMSTP",
+            "CoAP",
+            "CAN",
+            "I2C",
+            "Custom"
+          ]
+        },
+        "physicalLink": {
+          "type": "string",
+          "enum": [
+            "Ethernet",
+            "RS485",
+            "RS232",
+            "WiFi",
+            "Cellular",
+            "BLE",
+            "I2C",
+            "SPI",
+            "CAN",
+            "USB",
+            "Custom"
+          ]
+        },
+        "address": {
+          "type": "string"
+        },
+        "deviceId": {
+          "type": "string"
+        },
+        "pollingMode": {
+          "type": "string",
+          "enum": [
+            "Poll",
+            "Subscribe",
+            "Event",
+            "Push",
+            "Hybrid"
+          ]
+        },
+        "pollIntervalMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "subscribeTopic": {
+          "type": "string"
+        },
+        "requestPath": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "points": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/point"
+          }
+        }
+      }
+    },
+    "point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "dataType"
+      ],
+      "properties": {
+        "key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "registerType": {
+          "type": "string",
+          "enum": [
+            "Coil",
+            "DiscreteInput",
+            "InputRegister",
+            "HoldingRegister",
+            "Attribute",
+            "Telemetry",
+            "QueryResult",
+            "Custom"
+          ]
+        },
+        "dataType": {
+          "type": "string",
+          "enum": [
+            "Bool",
+            "Int16",
+            "UInt16",
+            "Int32",
+            "UInt32",
+            "Int64",
+            "UInt64",
+            "Float32",
+            "Float64",
+            "String",
+            "Binary",
+            "BitField",
+            "BCD",
+            "Custom"
+          ]
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "byteOrder": {
+          "type": "string",
+          "enum": [
+            "Little",
+            "Big",
+            "MiddleLittle",
+            "MiddleBig",
+            "None",
+            "Custom"
+          ]
+        },
+        "wordOrder": {
+          "type": "string",
+          "enum": [
+            "Normal",
+            "Reversed",
+            "Custom"
+          ]
+        },
+        "signedness": {
+          "type": "string",
+          "enum": [
+            "Signed",
+            "Unsigned",
+            "NotApplicable",
+            "Custom"
+          ]
+        },
+        "scale": {
+          "type": "number"
+        },
+        "offset": {
+          "type": "number"
+        },
+        "bitMask": {
+          "type": "string"
+        },
+        "bitShift": {
+          "type": "integer"
+        },
+        "enumMap": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/enumMapItem"
+          }
+        },
+        "expression": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "qualityRule": {
+          "type": "string"
+        },
+        "timestampRule": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    },
+    "enumMapItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to"
+      ],
+      "properties": {
+        "from": {
+          "type": [
+            "string",
+            "number",
+            "integer",
+            "boolean",
+            "null"
+          ]
+        },
+        "to": {
+          "type": [
+            "string",
+            "number",
+            "integer",
+            "boolean",
+            "null"
+          ]
+        },
+        "label": {
+          "type": "string"
+        }
+      }
+    },
+    "codec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "byteOrder",
+        "wordOrder"
+      ],
+      "properties": {
+        "byteOrder": {
+          "type": "string",
+          "enum": [
+            "Little",
+            "Big",
+            "MiddleLittle",
+            "MiddleBig",
+            "None",
+            "Custom"
+          ]
+        },
+        "wordOrder": {
+          "type": "string",
+          "enum": [
+            "Normal",
+            "Reversed",
+            "Custom"
+          ]
+        },
+        "signedness": {
+          "type": "string",
+          "enum": [
+            "Signed",
+            "Unsigned",
+            "NotApplicable",
+            "Custom"
+          ]
+        },
+        "defaultScale": {
+          "type": "number"
+        },
+        "defaultOffset": {
+          "type": "number"
+        },
+        "ruleMode": {
+          "type": "string",
+          "enum": [
+            "DefaultOnly",
+            "PointOverrides",
+            "Mixed"
+          ]
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/codecRule"
+          }
+        }
+      }
+    },
+    "codecRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "targetKey",
+        "transformType"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "targetKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceAddress": {
+          "type": "string"
+        },
+        "transformType": {
+          "type": "string",
+          "enum": [
+            "SwapBytes",
+            "SwapWords",
+            "Scale",
+            "Offset",
+            "BitMask",
+            "BitShift",
+            "EnumMap",
+            "Formula",
+            "BcdDecode",
+            "Utf8Decode",
+            "TimestampNormalize",
+            "QualityMap",
+            "UnitConvert",
+            "Custom"
+          ]
+        },
+        "byteOrder": {
+          "type": "string",
+          "enum": [
+            "Little",
+            "Big",
+            "MiddleLittle",
+            "MiddleBig",
+            "None",
+            "Custom"
+          ]
+        },
+        "wordOrder": {
+          "type": "string",
+          "enum": [
+            "Normal",
+            "Reversed",
+            "Custom"
+          ]
+        },
+        "signedness": {
+          "type": "string",
+          "enum": [
+            "Signed",
+            "Unsigned",
+            "NotApplicable",
+            "Custom"
+          ]
+        },
+        "scale": {
+          "type": "number"
+        },
+        "offset": {
+          "type": "number"
+        },
+        "bitMask": {
+          "type": "string"
+        },
+        "bitShift": {
+          "type": "integer"
+        },
+        "enumMap": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/enumMapItem"
+          }
+        },
+        "expression": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "uplink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "uplinkType",
+        "endpoint",
+        "authMode",
+        "payloadFormat"
+      ],
+      "properties": {
+        "uplinkType": {
+          "type": "string",
+          "enum": [
+            "MQTT",
+            "HTTP",
+            "HTTPS",
+            "DatabaseWrite",
+            "CoAP",
+            "AMQP",
+            "Kafka",
+            "FileBatch",
+            "Custom"
+          ]
+        },
+        "endpoint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "topicOrPath": {
+          "type": "string"
+        },
+        "databaseName": {
+          "type": "string"
+        },
+        "tableName": {
+          "type": "string"
+        },
+        "authMode": {
+          "type": "string",
+          "enum": [
+            "None",
+            "AccessToken",
+            "UsernamePassword",
+            "Certificate",
+            "ApiKey",
+            "ConnectionString",
+            "Token",
+            "Custom"
+          ]
+        },
+        "credentialRef": {
+          "type": "string"
+        },
+        "payloadFormat": {
+          "type": "string",
+          "enum": [
+            "JSON",
+            "Protobuf",
+            "Binary",
+            "LineProtocol",
+            "InfluxLine",
+            "Custom"
+          ]
+        },
+        "qos": {
+          "type": "integer",
+          "enum": [
+            0,
+            1,
+            2
+          ]
+        },
+        "batchSize": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "timeoutMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "retryPolicy": {
+          "$ref": "#/$defs/retryPolicy"
+        },
+        "backpressurePolicy": {
+          "type": "string",
+          "enum": [
+            "DropOldest",
+            "DropNewest",
+            "Buffer",
+            "Block",
+            "Custom"
+          ]
+        },
+        "compression": {
+          "type": "string",
+          "enum": [
+            "None",
+            "Gzip",
+            "Snappy",
+            "Lz4",
+            "Custom"
+          ]
+        },
+        "routeMode": {
+          "type": "string",
+          "enum": [
+            "Single",
+            "FanOut",
+            "FanIn",
+            "Custom"
+          ]
+        },
+        "routes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/uplinkRoute"
+          }
+        }
+      }
+    },
+    "retryPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "maxAttempts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "backoffMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxBackoffMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "jitterEnabled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "uplinkRoute": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fromKey",
+        "toPath"
+      ],
+      "properties": {
+        "fromKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "toPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "transformRef": {
+          "type": "string"
+        },
+        "filter": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "approvalMode": {
+          "type": "string",
+          "enum": [
+            "Never",
+            "Once",
+            "PerRun",
+            "Manual"
+          ]
+        },
+        "riskLevel": {
+          "type": "string",
+          "enum": [
+            "Low",
+            "Medium",
+            "High"
+          ]
+        },
+        "auditEnabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "dataRetentionDays": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "notifyOnFailure": {
+          "type": "boolean",
+          "default": true
+        },
+        "allowedTimeWindows": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

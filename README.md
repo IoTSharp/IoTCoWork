@@ -66,6 +66,8 @@ dotnet run --project IoTClaw.App -- --headless --urls http://127.0.0.1:5186
 - [组件映射](docs/ai-workbench-component-mapping.md)
 - [插件与工具契约](docs/ai-workbench-plugin-tool-contract.md)
 - [物联网业务方案蓝图](docs/iot-workspace-business-model.md)
+- [物联网业务方案字段表](docs/iot-workspace-business-profile-fields.md)
+- [物联网业务方案 JSON Schema](schemas/iot-workspace-business-profile.schema.json)
 
 ## 许可证
 

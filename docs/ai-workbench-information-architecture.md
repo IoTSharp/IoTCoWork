@@ -150,9 +150,11 @@ AI 页不是独立的聊天区，而是工作流的右侧操作面：
 
 这个信息架构会直接喂给：
 
-- `ai-workbench-component-mapping.md`
-- `ai-workbench-plugin-tool-contract.md`
-- `iot-workspace-business-model.md`
+- [组件映射](ai-workbench-component-mapping.md)
+- [插件与工具契约](ai-workbench-plugin-tool-contract.md)
+- [业务方案蓝图](iot-workspace-business-model.md)
+- [业务方案字段表](iot-workspace-business-profile-fields.md)
+- [业务方案 JSON Schema](../schemas/iot-workspace-business-profile.schema.json)
 
 ## 10. 参考
 
