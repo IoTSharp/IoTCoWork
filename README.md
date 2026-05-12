@@ -9,7 +9,7 @@ IoTCoWork 是 IoTSharp 生态中的本地开发与运维工作台，基于 .NET 
 - 本地建模、调试、生成、发布的统一入口
 - 设备/协议/点位等工程模型的本地编辑器
 - 本地调试控制台、协议联调、串口/TCP/MQTT/Modbus 实验室
-- 与 IoTSharp 平台、IoTSharp.Edge 系列基座的桥接
+- 与 IoTSharp 平台、IoTEdge 系列基座的桥接
 
 > 本仓库只承载**开源外壳**与插件 SDK。多租户、Copilot 编排、付费模板、企业交付流程等商业能力位于上层 `IoTSharp.SaaS` 仓库的 `src/IoTCoWork.*` 模块内，通过插件接口叠加。
 
@@ -48,7 +48,7 @@ dotnet run --project IoTCoWork.App -- --headless --urls http://127.0.0.1:5186
 └──────────────────────────────────────────────┘
        │           │              │
        ▼           ▼              ▼
-   IoTSharp    IoTSharp.Edge   IoTSharp.Edge.Linux/Stm32
+   IoTSharp    IoTEdge   IoTEdge.Linux/Stm32
    开源平台     C# AOT 基座     C / MCU 基座
 ```
 
