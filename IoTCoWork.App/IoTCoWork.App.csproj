@@ -3,21 +3,24 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <AssemblyName>IoTCoWork</AssemblyName>
-    <TargetFrameworks>net10.0;net10.0-windows</TargetFrameworks>
+    <TargetFrameworks>net10.0-windows;net10.0</TargetFrameworks>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <NoWarn>MSB3277</NoWarn>
     <Version Condition="'$(Version)' == ''">0.1.0</Version>
     <InformationalVersion Condition="'$(InformationalVersion)' == ''">$(Version)</InformationalVersion>
-    <ApplicationIcon>Assets\cosmos.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\iotcowork.ico</ApplicationIcon>
   </PropertyGroup>
 
   <PropertyGroup>
-    <IoTCoWorkEmbedWasmAssets>false</IoTCoWorkEmbedWasmAssets>
+    <IoTCoWorkEmbedWasmAssets Condition="'$(IoTCoWorkEmbedWasmAssets)' == '' and '$(Configuration)' != 'Debug' and ($([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('osx-')) or $([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('win-')))">true</IoTCoWorkEmbedWasmAssets>
+    <IoTCoWorkEmbedWasmAssets Condition="'$(IoTCoWorkEmbedWasmAssets)' == ''">false</IoTCoWorkEmbedWasmAssets>
     <IoTCoWorkDotNetHostPath>$(DotNetHostPath)</IoTCoWorkDotNetHostPath>
     <IoTCoWorkDotNetHostPath Condition="'$(IoTCoWorkDotNetHostPath)' == ''">dotnet</IoTCoWorkDotNetHostPath>
     <IoTCoWorkWasmRuntimeIdentifier>browser-wasm</IoTCoWorkWasmRuntimeIdentifier>
+    <IoTCoWorkWasmRunAotCompilation Condition="'$(IoTCoWorkWasmRunAotCompilation)' == '' and '$(Configuration)' == 'Debug'">false</IoTCoWorkWasmRunAotCompilation>
+    <IoTCoWorkWasmRunAotCompilation Condition="'$(IoTCoWorkWasmRunAotCompilation)' == ''">true</IoTCoWorkWasmRunAotCompilation>
     <IoTCoWorkWasmBuildKey>$(RuntimeIdentifier)</IoTCoWorkWasmBuildKey>
     <IoTCoWorkWasmBuildKey Condition="'$(IoTCoWorkWasmBuildKey)' == ''">portable</IoTCoWorkWasmBuildKey>
     <IoTCoWorkWasmPublishDir>$(MSBuildProjectDirectory)/../artifacts/obj/iotcowork-wasm/publish/$(Configuration)/$(IoTCoWorkWasmBuildKey)/</IoTCoWorkWasmPublishDir>
@@ -32,7 +35,6 @@
     <StripSymbols>true</StripSymbols>
     <IsAotCompatible>true</IsAotCompatible>
     <AppleMinOSVersion>12.0</AppleMinOSVersion>
-    <IoTCoWorkEmbedWasmAssets>true</IoTCoWorkEmbedWasmAssets>
   </PropertyGroup>
 
   <PropertyGroup Condition="$([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('win-'))">
@@ -43,14 +45,15 @@
     <InvariantGlobalization>true</InvariantGlobalization>
     <StripSymbols>true</StripSymbols>
     <IsAotCompatible>true</IsAotCompatible>
-    <IoTCoWorkEmbedWasmAssets>true</IoTCoWorkEmbedWasmAssets>
   </PropertyGroup>
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.7" />
     <Compile Include="..\IoTCoWork.Workbench\Models\AppUpdateModels.cs" Link="Models\AppUpdateModels.cs" />
-    <Content Include="Assets\cosmos.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Always" />
+    <Content Include="Assets\iotcowork.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Always" />
+    <Content Remove="wwwroot\**" />
+    <None Remove="wwwroot\**" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
@@ -59,11 +62,25 @@
     <ProjectReference Include="..\external\OmniHost\src\OmniHost.NativeWebView2\OmniHost.NativeWebView2.csproj" />
   </ItemGroup>
 
-  <Target Name="BuildIoTCoWorkWasm" BeforeTargets="Build" Condition="'$(SkipIoTCoWorkWasmPublish)' != 'true' and '$(IoTCoWorkEmbedWasmAssets)' != 'true'">
+  <Target Name="PublishIoTCoWorkWasmForDebugHost" BeforeTargets="Build" Condition="'$(SkipIoTCoWorkWasmPublish)' != 'true' and '$(IoTCoWorkEmbedWasmAssets)' != 'true'">
     <MSBuild Projects="..\IoTCoWork.Workbench\IoTCoWork.Workbench.csproj"
-             Targets="Build"
-             Properties="Configuration=$(Configuration);TargetFramework=net10.0;Version=$(Version);InformationalVersion=$(InformationalVersion)"
+             Targets="Publish"
+             Properties="Configuration=$(Configuration);TargetFramework=net10.0;Version=$(Version);InformationalVersion=$(InformationalVersion);RunAOTCompilation=$(IoTCoWorkWasmRunAotCompilation);PublishDir=$(IoTCoWorkWasmPublishDir)"
              RemoveProperties="RuntimeIdentifier;RuntimeIdentifiers;PublishAot;PublishSingleFile;SelfContained" />
+  </Target>
+
+  <Target Name="CopyIoTCoWorkWasmDebugOutput"
+          BeforeTargets="Build"
+          DependsOnTargets="PublishIoTCoWorkWasmForDebugHost"
+          Condition="'$(SkipIoTCoWorkWasmPublish)' != 'true' and '$(IoTCoWorkEmbedWasmAssets)' != 'true'">
+    <ItemGroup>
+      <_IoTCoWorkWasmDebugAsset Include="$(IoTCoWorkWasmPublishDir)wwwroot\**\*" />
+      <_IoTCoWorkWasmDebugAsset Remove="@(_IoTCoWorkWasmDebugAsset)" Condition="$([System.IO.Directory]::Exists('%(_IoTCoWorkWasmDebugAsset.FullPath)'))" />
+    </ItemGroup>
+    <RemoveDir Directories="$(OutDir)wwwroot" />
+    <Copy SourceFiles="@(_IoTCoWorkWasmDebugAsset)"
+          DestinationFiles="@(_IoTCoWorkWasmDebugAsset->'$(OutDir)wwwroot\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
   </Target>
 
   <Target Name="PublishIoTCoWorkWasmForHost" BeforeTargets="AssignTargetPaths" Condition="'$(SkipIoTCoWorkWasmPublish)' != 'true' and '$(IoTCoWorkEmbedWasmAssets)' == 'true'">

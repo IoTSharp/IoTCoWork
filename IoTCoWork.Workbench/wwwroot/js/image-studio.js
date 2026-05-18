@@ -405,7 +405,7 @@ window.imageStudio = {
   },
   setDocumentTheme: function (theme) {
     const effectiveTheme = theme === 'dark' ? 'dark' : 'light';
-    document.documentElement.dataset.cosmosTheme = effectiveTheme;
+    document.documentElement.dataset.IoTCoWorkTheme = effectiveTheme;
     document.documentElement.style.colorScheme = effectiveTheme;
   },
   window: {

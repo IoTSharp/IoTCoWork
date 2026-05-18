@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "IoTCoWork: 一键运行桌面版",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "IoTCoWork: prepare dev run",
+      "program": "${workspaceFolder}/IoTCoWork.App/bin/Debug/net10.0-windows/IoTCoWork.dll",
+      "args": [
+        "--content-root=${workspaceFolder}/artifacts/debug-web/wwwroot"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "stopAtEntry": false,
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  ]
+}

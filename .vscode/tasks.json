@@ -1,0 +1,71 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "IoTCoWork: publish WASM dev",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "publish",
+        "${workspaceFolder}/IoTCoWork.Workbench/IoTCoWork.Workbench.csproj",
+        "-f",
+        "net10.0",
+        "-c",
+        "Debug",
+        "-p:RunAOTCompilation=false",
+        "-o",
+        "${workspaceFolder}/artifacts/debug-web"
+      ],
+      "group": "build",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "IoTCoWork: build desktop host",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/IoTCoWork.App/IoTCoWork.App.csproj",
+        "-f",
+        "net10.0-windows",
+        "-c",
+        "Debug",
+        "-p:SkipIoTCoWorkWasmPublish=true"
+      ],
+      "group": "build",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "IoTCoWork: prepare dev run",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "IoTCoWork: publish WASM dev",
+        "IoTCoWork: build desktop host"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "IoTCoWork: run desktop",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "${workspaceFolder}/IoTCoWork.App/IoTCoWork.App.csproj",
+        "-f",
+        "net10.0-windows",
+        "-c",
+        "Debug",
+        "-p:SkipIoTCoWorkWasmPublish=true",
+        "--",
+        "--content-root=${workspaceFolder}/artifacts/debug-web/wwwroot"
+      ],
+      "dependsOn": "IoTCoWork: publish WASM dev",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": "$msCompile"
+    }
+  ]
+}

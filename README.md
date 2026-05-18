@@ -30,11 +30,13 @@ git submodule update --init --recursive
 dotnet build IoTCoWork.sln -m:1
 
 # 启动桌面宿主，默认打开 OmniHost 窗口
-dotnet run --project IoTCoWork.App
+dotnet run --project IoTCoWork.App -f net10.0-windows
 
 # 只启动本地站点，便于 API / 静态资源冒烟
-dotnet run --project IoTCoWork.App -- --headless --urls http://127.0.0.1:5186
+dotnet run --project IoTCoWork.App -f net10.0 -- --headless --urls http://127.0.0.1:5186
 ```
+
+VS Code 调试可直接使用 `IoTCoWork: 一键运行桌面版`。该配置会像 Cosmos 一样先把 Workbench 发布到 `artifacts/debug-web`，再启动 `net10.0-windows` 桌面宿主，并把物理静态资源目录传给宿主。
 
 ## 与 IoTSharp 生态的关系
 

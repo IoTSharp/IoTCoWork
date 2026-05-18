@@ -57,12 +57,19 @@ var app = builder
         var serverUrl = ResolveStartedServerUrl(webApp, listenUrl);
         options.Title = "IoTCoWork";
         options.StartUrl = serverUrl;
-        options.Width = 1280;
-        options.Height = 820;
+        options.Width = 1500;
+        options.Height = 980;
+        options.StartMaximized = true;
         options.EnableDevTools = webApp.Environment.IsDevelopment();
-        options.WindowStyle = OmniWindowStyle.Normal;
+        options.IconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "iotcowork.ico");
+        options.EnableTrayIcon = true;
+        options.HideMainWindowOnClose = true;
+        options.TrayToolTip = "IoTCoWork";
+        options.TrayOpenText = "打开 IoTCoWork";
+        options.TrayExitText = "退出";
+        options.WindowStyle = OmniWindowStyle.Frameless;
         options.BuiltInTitleBarStyle = OmniBuiltInTitleBarStyle.None;
-        options.ScrollBarMode = OmniScrollBarMode.Auto;
+        options.ScrollBarMode = OmniScrollBarMode.Hidden;
         options.UserDataFolder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "IoTCoWork",
@@ -343,21 +350,17 @@ static IFileProvider CreateWasmFileProvider(string contentRoot, EmbeddedWasmFile
     var hasEmbeddedAssets = embeddedWasmProvider.HasIndex;
     var hasPhysicalAssets = File.Exists(Path.Combine(contentRoot, "index.html"));
 
-    if (hasEmbeddedAssets && hasPhysicalAssets)
+    if (hasEmbeddedAssets)
     {
-        return new CompositeFileProvider(
-            new PhysicalFileProvider(contentRoot),
-            embeddedWasmProvider);
+        return embeddedWasmProvider;
     }
 
-    if (hasPhysicalAssets)
+    if (!hasPhysicalAssets)
     {
-        return new PhysicalFileProvider(contentRoot);
+        throw new DirectoryNotFoundException($"未找到 IoTCoWork Workbench 静态资源目录：{contentRoot}");
     }
 
-    return embeddedWasmProvider.HasIndex
-        ? embeddedWasmProvider
-        : new PhysicalFileProvider(contentRoot);
+    return new PhysicalFileProvider(contentRoot);
 }
 
 static string ResolveContentRoot(string[] args)
