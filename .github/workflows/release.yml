@@ -1,0 +1,145 @@
+name: build-and-release
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - "v*"
+  pull_request:
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: "10.0.x"
+  DOTNET_NOLOGO: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+  MACOSX_DEPLOYMENT_TARGET: "12.0"
+  PROJECT: IoTCoWork.App/IoTCoWork.App.csproj
+
+jobs:
+  test:
+    name: Build
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install WASM workload
+        run: dotnet workload install wasm-tools
+
+      - name: Restore
+        run: dotnet restore IoTCoWork.sln
+
+      - name: Build workbench
+        run: dotnet build IoTCoWork.Workbench/IoTCoWork.Workbench.csproj -f net10.0 -c Release --no-restore
+
+      - name: Build app
+        run: dotnet build $env:PROJECT -f net10.0-windows -c Release --no-restore
+
+  publish:
+    name: Publish ${{ matrix.rid }}
+    needs: test
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: osx-arm64
+            tfm: net10.0
+            os: macos-latest
+            artifact: IoTCoWork-macos-arm64
+            binary: IoTCoWork
+          - rid: osx-x64
+            tfm: net10.0
+            os: macos-latest
+            artifact: IoTCoWork-macos-x64
+            binary: IoTCoWork
+          - rid: win-x64
+            tfm: net10.0-windows
+            os: windows-latest
+            artifact: IoTCoWork-windows-x64
+            binary: IoTCoWork.exe
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install WASM workload
+        run: dotnet workload install wasm-tools
+
+      - name: Resolve version
+        shell: pwsh
+        run: |
+          $version = "0.1.0"
+          $informationalVersion = $version
+
+          if ($env:GITHUB_REF -like "refs/tags/v*") {
+            $informationalVersion = $env:GITHUB_REF_NAME
+            $version = $informationalVersion -replace '^v', ''
+          }
+
+          "IOTCOWORK_VERSION=$version" >> $env:GITHUB_ENV
+          "IOTCOWORK_INFORMATIONAL_VERSION=$informationalVersion" >> $env:GITHUB_ENV
+
+      - name: Publish
+        shell: pwsh
+        run: |
+          $publishArgs = @(
+            $env:PROJECT,
+            "-f", "${{ matrix.tfm }}",
+            "-c", "Release",
+            "-r", "${{ matrix.rid }}",
+            "-o", "artifacts/publish/${{ matrix.rid }}",
+            "/p:Version=$env:IOTCOWORK_VERSION",
+            "/p:InformationalVersion=$env:IOTCOWORK_INFORMATIONAL_VERSION"
+          )
+
+          if ("${{ matrix.rid }}".StartsWith("osx-")) {
+            $publishArgs += "/p:AppleMinOSVersion=$env:MACOSX_DEPLOYMENT_TARGET"
+          }
+
+          dotnet publish @publishArgs
+
+      - name: Create archive
+        shell: pwsh
+        run: |
+          $publishDir = "artifacts/publish/${{ matrix.rid }}"
+          $distDir = "artifacts/dist"
+          New-Item -ItemType Directory -Force -Path $distDir | Out-Null
+
+          if ("${{ runner.os }}" -eq "Windows") {
+            Compress-Archive -Path "$publishDir/*" -DestinationPath "$distDir/${{ matrix.artifact }}.zip" -Force
+          } else {
+            chmod +x "$publishDir/${{ matrix.binary }}"
+            bash packaging/macos/package-dmg.sh "$publishDir" "$distDir" "${{ matrix.rid }}"
+          }
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: artifacts/dist/*
+          if-no-files-found: error
+
+      - name: Attach to GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/dist/*

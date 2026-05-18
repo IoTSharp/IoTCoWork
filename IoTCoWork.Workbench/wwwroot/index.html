@@ -1,26 +1,45 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-IoTCoWork-theme="light">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>IoTCoWork</title>
     <base href="/" />
-    <link rel="stylesheet" href="app.css" />
+    <link rel="preload" id="webassembly" />
+    <link rel="stylesheet" href="_content/AntDesign/css/ant-design-blazor.css" />
+    <link rel="stylesheet" href="_content/AntDesign.X.Blazor/css/antdesign-x.css" />
+    <link rel="stylesheet" href="css/app.css" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="alternate icon" type="image/png" href="favicon.png" />
+    <link href="IoTCoWork.Workbench.styles.css" rel="stylesheet" />
+    <script type="importmap"></script>
+    <script>
+        (() => {
+            const theme = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+            document.documentElement.dataset.IoTCoWorkTheme = theme;
+            document.documentElement.style.colorScheme = theme;
+        })();
+    </script>
 </head>
+
 <body>
     <div id="app">
-        <div class="boot-screen">
-            <strong>IoTCoWork</strong>
-            <span>正在启动本地工作台</span>
-        </div>
+        <svg class="loading-progress">
+            <circle r="40%" cx="50%" cy="50%" />
+            <circle r="40%" cx="50%" cy="50%" />
+        </svg>
+        <div class="loading-progress-text"></div>
     </div>
 
     <div id="blazor-error-ui">
-        <span>客户端发生错误。</span>
-        <a href="" class="reload">重新加载</a>
-        <a class="dismiss">×</a>
+        应用发生了未处理错误。
+        <a href="." class="reload">重新加载</a>
+        <span class="dismiss">x</span>
     </div>
-
-    <script src="_framework/blazor.webassembly.js"></script>
+    <script src="_content/AntDesign/js/ant-design-blazor.js"></script>
+    <script src="js/image-studio.js"></script>
+    <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
 </body>
+
 </html>

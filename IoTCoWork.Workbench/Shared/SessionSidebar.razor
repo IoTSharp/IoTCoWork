@@ -1,0 +1,65 @@
+<aside class="@Class" aria-label="会话">
+    @if (Collapsed)
+    {
+        <button type="button" class="panel-rail-button" title="展开会话" @onclick="ToggleCollapsed">
+            <Icon Type="menu-unfold" Theme="IconThemeType.Outline" />
+            <span class="sr-only">展开会话</span>
+        </button>
+        <div class="@ServerStatusClass" title="@ServerStatusTitle">
+            <span class="server-status-dot" aria-hidden="true"></span>
+        </div>
+    }
+    else
+    {
+        <section class="studio-panel history-panel">
+            <div class="history-actions">
+                <button type="button" class="studio-button studio-button-light" @onclick="OnNewSession">
+                    <Icon Type="plus" Theme="IconThemeType.Outline" />
+                    <span>新建会话</span>
+                </button>
+                <button type="button" class="studio-button studio-button-ghost" title="清空历史" @onclick="OnClearHistory">
+                    <Icon Type="clear" Theme="IconThemeType.Outline" />
+                </button>
+                <button type="button" class="studio-button studio-button-ghost" title="折叠会话" @onclick="ToggleCollapsed">
+                    <Icon Type="menu-fold" Theme="IconThemeType.Outline" />
+                </button>
+            </div>
+
+            <XConversations Items="@Items"
+                            ActiveKey="@ActiveKey"
+                            ActiveKeyChanged="@ActiveKeyChanged"
+                            AllowRename="true"
+                            AllowDelete="true"
+                            OnRename="@OnRename"
+                            OnDelete="@OnDelete"
+                            Title="会话"
+                            Class="studio-conversations" />
+        </section>
+
+        <footer class="@ServerStatusClass" title="@ServerStatusTitle">
+            <span class="server-status-dot" aria-hidden="true"></span>
+            <span>@ServerStatusText</span>
+        </footer>
+    }
+</aside>
+
+@code {
+    [Parameter] public string Class { get; set; } = "studio-sidebar";
+    [Parameter] public bool Collapsed { get; set; }
+    [Parameter] public EventCallback<bool> CollapsedChanged { get; set; }
+    [Parameter] public IReadOnlyList<XConversationItem> Items { get; set; } = [];
+    [Parameter] public string? ActiveKey { get; set; }
+    [Parameter] public EventCallback<string> ActiveKeyChanged { get; set; }
+    [Parameter] public EventCallback<XConversationRenameRequest> OnRename { get; set; }
+    [Parameter] public EventCallback<XConversationItem> OnDelete { get; set; }
+    [Parameter] public EventCallback OnNewSession { get; set; }
+    [Parameter] public EventCallback OnClearHistory { get; set; }
+    [Parameter] public string ServerStatusClass { get; set; } = string.Empty;
+    [Parameter] public string ServerStatusText { get; set; } = string.Empty;
+    [Parameter] public string ServerStatusTitle { get; set; } = string.Empty;
+
+    private Task ToggleCollapsed()
+    {
+        return CollapsedChanged.InvokeAsync(!Collapsed);
+    }
+}
