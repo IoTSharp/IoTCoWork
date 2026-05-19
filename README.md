@@ -15,12 +15,12 @@ IoTCoWork 是 IoTSharp 生态中的本地开发与运维工作台，基于 .NET 
 
 ## 当前骨架
 
-当前已经接入 OmniHost 桌面宿主，采用 Windows Win32 Runtime + Native WebView2 打开本机 ASP.NET Core 服务；界面由 `IoTCoWork.Workbench` 的 Blazor WebAssembly 客户端在 WebView 内本地渲染。
+当前已经接入 NativeWebHost 桌面宿主，采用 Windows Win32 Runtime + Native WebView2 打开本机 ASP.NET Core 服务；界面由 `IoTCoWork.Workbench` 的 Blazor WebAssembly 客户端在 WebView 内本地渲染。
 
 ```text
-IoTCoWork.App        # OmniHost 桌面宿主、本地 ASP.NET Core API、WASM 静态资源服务
+IoTCoWork.App        # NativeWebHost 桌面宿主、本地 ASP.NET Core API、WASM 静态资源服务
 IoTCoWork.Workbench  # Blazor WebAssembly 本地客户端
-external/OmniHost  # OmniHost git 子模块源码依赖
+external/NativeWebHost  # NativeWebHost git 子模块源码依赖
 ```
 
 开发命令：
@@ -29,7 +29,7 @@ external/OmniHost  # OmniHost git 子模块源码依赖
 git submodule update --init --recursive
 dotnet build IoTCoWork.sln -m:1
 
-# 启动桌面宿主，默认打开 OmniHost 窗口
+# 启动桌面宿主，默认打开 NativeWebHost 窗口
 dotnet run --project IoTCoWork.App -f net10.0-windows
 
 # 只启动本地站点，便于 API / 静态资源冒烟

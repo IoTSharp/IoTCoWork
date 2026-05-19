@@ -12,8 +12,8 @@ public static class SaaSProxyEndpoints
     public const string HttpProxyHeader = "X-IoTCoWork-SaaS-Http-Proxy";
     public const string ProxyMarkerHeader = "X-IoTCoWork-SaaS-Proxy";
 
-    private const string DefaultPlatformBaseUrl = "https://api.iotsharp.net/";
-    private const string DefaultAiGatewayBaseUrl = "https://ai.iotsharp.net/";
+    private const string DefaultPlatformBaseUrl = "https://iotsharp.online/";
+    private const string DefaultAiGatewayBaseUrl = "https://iotsharp.online/v1/";
     private const long MaxProxyRequestBodyBytes = 96L * 1024 * 1024;
 
     private static readonly string[] SupportedMethods =
@@ -57,6 +57,7 @@ public static class SaaSProxyEndpoints
         "wallet",
         "wallet/transactions",
         "recharge-orders",
+        "redeem",
         "device-codes",
         "device-tokens",
     };

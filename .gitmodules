@@ -1,6 +1,6 @@
-[submodule "external/OmniHost"]
+[submodule "external/NativeWebHost"]
 	path = external/NativeWebHost
-	url = https://github.com/maikebing/OmniHost.git
+	url = https://github.com/IoTSharp/NativeWebHost.git
 [submodule "external/AntDesignXBlazor"]
 	path = external/AntDesignXBlazor
 	url = https://github.com/IoTSharp/AntDesignXBlazor.git

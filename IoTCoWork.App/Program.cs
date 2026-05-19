@@ -19,9 +19,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 #if WINDOWS
-using OmniHost;
-using OmniHost.NativeWebView2;
-using OmniHost.Windows;
+using NativeWebHost;
+using NativeWebHost.Windows;
 #endif
 
 var headless = args.Any(IsHeadlessSwitch);
@@ -46,7 +45,7 @@ if (headless)
 }
 
 #if WINDOWS
-var builder = OmniApplication.CreateBuilder(filteredArgs);
+var builder = NativeWebApplication.CreateBuilder(filteredArgs);
 var listenUrl = ResolveListenUrl(builder.Configuration);
 builder.WebHost.UseUrls(listenUrl);
 ConfigureLocalServices(builder.Web.Services);
@@ -67,9 +66,9 @@ var app = builder
         options.TrayToolTip = "IoTCoWork";
         options.TrayOpenText = "打开 IoTCoWork";
         options.TrayExitText = "退出";
-        options.WindowStyle = OmniWindowStyle.Frameless;
-        options.BuiltInTitleBarStyle = OmniBuiltInTitleBarStyle.None;
-        options.ScrollBarMode = OmniScrollBarMode.Hidden;
+        options.WindowStyle = NativeWebWindowStyle.Frameless;
+        options.BuiltInTitleBarStyle = NativeWebBuiltInTitleBarStyle.None;
+        options.ScrollBarMode = NativeWebScrollBarMode.Hidden;
         options.UserDataFolder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "IoTCoWork",
@@ -288,7 +287,7 @@ static string ResolveHostMode()
 {
     if (OperatingSystem.IsWindows())
     {
-        return "OmniHost + Win32Runtime";
+        return "NativeWebHost + Win32Runtime";
     }
 
     if (OperatingSystem.IsMacOS())
@@ -465,10 +464,10 @@ sealed class IoTCoWorkDesktopApp(Func<string> serverUrlResolver, DateTimeOffset 
     public Task OnClosingAsync(CancellationToken cancellationToken = default)
         => Task.CompletedTask;
 
-    public Task OnWindowStartAsync(OmniWindowContext window, CancellationToken cancellationToken = default)
+    public Task OnWindowStartAsync(NativeWebWindowContext window, CancellationToken cancellationToken = default)
         => Task.CompletedTask;
 
-    public Task OnWindowClosingAsync(OmniWindowContext window, CancellationToken cancellationToken = default)
+    public Task OnWindowClosingAsync(NativeWebWindowContext window, CancellationToken cancellationToken = default)
         => Task.CompletedTask;
 }
 #endif

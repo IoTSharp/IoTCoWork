@@ -24,10 +24,10 @@
 
 | 编号 | 状态 | 顺序 | 任务 |
 | --- | --- | --- | --- |
-| A0 | ✅ | [串行] | 参考 VSCopilotSwitch 接入 OmniHost：`IoTCoWork.App` 桌面宿主 + `IoTCoWork.Workbench` Blazor WebAssembly 本地客户端 |
+| A0 | ✅ | [串行] | 参考 VSCopilotSwitch 接入 NativeWebHost：`IoTCoWork.App` 桌面宿主 + `IoTCoWork.Workbench` Blazor WebAssembly 本地客户端 |
 | A1 | 🚧 | [依赖: A0] | 初始化 .NET 解决方案：`IoTCoWork.App` / `IoTCoWork.Workbench` 已完成，`IoTCoWork.PluginSdk` 待补齐 |
 | A2 | 🚧 | [并行 ‖ A1] | 草案推荐：`AntDesign Blazor` + `AntDesignXBlazor`；优先子模块化接入，必要时直接修改子模块源码 |
-| A3 | 🚧 | [依赖: A1] | 宿主：OmniHost 启动、本地 API、WASM 静态资源服务已接入；本地文件、命令、插件加载、配置目录待补齐 |
+| A3 | 🚧 | [依赖: A1] | 宿主：NativeWebHost 启动、本地 API、WASM 静态资源服务已接入；本地文件、命令、插件加载、配置目录待补齐 |
 | A4 | ⬜ | [依赖: A1] | 工程模型本地存储与读写（与上游契约 `IoTSharp.Contracts` 对齐） |
 | A5 | 🚧 | [依赖: A4] | 业务方案模板与 JSON Schema：平台、采集器、来源协议、转换规则、上传通道五要素建模 |
 

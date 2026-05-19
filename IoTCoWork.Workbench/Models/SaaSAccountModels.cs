@@ -34,8 +34,18 @@ public sealed class SaaSAccountProfile
     [JsonPropertyName("phoneNumber")] public string? PhoneNumber { get; set; }
     [JsonPropertyName("status")] public string Status { get; set; } = string.Empty;
     [JsonPropertyName("balanceCredits")] public long BalanceCredits { get; set; }
+    [JsonPropertyName("accountService")] public SaaSAccountServiceStatus? AccountService { get; set; }
 
     public decimal Balance => BalanceCredits / 100m;
+}
+
+public sealed class SaaSAccountServiceStatus
+{
+    [JsonPropertyName("status")] public string Status { get; set; } = string.Empty;
+    [JsonPropertyName("detail")] public string? Detail { get; set; }
+    [JsonPropertyName("balanceCredits")] public long? BalanceCredits { get; set; }
+    [JsonPropertyName("lastSyncedAt")] public DateTimeOffset? LastSyncedAt { get; set; }
+    [JsonPropertyName("accountName")] public string? AccountName { get; set; }
 }
 
 public sealed class SaaSRechargeOrderCreateRequest

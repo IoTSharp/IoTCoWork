@@ -57,9 +57,8 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
-    <ProjectReference Include="..\external\OmniHost\src\OmniHost\OmniHost.csproj" />
-    <ProjectReference Include="..\external\OmniHost\src\OmniHost.Windows\OmniHost.Windows.csproj" />
-    <ProjectReference Include="..\external\OmniHost\src\OmniHost.NativeWebView2\OmniHost.NativeWebView2.csproj" />
+    <ProjectReference Include="..\external\NativeWebHost\src\NativeWebHost\NativeWebHost.csproj" />
+    <ProjectReference Include="..\external\NativeWebHost\src\NativeWebHost.Windows\NativeWebHost.Windows.csproj" />
   </ItemGroup>
 
   <Target Name="PublishIoTCoWorkWasmForDebugHost" BeforeTargets="Build" Condition="'$(SkipIoTCoWorkWasmPublish)' != 'true' and '$(IoTCoWorkEmbedWasmAssets)' != 'true'">

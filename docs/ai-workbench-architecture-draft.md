@@ -49,7 +49,7 @@ Cowork 的关键不是聊天，而是把任务组织成可执行系统。
 
 - 启动桌面宿主
 - 托管本机 ASP.NET Core 服务
-- 提供 WebView2 / OmniHost 入口
+- 提供 WebView2 / NativeWebHost 入口
 - 提供本地 API、健康检查、宿主信息
 
 这一层只管“运行起来”，不承载业务 UI 逻辑。

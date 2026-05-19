@@ -4,8 +4,8 @@ namespace IoTCoWork.Workbench.Models;
 
 public sealed class StudioSettings
 {
-    public const string DefaultPlatformBaseUrl = "https://api.iotsharp.net/";
-    public const string DefaultAiGatewayBaseUrl = "https://ai.iotsharp.net/";
+    public const string DefaultPlatformBaseUrl = "https://iotsharp.online/";
+    public const string DefaultAiGatewayBaseUrl = "https://iotsharp.online/v1/";
 
     private string? _legacyBaseUrl;
 
@@ -166,7 +166,7 @@ public sealed class StudioSettings
             string.Equals(AiGatewayBaseUrl.Trim(), DefaultAiGatewayBaseUrl, StringComparison.OrdinalIgnoreCase)) &&
             Uri.TryCreate(value.Trim(), UriKind.Absolute, out var uri) &&
             uri.Scheme is "http" or "https" &&
-            uri.Host.EndsWith("iotsharp.net", StringComparison.OrdinalIgnoreCase);
+            uri.Host.EndsWith("iotsharp.online", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string NormalizeAbsoluteUrl(string value, string fallback)
