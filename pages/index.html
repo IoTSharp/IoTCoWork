@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IoTCoWork | Local IoT Workbench</title>
+  <meta name="description" content="IoTCoWork 是 IoTSharp 生态的开源本地工作台外壳，基于 .NET、NativeWebHost 和 Blazor WebAssembly 构建。">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="https://iotsharp.net/" aria-label="IoTSharp home">
+      <span class="brand-mark">IoT</span>
+      <span>IoTSharp</span>
+    </a>
+    <nav aria-label="Project navigation">
+      <a href="#capabilities">能力</a>
+      <a href="#workspace">工作台</a>
+      <a href="#extension">扩展</a>
+      <a href="https://github.com/IoTSharp/IoTCoWork">GitHub</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">IoTSharp Local Workbench</p>
+        <h1>IoTCoWork</h1>
+        <p class="hero-text">
+          开源本地工作台外壳。它把 IoT 工程建模、调试、生成、发布和本地 AI Gateway 连接放在一个桌面工作面里，承担“云端思考、本地干活、边缘执行”中的本地层。
+        </p>
+        <div class="actions">
+          <a class="primary" href="#workspace">查看工作台</a>
+          <a class="secondary" href="https://github.com/IoTSharp/IoTCoWork">查看源码</a>
+        </div>
+      </div>
+      <div class="hero-diagram" aria-label="IoTCoWork workbench panels">
+        <div>
+          <span>Shell</span>
+          <strong>NativeWebHost</strong>
+          <small>Windows WebView2 / local ASP.NET Core</small>
+        </div>
+        <div>
+          <span>Client</span>
+          <strong>Blazor Workbench</strong>
+          <small>三栏工作台 / 设置 / 能力中心</small>
+        </div>
+        <div>
+          <span>Bridge</span>
+          <strong>AI Gateway Proxy</strong>
+          <small>本地配置 / 代理 / Token 状态</small>
+        </div>
+      </div>
+    </section>
+
+    <section id="capabilities" class="section">
+      <div class="section-heading">
+        <p class="eyebrow">Capabilities</p>
+        <h2>面向 IoT 工程师的本地工作台骨架</h2>
+      </div>
+      <div class="feature-grid">
+        <article>
+          <span>01</span>
+          <h3>三栏工作区</h3>
+          <p>左侧会话与任务，中间工作画布，右侧工程上下文、产物、工具、日志和风险。</p>
+        </article>
+        <article>
+          <span>02</span>
+          <h3>本地设置中心</h3>
+          <p>统一管理外观、模型、本地网络代理、更新、快捷键和能力中心入口。</p>
+        </article>
+        <article>
+          <span>03</span>
+          <h3>能力中心</h3>
+          <p>预留智能体、技能、指令、挂钩、MCP 服务器和插件的本地 UI 插槽。</p>
+        </article>
+        <article>
+          <span>04</span>
+          <h3>AI Gateway 连接</h3>
+          <p>通过本地代理连接用户配置的 AI Gateway，不在开源外壳内实现商业账号或计费。</p>
+        </article>
+        <article>
+          <span>05</span>
+          <h3>工程上下文</h3>
+          <p>围绕 workspace、边缘目标、输出位置、审批模式和工具运行组织任务上下文。</p>
+        </article>
+        <article>
+          <span>06</span>
+          <h3>桌面宿主</h3>
+          <p>IoTCoWork.App 托管本地 API 和 WASM 静态资源，并用 NativeWebHost 打开桌面窗口。</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="workspace" class="section split">
+      <div class="section-heading">
+        <p class="eyebrow">Workbench</p>
+        <h2>开源仓库只保留本地外壳和扩展点</h2>
+      </div>
+      <div class="flow">
+        <div><b>IoTCoWork.App</b><small>桌面宿主、本地 API、更新、快照和 AI Gateway 代理。</small></div>
+        <div><b>IoTCoWork.Workbench</b><small>Blazor WebAssembly 工作台界面和本地状态。</small></div>
+        <div><b>NativeWebHost</b><small>跨平台 Native WebView 宿主抽象与 Windows 实现。</small></div>
+        <div><b>IoTSharp / IoTEdge</b><small>工作台面向主平台和边缘基座提供本地入口。</small></div>
+      </div>
+      <div class="module-list">
+        <p><strong>不接管设备管理</strong> 设备、遥测、告警和规则仍属于 IoTSharp 主平台。</p>
+        <p><strong>不承载商业账号</strong> 租户、计费、钱包、License 和付费模板由上层商业模块注入。</p>
+        <p><strong>只做本地连接</strong> Token、代理和 AI Gateway 地址由用户在本机配置。</p>
+        <p><strong>保留插件插槽</strong> 外部贡献通过公开 UI 插槽和契约进入工作台。</p>
+      </div>
+    </section>
+
+    <section id="extension" class="section start">
+      <div>
+        <p class="eyebrow">Extension</p>
+        <h2>从开源外壳开始扩展自己的工作流</h2>
+        <p>默认开发流程会构建 Blazor Workbench，并由 IoTCoWork.App 作为本地桌面宿主加载。GitHub Pages 文档来自本仓库 `docs/` 目录。</p>
+      </div>
+      <pre><code>git submodule update --init --recursive
+dotnet build IoTCoWork.sln -m:1
+
+dotnet run --project IoTCoWork.App -f net10.0-windows
+dotnet run --project IoTCoWork.App -f net10.0 -- --headless</code></pre>
+    </section>
+  </main>
+
+  <footer>
+    <span>IoTCoWork is the local workbench shell of the IoTSharp ecosystem.</span>
+    <a href="https://iotsharp.net/">iotsharp.net</a>
+  </footer>
+</body>
+</html>
