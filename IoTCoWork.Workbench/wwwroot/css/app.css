@@ -215,8 +215,6 @@ summary:focus-visible,
 .studio-tabs button:focus-visible,
 .theme-segment button:focus-visible,
 .polish-segment button:focus-visible,
-.auth-tabs button:focus-visible,
-.auth-proxy-link:focus-visible,
 .image-preview-actions button:focus-visible,
 .image-preview-editor header button:focus-visible,
 .result-tile button:focus-visible,
@@ -3223,21 +3221,6 @@ button.sender-context-chip:focus-visible {
     font-size: 12px;
 }
 
-.settings-account-strip {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: end;
-    gap: 10px;
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px solid var(--studio-line);
-}
-
-.settings-account-strip .recharge-row,
-.settings-account-strip .settings-message {
-    grid-column: 1 / -1;
-}
-
 .studio-check {
     display: flex;
     align-items: center;
@@ -3273,16 +3256,6 @@ button.sender-context-chip:focus-visible {
     text-align: right;
     text-overflow: ellipsis;
     white-space: nowrap;
-}
-
-.account-summary {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
-    padding: 10px;
-    border: 1px solid var(--studio-line);
-    border-radius: 8px;
-    background: var(--studio-soft-strong);
 }
 
 .theme-segment {
@@ -3350,34 +3323,6 @@ button.sender-context-chip:focus-visible {
     color: var(--studio-muted);
     font-size: 11px;
     line-height: 1.35;
-}
-
-.account-summary div {
-    min-width: 0;
-}
-
-.account-summary span {
-    display: block;
-    color: var(--studio-muted);
-    font-size: 11px;
-}
-
-.account-summary strong {
-    display: block;
-    min-width: 0;
-    overflow: hidden;
-    color: var(--studio-ink);
-    font-size: 12px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.account-summary-compact {
-    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
-}
-
-.account-grid {
-    grid-template-columns: 1fr 1fr;
 }
 
 .settings-actions {
@@ -3483,17 +3428,6 @@ button.sender-context-chip:focus-visible {
     padding-top: 16px;
 }
 
-.recharge-row {
-    display: grid;
-    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr) auto;
-    align-items: end;
-    gap: 8px;
-}
-
-.recharge-row-simple {
-    grid-template-columns: minmax(0, 1fr) auto;
-}
-
 .settings-message {
     margin: 0;
     overflow-wrap: anywhere;
@@ -3588,9 +3522,7 @@ button.sender-context-chip:focus-visible {
 }
 
 .capability-center-header > button,
-.settings-drawer header button,
-.auth-proxy-dialog header button,
-.payment-dialog header button {
+.settings-drawer header button {
     display: grid;
     place-items: center;
     width: 34px;
@@ -3958,8 +3890,6 @@ button.sender-context-chip:focus-visible {
 }
 
 .confirm-backdrop,
-.auth-backdrop,
-.payment-backdrop,
 .image-preview-backdrop {
     position: fixed;
     inset: 0;
@@ -3970,13 +3900,8 @@ button.sender-context-chip:focus-visible {
     backdrop-filter: blur(10px);
 }
 
-.confirm-backdrop,
-.auth-backdrop {
+.confirm-backdrop {
     z-index: 1300;
-}
-
-.payment-backdrop {
-    z-index: 1200;
 }
 
 .image-preview-backdrop {
@@ -3987,9 +3912,6 @@ button.sender-context-chip:focus-visible {
 }
 
 .confirm-dialog,
-.auth-dialog,
-.auth-proxy-dialog,
-.payment-dialog,
 .image-preview-dialog {
     width: min(440px, 100%);
     max-height: min(760px, calc(100vh - 36px));
@@ -4026,145 +3948,6 @@ button.sender-context-chip:focus-visible {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
-}
-
-.auth-dialog {
-    display: grid;
-    gap: 16px;
-    padding: 22px;
-}
-
-.auth-proxy-dialog {
-    position: fixed;
-    z-index: 1320;
-    width: min(390px, calc(100vw - 36px));
-    padding: 18px;
-}
-
-.auth-proxy-dialog header,
-.auth-proxy-dialog footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.auth-proxy-dialog header {
-    margin-bottom: 14px;
-}
-
-.auth-proxy-dialog footer {
-    justify-content: flex-end;
-    margin-top: 16px;
-}
-
-.auth-proxy-dialog h2 {
-    margin: 2px 0 0;
-    font-size: 20px;
-    line-height: 1.2;
-}
-
-.auth-proxy-dialog header button {
-    display: grid;
-    place-items: center;
-    width: 30px;
-    height: 30px;
-    border: 0;
-    border-radius: 6px;
-    color: var(--studio-ink);
-    background: var(--studio-soft);
-}
-
-.auth-brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-width: 0;
-}
-
-.auth-brand > div:not(.studio-logo) {
-    min-width: 0;
-}
-
-.auth-brand > div:not(.studio-logo) > span {
-    color: var(--studio-muted);
-    font-size: 12px;
-    font-weight: 800;
-}
-
-.auth-brand h2 {
-    margin: 2px 0 0;
-    overflow: hidden;
-    font-size: 24px;
-    line-height: 1.2;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.auth-tabs {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4px;
-    padding: 4px;
-    border-radius: 8px;
-    background: var(--studio-soft);
-}
-
-.auth-tabs button {
-    height: 34px;
-    border: 0;
-    border-radius: 6px;
-    color: var(--studio-muted-strong);
-    background: transparent;
-    font-weight: 800;
-}
-
-.auth-tabs button.active {
-    color: var(--studio-ink);
-    background: var(--studio-control-selected);
-    box-shadow: var(--studio-shadow-sm);
-}
-
-.auth-grid {
-    gap: 10px;
-}
-
-.auth-proxy-link {
-    display: flex;
-    align-items: center;
-    min-width: 0;
-    min-height: 36px;
-    gap: 8px;
-    padding: 0 10px;
-    border: 1px solid var(--studio-line);
-    border-radius: 8px;
-    color: var(--studio-muted-strong);
-    background: var(--studio-soft-strong);
-    font-size: 12px;
-    font-weight: 800;
-}
-
-.auth-proxy-link span {
-    min-width: 0;
-    overflow: hidden;
-    flex: 1 1 auto;
-    text-align: left;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.auth-proxy-link strong {
-    flex: 0 0 auto;
-    color: var(--studio-accent-ink);
-    font-size: 11px;
-}
-
-.auth-submit {
-    width: 100%;
-}
-
-.payment-dialog {
-    width: min(460px, 100%);
 }
 
 .image-preview-dialog {
@@ -4394,138 +4177,6 @@ button.sender-context-chip:focus-visible {
     flex-wrap: wrap;
     justify-content: flex-end;
     margin-top: 14px;
-}
-
-.payment-dialog header,
-.payment-dialog footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    min-width: 0;
-    padding: 16px 18px;
-}
-
-.payment-dialog header > div {
-    min-width: 0;
-}
-
-.payment-dialog header {
-    border-bottom: 1px solid var(--studio-line);
-}
-
-.payment-dialog h2 {
-    margin: 2px 0 0;
-    overflow: hidden;
-    font-size: 20px;
-    line-height: 1.2;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.payment-dialog header button {
-    display: grid;
-    place-items: center;
-    width: 30px;
-    height: 30px;
-    border: 0;
-    border-radius: 6px;
-    color: var(--studio-ink);
-    background: var(--studio-soft);
-}
-
-.payment-body {
-    display: grid;
-    justify-items: center;
-    gap: 14px;
-    padding: 20px 18px;
-}
-
-.payment-qr-frame {
-    display: grid;
-    place-items: center;
-    width: 272px;
-    max-width: 100%;
-    aspect-ratio: 1 / 1;
-    padding: 12px;
-    border: 1px solid var(--studio-line);
-    border-radius: 8px;
-    background: #fff;
-}
-
-.payment-qr-frame img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-.payment-hint {
-    margin: 0;
-    overflow-wrap: anywhere;
-    color: var(--studio-muted);
-    font-size: 13px;
-}
-
-.payment-status {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
-    width: 100%;
-}
-
-.payment-status div {
-    min-width: 0;
-    padding: 9px 10px;
-    border: 1px solid var(--studio-line);
-    border-radius: 8px;
-    background: var(--studio-soft-strong);
-}
-
-.payment-status span,
-.payment-success span {
-    display: block;
-    color: var(--studio-muted);
-    font-size: 11px;
-}
-
-.payment-status strong {
-    display: block;
-    margin-top: 3px;
-    overflow: hidden;
-    color: var(--studio-ink);
-    font-size: 13px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.payment-success {
-    display: grid;
-    justify-items: center;
-    gap: 6px;
-    padding: 24px 10px 10px;
-    text-align: center;
-}
-
-.payment-success .anticon {
-    color: var(--studio-accent);
-    font-size: 42px;
-}
-
-.payment-success strong {
-    overflow-wrap: anywhere;
-    color: var(--studio-ink);
-    font-size: 18px;
-}
-
-.payment-expired .anticon {
-    color: var(--studio-warning);
-}
-
-.payment-dialog footer {
-    justify-content: flex-end;
-    border-top: 1px solid var(--studio-line);
-    background: var(--studio-panel-alt);
 }
 
 #blazor-error-ui {
@@ -4861,18 +4512,6 @@ code {
         max-width: 100%;
     }
 
-    .account-grid,
-    .recharge-row,
-    .recharge-row-simple,
-    .account-summary-compact,
-    .payment-status {
-        grid-template-columns: 1fr;
-    }
-
-    .account-summary {
-        grid-template-columns: 1fr;
-    }
-
     .settings-drawer {
         width: 100vw;
         height: auto;
@@ -4882,7 +4521,6 @@ code {
 
     .settings-link-panel,
     .settings-center,
-    .settings-account-strip,
     .settings-model-grid,
     .capability-center-body,
     .capability-metrics,
@@ -4914,14 +4552,9 @@ code {
         padding: 14px;
     }
 
-    .settings-account-strip {
-        align-items: stretch;
-    }
-
     .settings-actions,
     .settings-actions .studio-button,
-    .settings-link-panel .studio-button,
-    .recharge-row-simple .studio-button {
+    .settings-link-panel .studio-button {
         width: 100%;
     }
 
@@ -4967,25 +4600,18 @@ code {
         gap: 3px;
     }
 
-    .auth-dialog,
-    .auth-proxy-dialog,
     .capability-center-dialog,
-    .payment-dialog,
     .image-preview-dialog {
         max-height: calc(100vh - 24px);
     }
 
-    .confirm-backdrop,
-    .auth-backdrop,
-    .payment-backdrop {
+    .confirm-backdrop {
         align-items: start;
         overflow: auto;
         padding: 12px;
     }
 
-    .confirm-dialog,
-    .auth-dialog,
-    .payment-dialog {
+    .confirm-dialog {
         width: 100%;
     }
 
@@ -5022,10 +4648,6 @@ code {
         max-width: 152px;
     }
 
-    .payment-dialog footer {
-        align-items: stretch;
-        flex-direction: column;
-    }
 }
 
 @media (max-width: 520px) {
@@ -5044,8 +4666,7 @@ code {
     }
 
     .workspace-overview-status,
-    .task-plan-summary,
-    .payment-status {
+    .task-plan-summary {
         grid-template-columns: 1fr;
     }
 
@@ -5082,7 +4703,6 @@ code {
 
     .settings-section-title,
     .capability-center-header,
-    .payment-dialog header,
     .confirm-dialog footer {
         align-items: stretch;
         flex-direction: column;
@@ -5097,7 +4717,6 @@ code {
         grid-template-columns: 1fr;
     }
 
-    .auth-tabs,
     .studio-tabs {
         grid-template-columns: 1fr 1fr;
     }

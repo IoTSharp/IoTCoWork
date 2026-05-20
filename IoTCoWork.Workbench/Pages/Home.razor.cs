@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Web;
 using System.Net.Http.Json;
 using Microsoft.JSInterop;
-using QRCoder;
 using System.Reflection;
 
 namespace IoTCoWork.Workbench.Pages;
@@ -142,28 +141,11 @@ public partial class Home
     private bool _accountMenuOpen;
     private bool _capabilityCenterOpen;
     private bool _exitConfirmOpen;
-    private bool _accountBusy;
-    private bool _accountRegisterOpen;
-    private bool _authProxyOpen;
     private string? _error;
     private string? _downloadNotice;
     private string? _lastDownloadFilePath;
     private bool _revealDownloadBusy;
     private string? _lastRawJson;
-    private string _accountEmail = string.Empty;
-    private string _accountPassword = string.Empty;
-    private string? _accountMessage;
-    private bool _accountMessageIsError;
-    private decimal _rechargeAmount = 10;
-    private SaaSRechargeOrder? _activePaymentOrder;
-    private SaaSRechargeOrder? _latestPaymentStatus;
-    private bool _paymentOverlayOpen;
-    private bool _paymentPolling;
-    private bool _paymentCancelling;
-    private string? _paymentQrImageSource;
-    private DateTimeOffset? _paymentExpiresAt;
-    private PeriodicTimer? _paymentTimer;
-    private CancellationTokenSource? _paymentCts;
     private CancellationTokenSource? _cts;
     private PeriodicTimer? _serverStatusTimer;
     private CancellationTokenSource? _serverStatusCts;
@@ -205,42 +187,29 @@ public partial class Home
         _snapshot.Sessions.FirstOrDefault(session => session.Id == _snapshot.ActiveSessionId)
         ?? _snapshot.Sessions.First();
 
-    private bool AccountLoggedIn => !string.IsNullOrWhiteSpace(Settings.PlatformAccessToken);
-    private bool AccountReady => AccountLoggedIn &&
-        !string.IsNullOrWhiteSpace(Settings.CloudAccessToken);
-    private bool RequiresAuthOverlay => !AccountReady;
+    private bool GatewayConfigured => !string.IsNullOrWhiteSpace(Settings.AiGatewayAccessToken);
     private string EffectiveTheme => Settings.ThemeMode == "dark" || (Settings.ThemeMode == "system" && _systemPrefersDark)
         ? "dark"
         : "light";
     private string ProviderTheme => EffectiveTheme;
     private XThemeTokens ThemeTokens => EffectiveTheme == "dark" ? DarkTokens : LightTokens;
     private string RootThemeClass => $"studio-provider theme-{EffectiveTheme}";
-    private string AccountEmail => string.IsNullOrWhiteSpace(Settings.SaaSUser?.Email) ? "未登录" : Settings.SaaSUser.Email;
-    private string AccountDisplayName => ResolveAccountDisplayName();
-    private string AccountAvatarUrl => Settings.SaaSUser?.AvatarUrl?.Trim() ?? string.Empty;
-    private string AccountInitials => ResolveAccountInitials(AccountDisplayName, Settings.SaaSUser?.Email);
-    private string AccountConnectionLabel => AccountReady
-        ? "已连接"
-        : AccountLoggedIn
-            ? "待完成云端连接"
-            : "未登录";
-    private string AccountServiceLabel => string.IsNullOrWhiteSpace(Settings.SaaSUser?.AccountService?.Status)
-        ? "未配置"
-        : Settings.SaaSUser.AccountService.Status;
-    private string AccountServiceDetail => string.IsNullOrWhiteSpace(Settings.SaaSUser?.AccountService?.Detail)
-        ? "暂无账户服务状态"
-        : Settings.SaaSUser.AccountService.Detail;
-    private string AccountMenuButtonTitle => AccountLoggedIn ? $"账户：{AccountDisplayName}" : "账户菜单";
+    private string AccountDisplayName => "本地工作台";
+    private string AccountAvatarUrl => string.Empty;
+    private string AccountInitials => "Io";
+    private string AccountConnectionLabel => GatewayConfigured ? "AI 网关已配置" : "待配置 AI 网关";
+    private string AccountServiceLabel => GatewayConfigured ? "本地连接就绪" : "本地连接未配置";
+    private string AccountServiceDetail => GatewayConfigured
+        ? "使用本地保存的 AI Gateway Token 调用模型。"
+        : "请在设置中心配置 AI Gateway 地址与 Token。";
+    private string AccountMenuButtonTitle => GatewayConfigured ? "本地连接已配置" : "本地连接待配置";
     private string AccountMenuExpanded => _accountMenuOpen ? "true" : "false";
     private string AccountAvatarButtonClass => $"account-avatar-button{(_accountMenuOpen ? " active" : string.Empty)}";
-    private string AccountPresenceClass => AccountReady
+    private string AccountPresenceClass => GatewayConfigured
         ? "account-presence is-ready"
-        : AccountLoggedIn
-            ? "account-presence is-partial"
-            : "account-presence";
-    private string BalanceLabel => Settings.SaaSUser is null ? "--" : FormatMoney(Settings.SaaSUser.Balance);
+        : "account-presence is-partial";
+    private string GatewayTokenStatus => GatewayConfigured ? "已配置" : "未配置";
     private string HeaderSubtitle => AppVersion;
-    private string AccountMessageClass => _accountMessageIsError ? "settings-message error" : "settings-message";
     private string PromptPolishModeLabel =>
         _promptPolishOptions.FirstOrDefault(option => option.Value == Settings.PromptPolishMode)?.Label ?? "直接生成";
     private string ServerStatusClass => _serverOnline
@@ -277,29 +246,6 @@ public partial class Home
     private string CanvasClass => _loading ? "workspace-canvas is-loading" : "workspace-canvas";
     private string ContextServerStatusClass => $"{ServerStatusClass} compact";
     private string WorkspaceStatus => _loading ? "正在生成，请保持窗口打开" : LatestImages.Count == 0 ? "已就绪，可以开始作图" : $"已生成 {LatestImages.Count} 张图片";
-    private string AuthButtonText => _accountBusy ? "处理中..." : _accountRegisterOpen ? "创建并登录" : "登录";
-    private string PaymentTitle => PaymentSucceeded
-        ? "支付完成"
-        : PaymentExpired
-            ? "订单已过期"
-            : "扫码完成支付";
-    private string PaymentStatusLabel => PaymentSucceeded
-        ? "已完成"
-        : PaymentExpired
-            ? "已过期"
-            : _paymentPolling
-                ? "确认中"
-                : "待支付";
-    private string PaymentCountdown => RemainingPaymentSeconds <= 0
-        ? "00:00"
-        : $"{RemainingPaymentSeconds / 60:00}:{RemainingPaymentSeconds % 60:00}";
-    private string? PaymentQrImageSource => _paymentQrImageSource;
-    private int RemainingPaymentSeconds => _paymentExpiresAt is null
-        ? 0
-        : Math.Max(0, (int)Math.Ceiling((_paymentExpiresAt.Value - DateTimeOffset.Now).TotalSeconds));
-    private bool PaymentSucceeded => IsPaymentSuccess(_latestPaymentStatus?.Status);
-    private bool PaymentExpired => RemainingPaymentSeconds <= 0 || IsPaymentExpired(_latestPaymentStatus?.Status);
-    private bool HasPendingPaymentOrder => _activePaymentOrder is not null && !PaymentSucceeded && !PaymentExpired;
     private string ModeLabel => ActiveSession.Mode switch
     {
         "image" => "图生图",
@@ -471,7 +417,6 @@ public partial class Home
 
         EnsureActiveMode();
         StartServerStatusPolling();
-        await RestoreAccountAsync();
         _ = CheckForUpdatesAsync(silent: true);
     }
 
@@ -773,8 +718,6 @@ public partial class Home
         _settingsSearchText = args.Value?.ToString() ?? string.Empty;
     }
 
-    private string AuthTabClass(bool register) => _accountRegisterOpen == register ? "active" : string.Empty;
-    private string AuthTabSelected(bool register) => _accountRegisterOpen == register ? "true" : "false";
     private void SetLeftSidebarCollapsed(bool collapsed) => _leftSidebarCollapsed = collapsed;
     private static string MessageClass(StudioMessage message) => $"thread-message {message.Role}";
     private static string MessageRoleLabel(string role) => role switch
@@ -796,11 +739,11 @@ public partial class Home
             return;
         }
 
-        if (!AccountReady)
+        if (!GatewayConfigured)
         {
-            _error = "请先登录账户。";
-            _settingsOpen = false;
-            SetAccountMessage("登录后会自动完成作图配置。", isError: false);
+            _error = "请先在本地网络设置里配置 AI Gateway Token。";
+            _activeSettingsCategoryKey = "network";
+            _settingsOpen = true;
             return;
         }
 
@@ -894,11 +837,11 @@ public partial class Home
 
     private async Task HandleUserTextAsync(string text)
     {
-        if (!AccountReady)
+        if (!GatewayConfigured)
         {
-            _error = "请先登录账户。";
-            _settingsOpen = false;
-            SetAccountMessage("登录后会自动完成作图配置。", isError: false);
+            _error = "请先在本地网络设置里配置 AI Gateway Token。";
+            _activeSettingsCategoryKey = "network";
+            _settingsOpen = true;
             return;
         }
 
@@ -1900,35 +1843,6 @@ public partial class Home
         }
     }
 
-    private static string ResolveAccountInitials(string displayName, string? email)
-    {
-        var source = !string.IsNullOrWhiteSpace(displayName) && displayName != "未登录"
-            ? displayName
-            : email;
-        source = source?.Trim();
-        if (string.IsNullOrWhiteSpace(source))
-        {
-            return "未";
-        }
-
-        return source[..1].ToUpperInvariant();
-    }
-
-    private string ResolveAccountDisplayName()
-    {
-        if (!string.IsNullOrWhiteSpace(Settings.SaaSUser?.DisplayName))
-        {
-            return Settings.SaaSUser.DisplayName.Trim();
-        }
-
-        if (!string.IsNullOrWhiteSpace(Settings.SaaSUser?.Email))
-        {
-            return Settings.SaaSUser.Email.Trim();
-        }
-
-        return "未登录";
-    }
-
     private string AccountThemeChecked(string mode) =>
         string.Equals(Settings.ThemeMode, mode, StringComparison.OrdinalIgnoreCase) ? "true" : "false";
 
@@ -1976,21 +1890,9 @@ public partial class Home
 
     private void CloseTransientUi()
     {
-        if (_authProxyOpen)
-        {
-            CloseAuthProxySettings();
-            return;
-        }
-
         if (_previewImage is not null)
         {
             CloseImagePreview();
-            return;
-        }
-
-        if (_paymentOverlayOpen)
-        {
-            _paymentOverlayOpen = false;
             return;
         }
 
@@ -2055,21 +1957,11 @@ public partial class Home
         OpenSettings();
     }
 
-    private async Task SignOutFromAccountMenu()
+    private void OpenNetworkSettingsFromAccountMenu()
     {
         CloseAccountMenu();
-        await SignOutAccount();
-    }
-
-    private void OpenAuthProxySettings() => _authProxyOpen = true;
-    private void CloseAuthProxySettings() => _authProxyOpen = false;
-
-    private void HandleAuthBackdropClick()
-    {
-        if (_authProxyOpen)
-        {
-            CloseAuthProxySettings();
-        }
+        _activeSettingsCategoryKey = "network";
+        OpenSettings();
     }
 
     private async Task CheckForUpdatesAsync()
@@ -2150,119 +2042,6 @@ public partial class Home
         }
     }
 
-    private void ToggleAccountRegister()
-    {
-        _accountRegisterOpen = !_accountRegisterOpen;
-    }
-
-    private void SetAuthMode(bool register)
-    {
-        _accountRegisterOpen = register;
-        _accountMessage = null;
-        _accountMessageIsError = false;
-    }
-
-    private async Task LoginAccount()
-    {
-        await RunAccountAction(async () =>
-        {
-            var response = await AccountClient.LoginAsync(Settings, _accountEmail, _accountPassword);
-            await CompleteAccountSetupAsync();
-            await SaveAsync();
-            _accountPassword = string.Empty;
-            _settingsOpen = false;
-            SetAccountMessage($"已登录 {response.User?.Email ?? _accountEmail}。");
-        });
-    }
-
-    private async Task RegisterAccount()
-    {
-        await RunAccountAction(async () =>
-        {
-            var response = await AccountClient.RegisterAsync(
-                Settings,
-                _accountEmail,
-                _accountPassword,
-                promoCode: null,
-                invitationCode: null,
-                affiliateCode: null);
-            await CompleteAccountSetupAsync();
-            await SaveAsync();
-            _accountPassword = string.Empty;
-            _accountRegisterOpen = false;
-            _settingsOpen = false;
-            SetAccountMessage($"已注册并登录 {response.User?.Email ?? _accountEmail}。");
-        });
-    }
-
-    private Task SubmitAuth()
-    {
-        return _accountRegisterOpen ? RegisterAccount() : LoginAccount();
-    }
-
-    private async Task RefreshAccountProfile()
-    {
-        await RunAccountAction(async () =>
-        {
-            var user = await AccountClient.RefreshProfileAsync(Settings);
-            await SaveAsync();
-            SetAccountMessage($"账户已刷新，余额 {user.Balance:0.####}。");
-        });
-    }
-
-    private async Task CreateRechargeOrder()
-    {
-        await RunAccountAction(async () =>
-        {
-            var order = await AccountClient.CreateRechargeOrderAsync(
-                Settings,
-                _rechargeAmount,
-                "native");
-            await SaveAsync();
-            OpenPaymentOverlay(order);
-            SetAccountMessage("充值订单已创建，请扫码完成支付。");
-        });
-    }
-
-    private async Task SignOutAccount()
-    {
-        await StopPaymentPollingAsync();
-        _paymentOverlayOpen = false;
-        _activePaymentOrder = null;
-        _latestPaymentStatus = null;
-        _paymentQrImageSource = null;
-        AccountClient.SignOut(Settings);
-        await SaveAsync();
-        _settingsOpen = false;
-        SetAccountMessage("已退出登录。");
-    }
-
-    private async Task RunAccountAction(Func<Task> action)
-    {
-        _accountBusy = true;
-        _accountMessage = null;
-        _accountMessageIsError = false;
-        try
-        {
-            await action();
-        }
-        catch (Exception ex)
-        {
-            SetAccountMessage(ex.Message, isError: true);
-        }
-        finally
-        {
-            _accountBusy = false;
-            StateHasChanged();
-        }
-    }
-
-    private void SetAccountMessage(string message, bool isError = false)
-    {
-        _accountMessage = message;
-        _accountMessageIsError = isError;
-    }
-
     private void StartServerStatusPolling()
     {
         _serverStatusCts?.Cancel();
@@ -2309,275 +2088,6 @@ public partial class Home
         }
     }
 
-    private async Task RestoreAccountAsync()
-    {
-        if (!AccountLoggedIn)
-        {
-            var hadStoredCloudToken = !string.IsNullOrWhiteSpace(Settings.CloudAccessToken);
-            Settings.CloudAccessToken = string.Empty;
-            Settings.CloudRefreshToken = string.Empty;
-            Settings.CloudTokenExpiresAt = null;
-            if (hadStoredCloudToken)
-            {
-                await SaveAsync();
-            }
-            return;
-        }
-
-        _accountBusy = true;
-        _accountMessage = null;
-        _accountMessageIsError = false;
-        try
-        {
-            await CompleteAccountSetupAsync();
-            await SaveAsync();
-            SetAccountMessage("账户已恢复。");
-        }
-        catch (Exception ex)
-        {
-            AccountClient.SignOut(Settings);
-            await SaveAsync();
-            SetAccountMessage($"登录状态已失效，请重新登录。{ex.Message}", isError: true);
-        }
-        finally
-        {
-            _accountBusy = false;
-        }
-    }
-
-    private async Task CompleteAccountSetupAsync()
-    {
-        await AccountClient.RefreshProfileAsync(Settings);
-        await AccountClient.EnsureCloudTokenAsync(Settings);
-    }
-
-    private void OpenPaymentOverlay(SaaSRechargeOrder order)
-    {
-        _activePaymentOrder = order;
-        _latestPaymentStatus = null;
-        _paymentExpiresAt = order.ExpiresAt == default
-            ? DateTimeOffset.Now.AddMinutes(30)
-            : order.ExpiresAt;
-        _paymentQrImageSource = BuildPaymentQrImageSource(order);
-        _paymentOverlayOpen = true;
-        _settingsOpen = false;
-        StartPaymentPolling();
-    }
-
-    private void ShowPendingPaymentOrder()
-    {
-        _paymentOverlayOpen = true;
-        _settingsOpen = false;
-        if (_paymentTimer is null)
-        {
-            StartPaymentPolling();
-        }
-    }
-
-    private void StartPaymentPolling()
-    {
-        _ = StopPaymentPollingAsync();
-        if (_activePaymentOrder is null)
-        {
-            return;
-        }
-
-        _paymentCts = new CancellationTokenSource();
-        _paymentTimer = new PeriodicTimer(TimeSpan.FromSeconds(3));
-        _ = PollPaymentLoopAsync(_paymentCts.Token);
-    }
-
-    private async Task PollPaymentLoopAsync(CancellationToken cancellationToken)
-    {
-        try
-        {
-            await RefreshPaymentStatusAsync();
-
-            while (_paymentTimer is not null &&
-                await _paymentTimer.WaitForNextTickAsync(cancellationToken))
-            {
-                if (_activePaymentOrder is null || PaymentSucceeded || PaymentExpired)
-                {
-                    break;
-                }
-
-                await RefreshPaymentStatusAsync();
-                await InvokeAsync(StateHasChanged);
-            }
-        }
-        catch (OperationCanceledException)
-        {
-        }
-    }
-
-    private async Task VerifyPaymentNow()
-    {
-        await UpdatePaymentStatusAsync(activeVerify: true, silent: false);
-        StateHasChanged();
-    }
-
-    private async Task RefreshPaymentStatusAsync()
-    {
-        await UpdatePaymentStatusAsync(activeVerify: false, silent: true);
-    }
-
-    private async Task UpdatePaymentStatusAsync(bool activeVerify, bool silent)
-    {
-        if (_activePaymentOrder is null || _paymentPolling)
-        {
-            return;
-        }
-
-        _paymentPolling = true;
-        try
-        {
-            _latestPaymentStatus = activeVerify
-                ? await AccountClient.VerifyPaymentOrderAsync(Settings, _activePaymentOrder.OrderNo)
-                : await AccountClient.GetPaymentOrderAsync(Settings, _activePaymentOrder.OrderNo);
-
-            if (PaymentSucceeded)
-            {
-                await AccountClient.RefreshProfileAsync(Settings);
-                await SaveAsync();
-                SetAccountMessage("充值已完成，余额已刷新。");
-                await StopPaymentPollingAsync();
-            }
-            else if (PaymentExpired)
-            {
-                SetAccountMessage("订单已过期，请重新生成二维码。", isError: true);
-                await StopPaymentPollingAsync();
-            }
-            else if (!silent)
-            {
-                SetAccountMessage("还没有确认到账，请稍后再试。");
-            }
-        }
-        catch (Exception ex)
-        {
-            if (!silent)
-            {
-                SetAccountMessage(ex.Message, isError: true);
-            }
-        }
-        finally
-        {
-            _paymentPolling = false;
-        }
-    }
-
-    private async Task CancelPaymentOrder()
-    {
-        if (_activePaymentOrder is null || _paymentCancelling)
-        {
-            return;
-        }
-
-        _paymentCancelling = true;
-        try
-        {
-            await AccountClient.CancelPaymentOrderAsync(Settings, _activePaymentOrder.OrderNo);
-            await StopPaymentPollingAsync();
-            _paymentOverlayOpen = false;
-            _activePaymentOrder = null;
-            _latestPaymentStatus = null;
-            _paymentQrImageSource = null;
-            SetAccountMessage("充值订单已取消。");
-        }
-        catch (Exception ex)
-        {
-            SetAccountMessage(ex.Message, isError: true);
-        }
-        finally
-        {
-            _paymentCancelling = false;
-        }
-    }
-
-    private async Task ClosePaymentOverlay()
-    {
-        if (PaymentSucceeded || PaymentExpired)
-        {
-            await StopPaymentPollingAsync();
-        }
-
-        _paymentOverlayOpen = false;
-    }
-
-    private async Task StopPaymentPollingAsync()
-    {
-        _paymentCts?.Cancel();
-        _paymentTimer?.Dispose();
-        _paymentTimer = null;
-        _paymentCts?.Dispose();
-        _paymentCts = null;
-        await Task.CompletedTask;
-    }
-
-    private static string? BuildPaymentQrImageSource(SaaSRechargeOrder order)
-    {
-        var qrValue = !string.IsNullOrWhiteSpace(order.QrCode)
-            ? order.QrCode.Trim()
-            : order.PayUrl?.Trim();
-        if (string.IsNullOrWhiteSpace(qrValue))
-        {
-            return null;
-        }
-
-        if (qrValue.StartsWith("data:image/", StringComparison.OrdinalIgnoreCase))
-        {
-            return qrValue;
-        }
-
-        if (IsImageUrl(qrValue))
-        {
-            return qrValue;
-        }
-
-        using var generator = new QRCodeGenerator();
-        using var data = generator.CreateQrCode(qrValue, QRCodeGenerator.ECCLevel.M);
-        var png = new PngByteQRCode(data).GetGraphic(12);
-        return $"data:image/png;base64,{Convert.ToBase64String(png)}";
-    }
-
-    private static bool IsImageUrl(string value)
-    {
-        if (!Uri.TryCreate(value, UriKind.Absolute, out var uri))
-        {
-            return false;
-        }
-
-        var path = uri.AbsolutePath;
-        return path.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ||
-            path.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
-            path.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) ||
-            path.EndsWith(".webp", StringComparison.OrdinalIgnoreCase) ||
-            path.EndsWith(".gif", StringComparison.OrdinalIgnoreCase) ||
-            path.EndsWith(".svg", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static bool IsPaymentSuccess(string? status)
-    {
-        return string.Equals(status, "paid", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static bool IsPaymentExpired(string? status)
-    {
-        return status is not null &&
-            (status.Equals("closed", StringComparison.OrdinalIgnoreCase) ||
-            status.Equals("failed", StringComparison.OrdinalIgnoreCase) ||
-            status.Equals("refunded", StringComparison.OrdinalIgnoreCase));
-    }
-
-    private static string FormatSignedMoney(decimal value)
-    {
-        return value >= 0 ? $"+{FormatMoney(value)}" : FormatMoney(value);
-    }
-
-    private static string FormatSignedNumber(decimal value)
-    {
-        return value >= 0 ? $"+{FormatMoney(value)}" : FormatMoney(value);
-    }
-
     private sealed record AspectRatioPreset(string Ratio, string? Badge = null)
     {
         public string Label => Ratio;
@@ -2598,13 +2108,6 @@ public partial class Home
         public bool SavedLocally { get; set; }
         public string? FilePath { get; set; }
         public string? FileName { get; set; }
-    }
-
-    private static string FormatMoney(decimal value)
-    {
-        return value == decimal.Truncate(value)
-            ? value.ToString("0")
-            : value.ToString("0.####");
     }
 
     private async Task UpdateMode(string mode)
@@ -2660,11 +2163,23 @@ public partial class Home
         await SaveAsync();
     }
 
-    private void UpdateAccountEmail(ChangeEventArgs args) { _accountEmail = args.Value?.ToString() ?? string.Empty; }
-    private void UpdateAccountPassword(ChangeEventArgs args) { _accountPassword = args.Value?.ToString() ?? string.Empty; }
-    private async Task UpdateAccountProxyUrl(ChangeEventArgs args)
+    private async Task UpdateNetworkProxyUrl(ChangeEventArgs args)
     {
         Settings.NetworkProxyUrl = NormalizeProxyUrl(args.Value?.ToString());
+        await SaveAsync();
+    }
+
+    private async Task UpdateAiGatewayBaseUrl(ChangeEventArgs args)
+    {
+        Settings.AiGatewayBaseUrl = NormalizeAbsoluteUrl(
+            args.Value?.ToString(),
+            StudioSettings.DefaultAiGatewayBaseUrl);
+        await SaveAsync();
+    }
+
+    private async Task UpdateAiGatewayAccessToken(ChangeEventArgs args)
+    {
+        Settings.AiGatewayAccessToken = args.Value?.ToString()?.Trim() ?? string.Empty;
         await SaveAsync();
     }
 
@@ -2757,14 +2272,6 @@ public partial class Home
         return InvokeAsync(StateHasChanged);
     }
 
-    private void UpdateRechargeAmount(ChangeEventArgs args)
-    {
-        if (decimal.TryParse(args.Value?.ToString(), out var amount))
-        {
-            _rechargeAmount = Math.Max(1, amount);
-        }
-    }
-
     private async Task UpdateModel(string value)
     {
         Settings.Model = ImageModelCatalog.NormalizeModel(value);
@@ -2803,6 +2310,18 @@ public partial class Home
         return proxy.Contains("://", StringComparison.Ordinal) ? proxy : $"http://{proxy}";
     }
 
+    private static string NormalizeAbsoluteUrl(string? value, string fallback)
+    {
+        var candidate = string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
+        if (!Uri.TryCreate(candidate, UriKind.Absolute, out var uri) ||
+            uri.Scheme is not ("http" or "https"))
+        {
+            candidate = fallback;
+        }
+
+        return candidate.EndsWith('/') ? candidate : candidate + "/";
+    }
+
     private void EnsureActiveMode()
     {
         if (string.IsNullOrWhiteSpace(ActiveSession.Mode) || ActiveSession.Mode == "text")
@@ -2832,9 +2351,6 @@ public partial class Home
         _selfReference?.Dispose();
         _cts?.Cancel();
         _cts?.Dispose();
-        _paymentCts?.Cancel();
-        _paymentTimer?.Dispose();
-        _paymentCts?.Dispose();
         _serverStatusCts?.Cancel();
         _serverStatusTimer?.Dispose();
         _serverStatusCts?.Dispose();

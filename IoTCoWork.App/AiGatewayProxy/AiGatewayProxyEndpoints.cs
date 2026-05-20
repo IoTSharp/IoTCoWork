@@ -4,15 +4,14 @@ using IoTCoWork.App;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 
-namespace IoTCoWork.App.SaaSProxy;
+namespace IoTCoWork.App.AiGatewayProxy;
 
-public static class SaaSProxyEndpoints
+public static class AiGatewayProxyEndpoints
 {
-    public const string UpstreamBaseHeader = "X-IoTCoWork-SaaS-Base";
-    public const string HttpProxyHeader = "X-IoTCoWork-SaaS-Http-Proxy";
-    public const string ProxyMarkerHeader = "X-IoTCoWork-SaaS-Proxy";
+    public const string UpstreamBaseHeader = "X-IoTCoWork-AI-Base";
+    public const string HttpProxyHeader = "X-IoTCoWork-AI-Http-Proxy";
+    public const string ProxyMarkerHeader = "X-IoTCoWork-AI-Proxy";
 
-    private const string DefaultPlatformBaseUrl = "https://iotsharp.online/";
     private const string DefaultAiGatewayBaseUrl = "https://iotsharp.online/v1/";
     private const long MaxProxyRequestBodyBytes = 96L * 1024 * 1024;
 
@@ -47,48 +46,9 @@ public static class SaaSProxyEndpoints
         UpstreamBaseHeader,
     };
 
-    private static readonly HashSet<string> AllowedPlatformExactPaths = new(StringComparer.OrdinalIgnoreCase)
+    public static void MapAiGatewayProxyEndpoints(this WebApplication app)
     {
-        "auth/login",
-        "auth/logout",
-        "auth/refresh",
-        "auth/register",
-        "account/me",
-        "wallet",
-        "wallet/transactions",
-        "recharge-orders",
-        "redeem",
-        "device-codes",
-        "device-tokens",
-    };
-
-    private static readonly string[] AllowedPlatformPathPrefixes =
-    [
-        "recharge-orders/",
-        "device-codes/",
-    ];
-
-    public static void MapSaaSProxyEndpoints(this WebApplication app)
-    {
-        app.MapMethods("/api/iotsharp/platform/{**path}", SupportedMethods, ProxyPlatformAsync);
         app.MapMethods("/api/iotsharp/ai/{**path}", SupportedMethods, ProxyAiAsync);
-    }
-
-    private static Task ProxyPlatformAsync(
-        HttpContext context,
-        IHttpClientFactory httpClientFactory,
-        string? path,
-        CancellationToken cancellationToken)
-    {
-        return ProxyAsync(
-            context,
-            httpClientFactory,
-            path,
-            DefaultPlatformBaseUrl,
-            BuildPlatformTargetUri,
-            IsAllowedPlatformPath,
-            "账户服务",
-            cancellationToken);
     }
 
     private static Task ProxyAiAsync(
@@ -161,7 +121,7 @@ public static class SaaSProxyEndpoints
             {
                 Timeout = TimeSpan.FromMinutes(10),
             };
-        var httpClient = proxyHttpClient ?? httpClientFactory.CreateClient("iotsharp-saas-proxy");
+        var httpClient = proxyHttpClient ?? httpClientFactory.CreateClient("iotcowork-ai-gateway-proxy");
 
         try
         {
@@ -183,12 +143,6 @@ public static class SaaSProxyEndpoints
                 $"无法连接{serviceLabel}：{ex.Message}",
                 cancellationToken);
         }
-    }
-
-    private static Uri BuildPlatformTargetUri(HttpRequest request, string path, string defaultBaseUrl)
-    {
-        var apiRoot = BuildApiRoot(request.Headers[UpstreamBaseHeader].FirstOrDefault(), defaultBaseUrl);
-        return AppendQuery(new Uri(apiRoot, path), request);
     }
 
     private static Uri BuildAbsoluteTargetUri(HttpRequest request, string path, string defaultBaseUrl)
@@ -245,17 +199,6 @@ public static class SaaSProxyEndpoints
             !string.IsNullOrWhiteSpace(proxyUri.Host);
     }
 
-    private static Uri BuildApiRoot(string? baseUrl, string defaultBaseUrl)
-    {
-        var root = NormalizeRoot(baseUrl, defaultBaseUrl);
-        if (!root.EndsWith("api/v1/", StringComparison.OrdinalIgnoreCase))
-        {
-            root += "api/v1/";
-        }
-
-        return CreateHttpUri(root, "账户服务地址必须是 http 或 https 绝对地址。");
-    }
-
     private static Uri BuildAbsoluteRoot(string? baseUrl, string defaultBaseUrl)
     {
         var root = NormalizeRoot(baseUrl, defaultBaseUrl);
@@ -282,13 +225,6 @@ public static class SaaSProxyEndpoints
     private static string NormalizePath(string? path)
     {
         return (path ?? string.Empty).Trim().TrimStart('/');
-    }
-
-    private static bool IsAllowedPlatformPath(string path)
-    {
-        return IsSafeRelativePath(path) &&
-            (AllowedPlatformExactPaths.Contains(path) ||
-            AllowedPlatformPathPrefixes.Any(prefix => path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)));
     }
 
     private static bool IsAllowedAiPath(string path)

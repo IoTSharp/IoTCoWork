@@ -1,33 +1,29 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace IoTCoWork.Workbench.Models;
 
 public sealed class StudioSettings
 {
-    public const string DefaultPlatformBaseUrl = "https://iotsharp.online/";
     public const string DefaultAiGatewayBaseUrl = "https://iotsharp.online/v1/";
 
     private string? _legacyBaseUrl;
+    private string? _legacyAccessToken;
 
-    public string PlatformBaseUrl { get; set; } = DefaultPlatformBaseUrl;
     public string AiGatewayBaseUrl { get; set; } = DefaultAiGatewayBaseUrl;
     public string NetworkProxyUrl { get; set; } = string.Empty;
-    public string PlatformAccessToken { get; set; } = string.Empty;
-    public string PlatformRefreshToken { get; set; } = string.Empty;
-    public DateTimeOffset? PlatformTokenExpiresAt { get; set; }
-    public SaaSAccountProfile? SaaSUser { get; set; }
-    public string CloudAccessToken { get; set; } = string.Empty;
-    public string CloudRefreshToken { get; set; } = string.Empty;
-    public DateTimeOffset? CloudTokenExpiresAt { get; set; }
+    public string AiGatewayAccessToken { get; set; } = string.Empty;
     public string DeviceLocalId { get; set; } = $"iotcowork-{Guid.NewGuid():N}";
-    public string PaymentTradeType { get; set; } = "native";
 
     [JsonPropertyName("apiKey")]
     public string? LegacyImageApiKey
     {
         get => null;
-        set { }
+        set => _legacyAccessToken = value;
     }
+
+    [JsonExtensionData]
+    public Dictionary<string, JsonElement>? ObsoleteSettings { get; set; }
     [JsonPropertyName("sonnetBaseUrl")]
     public string? LegacyBaseUrl
     {
@@ -82,9 +78,10 @@ public sealed class StudioSettings
             AiGatewayBaseUrl = _legacyBaseUrl!.Trim();
         }
 
-        if (string.IsNullOrWhiteSpace(PlatformBaseUrl))
+        if (string.IsNullOrWhiteSpace(AiGatewayAccessToken) &&
+            !string.IsNullOrWhiteSpace(_legacyAccessToken))
         {
-            PlatformBaseUrl = DefaultPlatformBaseUrl;
+            AiGatewayAccessToken = _legacyAccessToken.Trim();
         }
 
         if (string.IsNullOrWhiteSpace(AiGatewayBaseUrl))
@@ -92,23 +89,22 @@ public sealed class StudioSettings
             AiGatewayBaseUrl = DefaultAiGatewayBaseUrl;
         }
 
-        PlatformBaseUrl = NormalizeAbsoluteUrl(PlatformBaseUrl, DefaultPlatformBaseUrl);
         AiGatewayBaseUrl = NormalizeAbsoluteUrl(AiGatewayBaseUrl, DefaultAiGatewayBaseUrl);
         NetworkProxyUrl = NetworkProxyUrl.Trim();
+        AiGatewayAccessToken = AiGatewayAccessToken.Trim();
         if (string.IsNullOrWhiteSpace(DeviceLocalId))
         {
             DeviceLocalId = $"iotcowork-{Guid.NewGuid():N}";
         }
 
-        PaymentTradeType = string.Equals(PaymentTradeType, "native", StringComparison.OrdinalIgnoreCase)
-            ? "native"
-            : "native";
         ThemeMode = NormalizeThemeMode(ThemeMode);
         PromptPolishMode = NormalizePromptPolishMode(PromptPolishMode);
         AspectRatio = NormalizeAspectRatio(AspectRatio);
         ResolutionTier = NormalizeResolutionTier(ResolutionTier);
 
         _legacyBaseUrl = null;
+        _legacyAccessToken = null;
+        ObsoleteSettings = null;
     }
 
     public static string NormalizeThemeMode(string? value)

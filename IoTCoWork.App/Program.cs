@@ -7,7 +7,7 @@ using System.Text.Json;
 #endif
 using IoTCoWork.App;
 using IoTCoWork.App.LocalStore;
-using IoTCoWork.App.SaaSProxy;
+using IoTCoWork.App.AiGatewayProxy;
 using IoTCoWork.App.Updater;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -129,7 +129,7 @@ static void ConfigureWebApplication(
     });
 
     webApp.MapLocalSnapshotEndpoints();
-    webApp.MapSaaSProxyEndpoints();
+    webApp.MapAiGatewayProxyEndpoints();
     webApp.MapAppUpdateEndpoints();
 
     webApp.MapGet("/health", () => Results.Ok(new WorkbenchHealthResponse(
@@ -184,7 +184,7 @@ static void ConfigureLocalServices(IServiceCollection services)
     {
         options.SerializerOptions.TypeInfoResolverChain.Insert(0, HostJsonSerializerContext.Default);
     });
-    services.AddHttpClient("iotsharp-saas-proxy", client =>
+    services.AddHttpClient("iotcowork-ai-gateway-proxy", client =>
     {
         client.Timeout = TimeSpan.FromMinutes(10);
     });

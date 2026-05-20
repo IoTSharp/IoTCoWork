@@ -10,9 +10,9 @@ namespace IoTCoWork.Workbench.Services;
 public sealed class PromptChatClient
 {
     private const string LocalProxyRoot = "/api/iotsharp/ai/";
-    private const string LocalProxyHeader = "X-IoTCoWork-SaaS-Proxy";
-    private const string UpstreamBaseHeader = "X-IoTCoWork-SaaS-Base";
-    private const string HttpProxyHeader = "X-IoTCoWork-SaaS-Http-Proxy";
+    private const string LocalProxyHeader = "X-IoTCoWork-AI-Proxy";
+    private const string UpstreamBaseHeader = "X-IoTCoWork-AI-Base";
+    private const string HttpProxyHeader = "X-IoTCoWork-AI-Http-Proxy";
     private const string DefaultModel = "gpt-5.5";
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
@@ -104,9 +104,9 @@ public sealed class PromptChatClient
         double temperature,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(settings.CloudAccessToken))
+        if (string.IsNullOrWhiteSpace(settings.AiGatewayAccessToken))
         {
-            throw new InvalidOperationException("账户尚未准备好会话能力，请重新登录。");
+            throw new InvalidOperationException("请先在本地网络设置里配置 AI Gateway Token。");
         }
 
         var endpoint = BuildEndpoint(settings.AiGatewayBaseUrl, "v1/chat/completions");
@@ -138,7 +138,7 @@ public sealed class PromptChatClient
                 temperature), options: JsonOptions),
         };
 
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", settings.CloudAccessToken.Trim());
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", settings.AiGatewayAccessToken.Trim());
         if (useLocalProxy)
         {
             request.Headers.TryAddWithoutValidation(UpstreamBaseHeader, BuildProxyUpstreamRoot(upstreamEndpoint));

@@ -39,11 +39,12 @@
 在 external/IoTCoWork 中实现 UI-001。只允许修改 IoTCoWork.Workbench 的开源 UI 外壳。将 Home 页面从两栏改为三栏：左侧会话，中间现有工作画布，右侧新增工程上下文面板。右侧面板只能展示本地 workspace、边缘目标、产物、工具运行等占位信息，不得接入租户、计费、余额、充值、License、商业 Copilot 编排。保持现有生成、账户弹窗、主题切换、窗口控制功能可用。修改后运行 dotnet build 验证。
 ```
 
-### UI-002 🚧 头像账户菜单轻量化
+### UI-002 ✅ 头像账户菜单轻量化
 
-- 目标：参考 VS Code 头像菜单，把顶部“我的账户”改为头像按钮 + 轻量 Popover，完整账户页仍用抽屉承载。
-- 边界：开源外壳只能定义菜单槽位和 UI 状态；余额、充值、预算、用量等真实商业数据由上层商业插件或已有契约提供。
-- 验收：点击头像可看到账户、设置、主题、退出等入口；未登录态清楚；不新增真实密钥或硬编码商业配置。
+- 目标：参考 VS Code 头像菜单，把顶部“我的账户”收敛为头像按钮 + 轻量 Popover。
+- 边界：开源外壳只展示本地工作台连接状态；余额、充值、预算、用量、租户、License 等商业数据已迁出到上层 `IoTSharp.SaaS/src/*`。
+- 验收：点击头像可看到本地 AI Gateway 状态、设置、主题、退出等入口；未配置 Token 态清楚；不新增真实密钥或硬编码商业配置。
+- 闭环记录：已删除 `SaaSAccountClient`、`SaaSAccountModels`、QRCoder 依赖、支付/登录弹层和账户充值样式；本地代理已从 `SaaSProxy` 改为 `AiGatewayProxy`。
 - 提示词：
 
 ```text
@@ -127,11 +128,12 @@
 在 external/IoTCoWork 中实现 UI-009。为左侧导航、右侧上下文 Tabs、设置中心分类、输入器上下文芯片定义插件贡献点和最小接口。接口保持开源属性，不包含租户、计费、License、付费模板字段。补充文档说明商业插件只能通过上层仓库注入。
 ```
 
-### UI-010 ⏳ 主题、响应式与可访问性验收
+### UI-010 ✅ 主题、响应式与可访问性验收
 
 - 目标：统一暗色/浅色主题、窄屏布局、键盘操作和文本溢出策略。
 - 边界：只做 UI 质量验收和样式修复，不改变业务流程。
 - 验收：桌面、平板、手机宽度下无明显重叠；按钮有 title 或可见文本；主要弹层可关闭。
+- 闭环记录：清理旧认证/支付/充值 CSS，保留确认框、图片预览、设置中心、能力中心等仍在用的弹层响应式规则；本地 AI Gateway 配置未就绪时引导到设置中心网络页。
 - 提示词：
 
 ```text
@@ -140,8 +142,15 @@
 
 ## 4. 当前执行顺序
 
-1. UI-001：先固定三栏骨架。
-2. UI-002：再把账户入口收敛成头像菜单。
-3. UI-003 与 UI-004：能力中心和设置中心并行推进。
-4. UI-005 到 UI-008：补齐输入器上下文、任务计划、右侧 Tabs、工作区总览。
-5. UI-009 与 UI-010：最后稳定插件贡献点和 UI 验收。
+1. ✅ UI-001：三栏骨架已固定。
+2. ✅ UI-002：账户入口已收敛为本地连接菜单，商业账户/支付逻辑已迁出开源外壳。
+3. ✅ UI-003 与 UI-004：能力中心和设置中心已落地。
+4. ✅ UI-005 到 UI-008：输入器上下文、任务计划、右侧 Tabs、工作区总览已补齐。
+5. ✅ UI-009 与 UI-010：插件贡献点和 UI 质量验收已闭环。
+
+## 5. 商业能力迁出记录
+
+- `external/IoTCoWork` 不再包含账户余额、充值、支付二维码、订单轮询或 SaaS 账号客户端实现。
+- `IoTCoWork.App` 仅保留本地 AI Gateway 代理 `/api/iotsharp/ai/{**path}`，请求头统一为 `X-IoTCoWork-AI-*`。
+- 商业账户、钱包、充值订单和用量摘要的扩展骨架位于上层仓库 `src/IoTSharp.SaaS.Identity/Workbench`。
+- 构建验证：`dotnet build .\external\IoTCoWork\IoTCoWork.Workbench\IoTCoWork.Workbench.csproj --no-restore`、`dotnet build .\external\IoTCoWork\IoTCoWork.App\IoTCoWork.App.csproj --no-restore`、`dotnet build .\IoTSharp.SaaS.slnx --no-restore -m:1` 均已通过；全仓构建仅保留既有 NuGet 版本解析与 `System.Security.Cryptography.Xml` 漏洞告警。

@@ -18,7 +18,6 @@ builder.Services.AddScoped(sp => new HttpClient
 builder.Services.AddScoped<ImageStudioStorage>();
 builder.Services.AddScoped<ImageGenerationClient>();
 builder.Services.AddScoped<PromptChatClient>();
-builder.Services.AddScoped<SaaSAccountClient>();
 builder.Services.AddScoped<AppUpdateClient>();
 builder.Services.AddSingleton<IWorkbenchContributionProvider, BuiltinWorkbenchContributionProvider>();
 builder.Services.AddSingleton<WorkbenchContributionCatalog>();

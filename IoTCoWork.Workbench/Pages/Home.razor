@@ -2,12 +2,10 @@
 @inject ImageStudioStorage Storage
 @inject ImageGenerationClient ImageClient
 @inject PromptChatClient ChatClient
-@inject SaaSAccountClient AccountClient
 @inject AppUpdateClient UpdateClient
 @inject IJSRuntime JsRuntime
 @inject HttpClient Http
 @implements IDisposable
-@using QRCoder
 
 <PageTitle>@AppName</PageTitle>
 
@@ -70,23 +68,23 @@
                                 </div>
                                 <div class="account-menu-identity">
                                     <strong>@AccountDisplayName</strong>
-                                    <span>@AccountEmail</span>
+                                    <span>@GatewayTokenStatus</span>
                                     <small>@AccountConnectionLabel</small>
                                 </div>
                             </header>
 
                             <div class="account-menu-status" role="presentation">
-                                <span>账户服务</span>
+                                <span>本地连接</span>
                                 <strong>@AccountServiceLabel</strong>
                                 <small>@AccountServiceDetail</small>
                             </div>
 
-                            <div class="account-menu-group" role="group" aria-label="账户">
-                                <button type="button" role="menuitem" title="账户与设置" @onclick="OpenSettingsFromAccountMenu">
+                            <div class="account-menu-group" role="group" aria-label="设置">
+                                <button type="button" role="menuitem" title="工作台设置" @onclick="OpenSettingsFromAccountMenu">
                                     <Icon Type="setting" Theme="IconThemeType.Outline" />
                                     <span>
-                                        <strong>账户与设置</strong>
-                                        <small>打开账户详情</small>
+                                        <strong>工作台设置</strong>
+                                        <small>打开本地设置中心</small>
                                     </span>
                                 </button>
                             </div>
@@ -124,17 +122,15 @@
                                 </div>
                             </div>
 
-                            <div class="account-menu-group" role="group" aria-label="登录">
+                            <div class="account-menu-group" role="group" aria-label="本地连接">
                                 <button type="button"
                                         role="menuitem"
-                                        class="account-menu-action-danger"
-                                        title="退出登录"
-                                        disabled="@(!AccountLoggedIn || _accountBusy)"
-                                        @onclick="SignOutFromAccountMenu">
-                                    <Icon Type="@(_accountBusy ? "loading" : "logout")" Theme="IconThemeType.Outline" />
+                                        title="打开本地连接设置"
+                                        @onclick="OpenNetworkSettingsFromAccountMenu">
+                                    <Icon Type="api" Theme="IconThemeType.Outline" />
                                     <span>
-                                        <strong>@(_accountBusy ? "处理中" : "退出登录")</strong>
-                                        <small>@(AccountLoggedIn ? "清除本地账户令牌" : "当前未登录")</small>
+                                        <strong>AI Gateway Token</strong>
+                                        <small>@GatewayTokenStatus</small>
                                     </span>
                                 </button>
                             </div>
@@ -902,7 +898,17 @@
 
                                         <div class="studio-field">
                                             <label class="studio-label">本机代理地址</label>
-                                            <input class="studio-input" autocomplete="off" placeholder="http://127.0.0.1:7890" value="@Settings.NetworkProxyUrl" @onchange="UpdateAccountProxyUrl" />
+                                            <input class="studio-input" autocomplete="off" placeholder="http://127.0.0.1:7890" value="@Settings.NetworkProxyUrl" @onchange="UpdateNetworkProxyUrl" />
+                                        </div>
+
+                                        <div class="studio-field">
+                                            <label class="studio-label">AI Gateway 地址</label>
+                                            <input class="studio-input" autocomplete="off" placeholder="https://iotsharp.online/v1/" value="@Settings.AiGatewayBaseUrl" @onchange="UpdateAiGatewayBaseUrl" />
+                                        </div>
+
+                                        <div class="studio-field">
+                                            <label class="studio-label">AI Gateway Token</label>
+                                            <input class="studio-input" type="password" autocomplete="off" placeholder="由商业宿主或本地配置注入" value="@Settings.AiGatewayAccessToken" @onchange="UpdateAiGatewayAccessToken" />
                                         </div>
 
                                         <div class="settings-status-panel">
@@ -982,53 +988,6 @@
                         }
                     </section>
                 </div>
-
-                <section class="settings-account-strip" aria-label="账户服务">
-                    <div class="account-summary account-summary-compact">
-                        <div>
-                            <span>账户</span>
-                            <strong>@AccountEmail</strong>
-                        </div>
-                        <div>
-                            <span>余额</span>
-                            <strong>@BalanceLabel</strong>
-                        </div>
-                    </div>
-
-                    <div class="settings-actions">
-                        <button type="button" class="studio-button studio-button-light" title="刷新余额" disabled="@(!AccountLoggedIn || _accountBusy)" @onclick="RefreshAccountProfile">
-                            <Icon Type="reload" Theme="IconThemeType.Outline" />
-                            <span>刷新余额</span>
-                        </button>
-                        @if (HasPendingPaymentOrder)
-                        {
-                            <button type="button" class="studio-button studio-button-light" title="查看待支付订单" @onclick="ShowPendingPaymentOrder">
-                                <Icon Type="qrcode" Theme="IconThemeType.Outline" />
-                                <span>查看待支付订单</span>
-                            </button>
-                        }
-                        <button type="button" class="studio-button studio-button-ghost" title="退出登录" disabled="@(!AccountLoggedIn || _accountBusy)" @onclick="SignOutAccount">
-                            <Icon Type="logout" Theme="IconThemeType.Outline" />
-                            <span>退出登录</span>
-                        </button>
-                    </div>
-
-                    <div class="recharge-row recharge-row-simple">
-                        <div class="studio-field">
-                            <label class="studio-label">充值金额</label>
-                            <input class="studio-input" type="number" min="1" step="1" value="@_rechargeAmount" @onchange="UpdateRechargeAmount" />
-                        </div>
-                        <button type="button" class="studio-button studio-button-primary" title="生成支付二维码" disabled="@(!AccountLoggedIn || _accountBusy)" @onclick="CreateRechargeOrder">
-                            <Icon Type="credit-card" Theme="IconThemeType.Outline" />
-                            <span>生成二维码</span>
-                        </button>
-                    </div>
-
-                    @if (!string.IsNullOrWhiteSpace(_accountMessage))
-                    {
-                        <p class="@AccountMessageClass">@_accountMessage</p>
-                    }
-                </section>
             </section>
         </div>
     }
@@ -1051,88 +1010,6 @@
                     <button type="button" class="studio-button studio-button-danger" title="退出应用" @onclick="ConfirmExitAsync">
                         <Icon Type="poweroff" Theme="IconThemeType.Outline" />
                         <span>退出</span>
-                    </button>
-                </footer>
-            </section>
-        </div>
-    }
-
-    @if (_paymentOverlayOpen && _activePaymentOrder is not null)
-    {
-        <div class="payment-backdrop" @onclick="ClosePaymentOverlay">
-            <section class="payment-dialog" role="dialog" aria-modal="true" aria-labelledby="payment-title" tabindex="-1" @onkeydown="HandleOverlayKeyDown" @onclick:stopPropagation>
-                <header>
-                    <div>
-                        <span class="workspace-eyebrow">微信支付</span>
-                        <h2 id="payment-title">@PaymentTitle</h2>
-                    </div>
-                    <button type="button" title="关闭" aria-label="关闭支付弹层" @onclick="ClosePaymentOverlay">
-                        <Icon Type="close" Theme="IconThemeType.Outline" />
-                    </button>
-                </header>
-
-                <div class="payment-body">
-                    @if (PaymentSucceeded)
-                    {
-                        <div class="payment-success">
-                            <Icon Type="check-circle" Theme="IconThemeType.Outline" />
-                            <strong>充值已完成</strong>
-                            <span>余额已刷新，可以继续使用。</span>
-                        </div>
-                    }
-                    else if (PaymentExpired)
-                    {
-                        <div class="payment-success payment-expired">
-                            <Icon Type="clock-circle" Theme="IconThemeType.Outline" />
-                            <strong>订单已过期</strong>
-                            <span>请重新生成支付二维码。</span>
-                        </div>
-                    }
-                    else if (!string.IsNullOrWhiteSpace(PaymentQrImageSource))
-                    {
-                        <div class="payment-qr-frame">
-                            <img src="@PaymentQrImageSource" alt="微信支付二维码" />
-                        </div>
-                        <p class="payment-hint">请使用微信扫码完成支付。</p>
-                    }
-                    else
-                    {
-                        <div class="payment-success payment-expired">
-                            <Icon Type="info-circle" Theme="IconThemeType.Outline" />
-                            <strong>订单已创建</strong>
-                            <span>当前支付方式没有返回可展示的二维码。</span>
-                        </div>
-                    }
-
-                    <div class="payment-status">
-                        <div>
-                            <span>金额</span>
-                            <strong>@FormatMoney(_activePaymentOrder.PayAmount > 0 ? _activePaymentOrder.PayAmount : _activePaymentOrder.Amount)</strong>
-                        </div>
-                        <div>
-                            <span>状态</span>
-                            <strong>@PaymentStatusLabel</strong>
-                        </div>
-                        <div>
-                            <span>剩余时间</span>
-                            <strong>@PaymentCountdown</strong>
-                        </div>
-                    </div>
-                </div>
-
-                <footer>
-                    @if (!PaymentSucceeded && !PaymentExpired)
-                    {
-                        <button type="button" class="studio-button studio-button-light" title="我已完成支付" disabled="@_paymentPolling" @onclick="VerifyPaymentNow">
-                            <Icon Type="sync" Theme="IconThemeType.Outline" />
-                            <span>我已完成支付</span>
-                        </button>
-                        <button type="button" class="studio-button studio-button-ghost" title="取消订单" disabled="@_paymentCancelling" @onclick="CancelPaymentOrder">
-                            <span>@(_paymentCancelling ? "取消中" : "取消订单")</span>
-                        </button>
-                    }
-                    <button type="button" class="studio-button studio-button-primary" title="关闭支付弹层" @onclick="ClosePaymentOverlay">
-                        <span>@(PaymentSucceeded || PaymentExpired ? "完成" : "稍后查看")</span>
                     </button>
                 </footer>
             </section>
@@ -1221,82 +1098,5 @@
         </div>
     }
 
-    @if (RequiresAuthOverlay)
-    {
-        <div class="auth-backdrop" @onclick="HandleAuthBackdropClick">
-            <section class="auth-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-title" tabindex="-1" @onkeydown="HandleOverlayKeyDown" @onclick:stopPropagation>
-                <div class="auth-brand">
-                    <div class="studio-logo" aria-hidden="true">
-                        <img src="favicon.svg" alt="" />
-                    </div>
-                    <div>
-                        <span>@AppName</span>
-                        <h2 id="auth-title">@(_accountRegisterOpen ? "创建账户" : "登录账户")</h2>
-                    </div>
-                </div>
-
-                <div class="auth-tabs" role="tablist">
-                    <button type="button" role="tab" aria-selected="@AuthTabSelected(false)" class="@AuthTabClass(false)" title="登录" @onclick="@(() => SetAuthMode(false))">登录</button>
-                    <button type="button" role="tab" aria-selected="@AuthTabSelected(true)" class="@AuthTabClass(true)" title="注册" @onclick="@(() => SetAuthMode(true))">注册</button>
-                </div>
-
-                <div class="studio-form-grid account-grid auth-grid">
-                    <div class="studio-field">
-                        <label class="studio-label">邮箱</label>
-                        <input class="studio-input" type="email" autocomplete="username" value="@_accountEmail" @oninput="UpdateAccountEmail" />
-                    </div>
-                    <div class="studio-field">
-                        <label class="studio-label">密码</label>
-                        <input class="studio-input" type="password" autocomplete="@(_accountRegisterOpen ? "new-password" : "current-password")" value="@_accountPassword" @oninput="UpdateAccountPassword" />
-                    </div>
-                </div>
-
-                <button type="button" class="auth-proxy-link" title="代理设置" @onclick="OpenAuthProxySettings">
-                    <Icon Type="global" Theme="IconThemeType.Outline" />
-                    <span>代理设置</span>
-                    @if (!string.IsNullOrWhiteSpace(Settings.NetworkProxyUrl))
-                    {
-                        <strong>已启用</strong>
-                    }
-                </button>
-
-                @if (!string.IsNullOrWhiteSpace(_accountMessage))
-                {
-                    <p class="@AccountMessageClass">@_accountMessage</p>
-                }
-
-                <button type="button" class="studio-button studio-button-primary auth-submit" title="@AuthButtonText" disabled="@_accountBusy" @onclick="SubmitAuth">
-                    <Icon Type="@(_accountBusy ? "loading" : _accountRegisterOpen ? "user-add" : "login")" Theme="IconThemeType.Outline" />
-                    <span>@AuthButtonText</span>
-                </button>
-            </section>
-
-            @if (_authProxyOpen)
-            {
-                <section class="auth-proxy-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-proxy-title" tabindex="-1" @onkeydown="HandleOverlayKeyDown" @onclick:stopPropagation>
-                    <header>
-                        <div>
-                            <span class="workspace-eyebrow">连接设置</span>
-                            <h2 id="auth-proxy-title">网络代理</h2>
-                        </div>
-                        <button type="button" title="关闭" aria-label="关闭代理设置" @onclick="CloseAuthProxySettings">
-                            <Icon Type="close" Theme="IconThemeType.Outline" />
-                        </button>
-                    </header>
-
-                    <div class="studio-field">
-                        <label class="studio-label">代理地址</label>
-                        <input class="studio-input" autocomplete="off" placeholder="http://127.0.0.1:7890" value="@Settings.NetworkProxyUrl" @onchange="UpdateAccountProxyUrl" />
-                    </div>
-
-                    <footer>
-                        <button type="button" class="studio-button studio-button-light" title="完成代理设置" @onclick="CloseAuthProxySettings">
-                            <span>完成</span>
-                        </button>
-                    </footer>
-                </section>
-            }
-        </div>
-    }
 </XProvider>
 
