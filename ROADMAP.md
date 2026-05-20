@@ -152,5 +152,5 @@
 
 - `external/IoTCoWork` 不再包含账户余额、充值、支付二维码、订单轮询或 SaaS 账号客户端实现。
 - `IoTCoWork.App` 仅保留本地 AI Gateway 代理 `/api/iotsharp/ai/{**path}`，请求头统一为 `X-IoTCoWork-AI-*`。
-- 商业账户、钱包、充值订单和用量摘要的扩展骨架位于上层仓库 `src/IoTSharp.SaaS.Identity/Workbench`。
+- 商业账户、钱包、充值订单和用量摘要的扩展骨架位于上层仓库 `src/IoTSharp.SaaS/Identity/Workbench`。
 - 构建验证：`dotnet build .\external\IoTCoWork\IoTCoWork.Workbench\IoTCoWork.Workbench.csproj --no-restore`、`dotnet build .\external\IoTCoWork\IoTCoWork.App\IoTCoWork.App.csproj --no-restore`、`dotnet build .\IoTSharp.SaaS.slnx --no-restore -m:1` 均已通过；全仓构建仅保留既有 NuGet 版本解析与 `System.Security.Cryptography.Xml` 漏洞告警。
