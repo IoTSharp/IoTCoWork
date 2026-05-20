@@ -202,6 +202,35 @@ button {
     cursor: pointer;
 }
 
+button:focus-visible,
+a:focus-visible,
+summary:focus-visible,
+[role="button"]:focus-visible,
+[role="tab"]:focus-visible,
+.studio-button:focus-visible,
+.window-control:focus-visible,
+.panel-rail-button:focus-visible,
+.quick-trigger:focus-visible,
+.quick-menu button:focus-visible,
+.studio-tabs button:focus-visible,
+.theme-segment button:focus-visible,
+.polish-segment button:focus-visible,
+.auth-tabs button:focus-visible,
+.auth-proxy-link:focus-visible,
+.image-preview-actions button:focus-visible,
+.image-preview-editor header button:focus-visible,
+.result-tile button:focus-visible,
+.studio-notice button:focus-visible {
+    outline: 2px solid var(--studio-accent);
+    outline-offset: 2px;
+}
+
+a,
+button,
+summary {
+    -webkit-tap-highlight-color: transparent;
+}
+
 h1:focus,
 h2:focus {
     outline: none;
@@ -267,6 +296,10 @@ h2:focus {
     font-size: 24px;
     line-height: 1.1;
     font-weight: 800;
+}
+
+.studio-brand > div:not(.studio-logo) {
+    min-width: 0;
 }
 
 .studio-brand p {
@@ -915,6 +948,13 @@ html[data-native-web-window-style="vscode"] .window-controls {
     transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
 }
 
+.studio-button > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .studio-button:hover:not(:disabled) {
     transform: translateY(-1px);
 }
@@ -1060,9 +1100,14 @@ html[data-native-web-window-style="vscode"] .window-controls {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    min-width: 0;
     min-height: 72px;
     padding: 14px;
     border-bottom: 1px solid var(--studio-line);
+}
+
+.context-panel-header > div {
+    min-width: 0;
 }
 
 .context-panel-header h2 {
@@ -1190,8 +1235,16 @@ html[data-native-web-window-style="vscode"] .window-controls {
     display: flex;
     align-items: center;
     gap: 8px;
+    min-width: 0;
     color: var(--studio-ink);
     font-size: 13px;
+}
+
+.context-section-title strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .context-section-title .anticon {
@@ -1346,6 +1399,7 @@ html[data-native-web-window-style="vscode"] .window-controls {
 .context-artifact-list small,
 .context-log-list small,
 .context-risk-list small {
+    overflow-wrap: anywhere;
     color: var(--studio-muted);
     font-size: 12px;
     line-height: 1.45;
@@ -1503,6 +1557,7 @@ html[data-native-web-window-style="vscode"] .window-controls {
 
 .context-boundary-note p {
     margin: 0;
+    overflow-wrap: anywhere;
     font-size: 12px;
     line-height: 1.55;
 }
@@ -1518,8 +1573,13 @@ html[data-native-web-window-style="vscode"] .window-controls {
     gap: 10px;
 }
 
+.task-plan-header > div {
+    min-width: 0;
+}
+
 .task-plan-header p {
     margin: 5px 0 0;
+    overflow-wrap: anywhere;
     color: var(--studio-muted);
     font-size: 12px;
     line-height: 1.5;
@@ -1564,6 +1624,10 @@ html[data-native-web-window-style="vscode"] .window-controls {
     font-size: 12px;
     font-weight: 800;
     transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+}
+
+.task-plan-state-option > span:last-child {
+    white-space: nowrap;
 }
 
 .task-plan-state-option:hover,
@@ -1700,6 +1764,7 @@ html[data-native-web-window-style="vscode"] .window-controls {
 }
 
 .task-plan-item small {
+    overflow-wrap: anywhere;
     color: var(--studio-muted);
     font-size: 12px;
     line-height: 1.45;
@@ -1857,10 +1922,15 @@ html[data-native-web-window-style="vscode"] .window-controls {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    min-width: 0;
     min-height: 76px;
     gap: 16px;
     padding: 16px 18px;
     border-bottom: 1px solid var(--studio-line);
+}
+
+.workspace-header > div {
+    min-width: 0;
 }
 
 .workspace-eyebrow {
@@ -1873,14 +1943,24 @@ html[data-native-web-window-style="vscode"] .window-controls {
 .workspace-header h2,
 .settings-drawer h2 {
     margin: 2px 0 0;
+    overflow: hidden;
     font-size: 20px;
     line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .workspace-header p {
     margin: 4px 0 0;
+    overflow: hidden;
     color: var(--studio-muted);
     font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.workspace-actions {
+    flex: 0 0 auto;
 }
 
 .workspace-canvas {
@@ -1921,13 +2001,17 @@ html[data-native-web-window-style="vscode"] .window-controls {
 
 .workspace-overview-copy h3 {
     margin: 2px 0 0;
+    overflow: hidden;
     color: var(--studio-ink);
     font-size: 28px;
     line-height: 1.1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .workspace-overview-copy p {
     margin: 6px 0 0;
+    overflow-wrap: anywhere;
     color: var(--studio-muted);
     font-size: 13px;
 }
@@ -1995,9 +2079,12 @@ html[data-native-web-window-style="vscode"] .window-controls {
 .workspace-overview-section h4,
 .workspace-suggestion-panel h4 {
     margin: 2px 0 0;
+    overflow: hidden;
     color: var(--studio-ink);
     font-size: 15px;
     line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .overview-task-list,
@@ -2093,6 +2180,7 @@ html[data-native-web-window-style="vscode"] .window-controls {
 .overview-artifact-list small,
 .workspace-suggestion-list small,
 .overview-boundary-panel p {
+    overflow-wrap: anywhere;
     color: var(--studio-muted);
     font-size: 12px;
     line-height: 1.45;
@@ -2261,6 +2349,7 @@ html[data-native-web-window-style="vscode"] .window-controls {
 .thread-message {
     display: grid;
     gap: 8px;
+    min-width: 0;
     max-width: 86%;
     padding: 12px 14px;
     border: 1px solid var(--studio-line);
@@ -2308,6 +2397,7 @@ html[data-native-web-window-style="vscode"] .window-controls {
 
 .thread-message p {
     margin: 0;
+    overflow-wrap: anywhere;
     color: inherit;
     font-size: 14px;
     line-height: 1.65;
@@ -2364,6 +2454,13 @@ html[data-native-web-window-style="vscode"] .window-controls {
     border-top: 1px solid var(--studio-line);
     color: var(--studio-muted-strong);
     font-size: 12px;
+}
+
+.result-tile figcaption > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .result-tile button,
@@ -2647,6 +2744,12 @@ button.sender-context-chip:focus-visible {
     box-shadow: var(--studio-shadow);
 }
 
+.quick-popover:last-child .quick-menu,
+.quick-resolution .quick-menu {
+    right: 0;
+    left: auto;
+}
+
 .quick-menu header {
     padding: 2px 4px 8px;
     color: var(--studio-muted);
@@ -2669,6 +2772,7 @@ button.sender-context-chip:focus-visible {
 }
 
 .quick-menu button:hover,
+.quick-menu button:focus-visible,
 .quick-menu button.active {
     background: var(--studio-soft-strong);
 }
@@ -2699,9 +2803,13 @@ button.sender-context-chip:focus-visible {
 }
 
 .quick-option-copy strong {
+    min-width: 0;
+    overflow: hidden;
     color: var(--studio-ink);
     font-size: 16px;
     font-weight: 850;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .resolution-menu .quick-option-copy strong {
@@ -2866,6 +2974,7 @@ button.sender-context-chip:focus-visible {
     grid-template-rows: auto minmax(0, 1fr) auto;
     width: min(820px, 100vw);
     height: 100%;
+    min-width: 0;
     padding: 18px;
     background: var(--studio-panel);
     box-shadow: var(--studio-shadow-drawer);
@@ -2877,7 +2986,12 @@ button.sender-context-chip:focus-visible {
     align-items: center;
     justify-content: space-between;
     gap: 16px;
+    min-width: 0;
     margin-bottom: 14px;
+}
+
+.settings-header > div {
+    min-width: 0;
 }
 
 .settings-center {
@@ -3034,13 +3148,17 @@ button.sender-context-chip:focus-visible {
 
 .settings-content-header h3 {
     margin: 3px 0 0;
+    overflow: hidden;
     color: var(--studio-ink);
     font-size: 20px;
     line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .settings-content-header p {
     margin: 6px 0 0;
+    overflow-wrap: anywhere;
     color: var(--studio-muted-strong);
     font-size: 13px;
     line-height: 1.5;
@@ -3075,6 +3193,7 @@ button.sender-context-chip:focus-visible {
 .settings-empty-state p {
     max-width: 420px;
     margin: 0;
+    overflow-wrap: anywhere;
     color: var(--studio-muted-strong);
     font-size: 13px;
     line-height: 1.5;
@@ -3227,6 +3346,7 @@ button.sender-context-chip:focus-visible {
 }
 
 .polish-segment small {
+    overflow-wrap: anywhere;
     color: var(--studio-muted);
     font-size: 11px;
     line-height: 1.35;
@@ -3264,6 +3384,10 @@ button.sender-context-chip:focus-visible {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+}
+
+.settings-actions .studio-button {
+    min-width: max-content;
 }
 
 .settings-link-panel {
@@ -3342,6 +3466,7 @@ button.sender-context-chip:focus-visible {
 
 .update-panel p {
     margin: 0;
+    overflow-wrap: anywhere;
     color: var(--studio-muted-strong);
     font-size: 12px;
     line-height: 1.45;
@@ -3371,6 +3496,7 @@ button.sender-context-chip:focus-visible {
 
 .settings-message {
     margin: 0;
+    overflow-wrap: anywhere;
     padding: 9px 10px;
     border: 1px solid var(--studio-success-line);
     border-radius: 8px;
@@ -3433,20 +3559,29 @@ button.sender-context-chip:focus-visible {
     align-items: flex-start;
     justify-content: space-between;
     gap: 18px;
+    min-width: 0;
     padding: 18px;
     border-bottom: 1px solid var(--studio-line);
     background: var(--studio-panel-translucent);
 }
 
+.capability-center-header > div {
+    min-width: 0;
+}
+
 .capability-center-header h2 {
     margin: 3px 0 0;
+    overflow: hidden;
     color: var(--studio-ink);
     font-size: 22px;
     line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .capability-center-header p {
     margin: 6px 0 0;
+    overflow-wrap: anywhere;
     color: var(--studio-muted-strong);
     font-size: 13px;
     line-height: 1.5;
@@ -3620,6 +3755,7 @@ button.sender-context-chip:focus-visible {
 .capability-detail-header {
     display: grid;
     gap: 14px;
+    min-width: 0;
     padding-bottom: 14px;
     border-bottom: 1px solid var(--studio-line);
 }
@@ -3629,6 +3765,7 @@ button.sender-context-chip:focus-visible {
     grid-template-columns: auto minmax(0, 1fr);
     gap: 12px;
     align-items: center;
+    min-width: 0;
 }
 
 .capability-detail-icon {
@@ -3856,6 +3993,7 @@ button.sender-context-chip:focus-visible {
 .image-preview-dialog {
     width: min(440px, 100%);
     max-height: min(760px, calc(100vh - 36px));
+    min-width: 0;
     overflow: auto;
     border: 1px solid var(--studio-line);
     border-radius: 8px;
@@ -3878,6 +4016,7 @@ button.sender-context-chip:focus-visible {
 
 .confirm-dialog p {
     margin: 0;
+    overflow-wrap: anywhere;
     color: var(--studio-muted-strong);
     font-size: 14px;
     line-height: 1.7;
@@ -3940,6 +4079,11 @@ button.sender-context-chip:focus-visible {
     display: flex;
     align-items: center;
     gap: 12px;
+    min-width: 0;
+}
+
+.auth-brand > div:not(.studio-logo) {
+    min-width: 0;
 }
 
 .auth-brand > div:not(.studio-logo) > span {
@@ -3950,8 +4094,11 @@ button.sender-context-chip:focus-visible {
 
 .auth-brand h2 {
     margin: 2px 0 0;
+    overflow: hidden;
     font-size: 24px;
     line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .auth-tabs {
@@ -3998,8 +4145,12 @@ button.sender-context-chip:focus-visible {
 }
 
 .auth-proxy-link span {
+    min-width: 0;
+    overflow: hidden;
     flex: 1 1 auto;
     text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .auth-proxy-link strong {
@@ -4040,6 +4191,10 @@ button.sender-context-chip:focus-visible {
     border-bottom: 1px solid var(--studio-line);
     background: var(--studio-panel-translucent);
     backdrop-filter: blur(12px);
+}
+
+.image-preview-dialog header > div {
+    min-width: 0;
 }
 
 .image-preview-dialog h2 {
@@ -4171,13 +4326,17 @@ button.sender-context-chip:focus-visible {
     align-items: center;
     justify-content: space-between;
     gap: 10px;
+    min-width: 0;
 }
 
 .image-preview-editor h3 {
     margin: 2px 0 0;
+    overflow: hidden;
     color: var(--studio-ink);
     font-size: 18px;
     line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .image-preview-editor header button {
@@ -4220,6 +4379,7 @@ button.sender-context-chip:focus-visible {
 
 .image-edit-error {
     margin: 10px 0 0;
+    overflow-wrap: anywhere;
     padding: 9px 10px;
     border: 1px solid var(--studio-danger-line);
     border-radius: 8px;
@@ -4242,7 +4402,12 @@ button.sender-context-chip:focus-visible {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    min-width: 0;
     padding: 16px 18px;
+}
+
+.payment-dialog header > div {
+    min-width: 0;
 }
 
 .payment-dialog header {
@@ -4251,8 +4416,11 @@ button.sender-context-chip:focus-visible {
 
 .payment-dialog h2 {
     margin: 2px 0 0;
+    overflow: hidden;
     font-size: 20px;
     line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .payment-dialog header button {
@@ -4294,6 +4462,7 @@ button.sender-context-chip:focus-visible {
 
 .payment-hint {
     margin: 0;
+    overflow-wrap: anywhere;
     color: var(--studio-muted);
     font-size: 13px;
 }
@@ -4344,6 +4513,7 @@ button.sender-context-chip:focus-visible {
 }
 
 .payment-success strong {
+    overflow-wrap: anywhere;
     color: var(--studio-ink);
     font-size: 18px;
 }
@@ -4518,17 +4688,32 @@ code {
         flex-direction: column;
         height: auto;
         gap: 10px;
-        padding: 14px 0 0 14px;
+        padding: 14px;
     }
 
     .studio-brand {
+        width: 100%;
         padding-right: 14px;
+    }
+
+    .studio-brand h1 {
+        font-size: 20px;
     }
 
     .studio-topbar-actions {
         align-self: stretch;
         justify-content: space-between;
+        gap: 8px;
         min-height: 46px;
+        overflow-x: auto;
+        padding-bottom: 1px;
+        scrollbar-width: thin;
+    }
+
+    .studio-topbar-actions > .studio-button {
+        flex: 0 0 auto;
+        width: 40px;
+        padding: 0;
     }
 
     .capability-topbar-button span {
@@ -4546,6 +4731,8 @@ code {
 
     .studio-body {
         grid-template-columns: 1fr;
+        gap: 10px;
+        padding: 10px;
     }
 
     .studio-body.left-collapsed {
@@ -4555,6 +4742,10 @@ code {
     .studio-sidebar,
     .studio-workspace {
         grid-template-rows: minmax(220px, auto) auto;
+    }
+
+    .history-panel {
+        max-height: 42vh;
     }
 
     .workspace-context-panel {
@@ -4591,6 +4782,11 @@ code {
 
     .workspace-overview-copy h3 {
         font-size: 24px;
+    }
+
+    .workspace-header h2,
+    .workspace-header p {
+        white-space: normal;
     }
 
     .workspace-suggestion-list {
@@ -4652,6 +4848,11 @@ code {
         flex-direction: column;
     }
 
+    .workspace-actions,
+    .workspace-actions .studio-button {
+        width: 100%;
+    }
+
     .playground-thread {
         padding: 16px;
     }
@@ -4674,6 +4875,9 @@ code {
 
     .settings-drawer {
         width: 100vw;
+        height: auto;
+        min-height: 100vh;
+        padding: 14px;
     }
 
     .settings-link-panel,
@@ -4712,6 +4916,13 @@ code {
 
     .settings-account-strip {
         align-items: stretch;
+    }
+
+    .settings-actions,
+    .settings-actions .studio-button,
+    .settings-link-panel .studio-button,
+    .recharge-row-simple .studio-button {
+        width: 100%;
     }
 
     .capability-center-backdrop {
@@ -4764,9 +4975,24 @@ code {
         max-height: calc(100vh - 24px);
     }
 
+    .confirm-backdrop,
+    .auth-backdrop,
+    .payment-backdrop {
+        align-items: start;
+        overflow: auto;
+        padding: 12px;
+    }
+
+    .confirm-dialog,
+    .auth-dialog,
+    .payment-dialog {
+        width: 100%;
+    }
+
     .image-preview-dialog {
         width: 100vw;
         height: 100vh;
+        max-height: none;
     }
 
     .image-preview-dialog.is-editing .image-preview-body {
@@ -4782,15 +5008,117 @@ code {
 
     .image-preview-dialog header {
         align-items: flex-start;
+        gap: 10px;
     }
 
     .image-preview-dialog h2 {
-        max-width: 52vw;
+        max-width: none;
         font-size: 16px;
+    }
+
+    .image-preview-actions {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        max-width: 152px;
     }
 
     .payment-dialog footer {
         align-items: stretch;
         flex-direction: column;
+    }
+}
+
+@media (max-width: 520px) {
+    .studio-shell {
+        grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    .studio-logo {
+        width: 34px;
+        height: 34px;
+        flex-basis: 34px;
+    }
+
+    .studio-brand h1 {
+        font-size: 18px;
+    }
+
+    .workspace-overview-status,
+    .task-plan-summary,
+    .payment-status {
+        grid-template-columns: 1fr;
+    }
+
+    .overview-task-list button,
+    .overview-artifact-list li {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .overview-artifact-list em {
+        grid-column: 2;
+        justify-self: start;
+    }
+
+    .task-plan-header,
+    .task-plan-step-list .task-plan-item,
+    .task-plan-approval-list .task-plan-item {
+        grid-template-columns: 1fr;
+    }
+
+    .task-plan-badge,
+    .task-plan-status-pill {
+        justify-self: start;
+    }
+
+    .context-tree-list li {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .context-tree-list small {
+        grid-column: 2;
+        justify-self: start;
+        text-align: left;
+    }
+
+    .settings-section-title,
+    .capability-center-header,
+    .payment-dialog header,
+    .confirm-dialog footer {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .settings-section-title span {
+        text-align: left;
+        white-space: normal;
+    }
+
+    .theme-segment {
+        grid-template-columns: 1fr;
+    }
+
+    .auth-tabs,
+    .studio-tabs {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .quick-menu {
+        right: 10px;
+        left: 10px;
+        width: auto;
+    }
+
+    .image-preview-actions {
+        max-width: 112px;
+        gap: 6px;
+    }
+
+    .image-preview-actions button {
+        width: 30px;
+        height: 30px;
+    }
+
+    .image-preview-editor footer .studio-button {
+        width: 100%;
     }
 }

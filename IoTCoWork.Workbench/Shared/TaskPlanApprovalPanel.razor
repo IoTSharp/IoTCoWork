@@ -20,6 +20,7 @@
                     class="@StateOptionClass(option.State)"
                     role="tab"
                     aria-selected="@IsSelectedState(option.State)"
+                    title="@($"切换到{option.Label}状态")"
                     @onclick="@(() => SelectState(option.State))">
                 <span class="@StateDotClass(option.State)" aria-hidden="true"></span>
                 <span>@option.Label</span>
@@ -105,11 +106,11 @@
                             @if (approval.Status == TaskPlanItemStatus.WaitingApproval)
                             {
                                 <div class="task-plan-approval-actions">
-                                    <button type="button" class="studio-button studio-button-primary" @onclick="ApprovePreview">
+                                    <button type="button" class="studio-button studio-button-primary" title="确认模拟" @onclick="ApprovePreview">
                                         <Icon Type="check-circle" Theme="IconThemeType.Outline" />
                                         <span>确认模拟</span>
                                     </button>
-                                    <button type="button" class="studio-button studio-button-light" @onclick="RejectPreview">
+                                    <button type="button" class="studio-button studio-button-light" title="退回模拟" @onclick="RejectPreview">
                                         <Icon Type="close-circle" Theme="IconThemeType.Outline" />
                                         <span>退回模拟</span>
                                     </button>

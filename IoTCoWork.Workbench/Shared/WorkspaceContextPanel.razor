@@ -19,6 +19,7 @@
                     aria-selected="@IsActiveTab(tab.Id)"
                     aria-controls="@PanelId(tab.Id)"
                     title="@tab.Description"
+                    aria-label="@($"{tab.Title}：{tab.Description}")"
                     @onclick="@(() => SelectTab(tab.Id))">
                 <Icon Type="@tab.Icon" Theme="IconThemeType.Outline" />
                 <span>@tab.Title</span>

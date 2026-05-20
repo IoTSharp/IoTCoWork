@@ -12,7 +12,7 @@
 <PageTitle>@AppName</PageTitle>
 
 <XProvider Theme="@ProviderTheme" Tokens="@ThemeTokens" Class="@RootThemeClass">
-    <div class="studio-shell">
+    <div class="studio-shell" @onkeydown="HandleShellKeyDown">
         <header class="studio-topbar" native-web-drag omni-drag>
             <div class="studio-brand">
                 <div class="studio-logo" aria-hidden="true">
@@ -25,7 +25,7 @@
             </div>
 
             <div class="studio-topbar-actions" native-web-no-drag omni-no-drag>
-                <button type="button" class="studio-button studio-button-light capability-topbar-button" title="能力中心" @onclick="OpenCapabilityCenter">
+                <button type="button" class="studio-button studio-button-light capability-topbar-button" title="能力中心" aria-label="打开能力中心" @onclick="OpenCapabilityCenter">
                     <Icon Type="appstore" Theme="IconThemeType.Outline" />
                     <span>能力中心</span>
                 </button>
@@ -55,7 +55,7 @@
 
                     @if (_accountMenuOpen)
                     {
-                        <button type="button" class="account-menu-scrim" tabindex="-1" aria-label="关闭账户菜单" @onclick="CloseAccountMenu"></button>
+                        <button type="button" class="account-menu-scrim" tabindex="-1" title="关闭账户菜单" aria-label="关闭账户菜单" @onclick="CloseAccountMenu"></button>
                         <section id="account-menu-popover" class="account-menu-popover" role="menu" aria-labelledby="account-menu-button">
                             <header class="account-menu-header">
                                 <div class="account-menu-avatar" aria-hidden="true">
@@ -82,7 +82,7 @@
                             </div>
 
                             <div class="account-menu-group" role="group" aria-label="账户">
-                                <button type="button" role="menuitem" @onclick="OpenSettingsFromAccountMenu">
+                                <button type="button" role="menuitem" title="账户与设置" @onclick="OpenSettingsFromAccountMenu">
                                     <Icon Type="setting" Theme="IconThemeType.Outline" />
                                     <span>
                                         <strong>账户与设置</strong>
@@ -128,6 +128,7 @@
                                 <button type="button"
                                         role="menuitem"
                                         class="account-menu-action-danger"
+                                        title="退出登录"
                                         disabled="@(!AccountLoggedIn || _accountBusy)"
                                         @onclick="SignOutFromAccountMenu">
                                     <Icon Type="@(_accountBusy ? "loading" : "logout")" Theme="IconThemeType.Outline" />
@@ -178,7 +179,7 @@
                         <p>@WorkspaceStatus</p>
                     </div>
                     <div class="workspace-actions">
-                        <button type="button" class="studio-button studio-button-light" @onclick="ClearResults">
+                        <button type="button" class="studio-button studio-button-light" title="清空结果" @onclick="ClearResults">
                             <Icon Type="delete" Theme="IconThemeType.Outline" />
                             <span>清空结果</span>
                         </button>
@@ -224,7 +225,7 @@
                                         @foreach (var task in RecentWorkspaceTasks)
                                         {
                                             <li class="@(task.IsActive ? "active" : null)">
-                                                <button type="button" @onclick="() => ActivateSession(task.SessionId)">
+                                                <button type="button" title="@($"{task.Title} · {task.Detail}")" @onclick="() => ActivateSession(task.SessionId)">
                                                     <Icon Type="message" Theme="IconThemeType.Outline" />
                                                     <span>
                                                         <strong>@task.Title</strong>
@@ -312,7 +313,7 @@
                                 <div class="workspace-suggestion-list">
                                     @foreach (var item in _workspaceSuggestionActions)
                                     {
-                                        <button type="button" @onclick="() => UsePrompt(item.Prompt)">
+                                        <button type="button" title="@item.Prompt" @onclick="() => UsePrompt(item.Prompt)">
                                             <Icon Type="@item.Icon" Theme="IconThemeType.Outline" />
                                             <span>
                                                 <strong>@item.Title</strong>
@@ -371,7 +372,7 @@
                                                     <img src="@image.Url" alt="@message.Content" title="双击放大" @ondblclick="() => OpenImagePreview(image, message.Content)" />
                                                     <figcaption>
                                                         <span>@(image.MimeType ?? Settings.Format)</span>
-                                                        <button type="button" title="下载" @onclick="() => DownloadImage(image)">
+                                                        <button type="button" title="下载" aria-label="下载图片" @onclick="() => DownloadImage(image)">
                                                             <Icon Type="download" Theme="IconThemeType.Outline" />
                                                         </button>
                                                     </figcaption>
@@ -423,18 +424,25 @@
                                     <button type="button"
                                             class="quick-field quick-trigger"
                                             title="画面比例"
+                                            aria-haspopup="listbox"
                                             aria-expanded="@_ratioMenuOpen"
+                                            aria-controls="quick-ratio-menu"
                                             @onclick="ToggleRatioMenu">
                                         <span class="@CurrentRatioPreviewClass" aria-hidden="true"></span>
                                         <strong>@CurrentAspectRatio.Label</strong>
                                     </button>
                                     @if (_ratioMenuOpen)
                                     {
-                                        <div class="quick-menu ratio-menu">
+                                        <div id="quick-ratio-menu" class="quick-menu ratio-menu" role="listbox" aria-label="画面比例">
                                             <header>画面比例</header>
                                             @foreach (var preset in _aspectRatioPresets)
                                             {
-                                                <button type="button" class="@RatioOptionClass(preset)" @onclick="() => SelectAspectRatio(preset.Ratio)">
+                                                <button type="button"
+                                                        role="option"
+                                                        aria-selected="@IsCurrentAspectRatioText(preset)"
+                                                        title="@preset.Label"
+                                                        class="@RatioOptionClass(preset)"
+                                                        @onclick="() => SelectAspectRatio(preset.Ratio)">
                                                     <span class="@RatioPreviewClass(preset)" aria-hidden="true"></span>
                                                     <span class="quick-option-copy">
                                                         <strong>@preset.Label</strong>
@@ -456,18 +464,25 @@
                                     <button type="button"
                                             class="quick-field quick-trigger"
                                             title="分辨率"
+                                            aria-haspopup="listbox"
                                             aria-expanded="@_resolutionMenuOpen"
+                                            aria-controls="quick-resolution-menu"
                                             @onclick="ToggleResolutionMenu">
                                         <span class="quick-resolution-icon" aria-hidden="true"></span>
                                         <strong>@CurrentResolution.Label</strong>
                                     </button>
                                     @if (_resolutionMenuOpen)
                                     {
-                                        <div class="quick-menu resolution-menu">
+                                        <div id="quick-resolution-menu" class="quick-menu resolution-menu" role="listbox" aria-label="分辨率">
                                             <header>选择分辨率</header>
                                             @foreach (var preset in AvailableResolutionPresets)
                                             {
-                                                <button type="button" class="@ResolutionOptionClass(preset)" @onclick="() => SelectResolution(preset.Tier)">
+                                                <button type="button"
+                                                        role="option"
+                                                        aria-selected="@IsCurrentResolutionText(preset)"
+                                                        title="@preset.Description"
+                                                        class="@ResolutionOptionClass(preset)"
+                                                        @onclick="() => SelectResolution(preset.Tier)">
                                                     <span class="quick-option-copy">
                                                         <strong>@preset.Label</strong>
                                                         <small>@preset.Description</small>
@@ -511,10 +526,10 @@
                         </summary>
 
                         <nav class="studio-tabs" aria-label="作图模式">
-                            <button type="button" class="@TabClass("generate")" @onclick="@(() => UpdateMode("generate"))">文生图</button>
-                            <button type="button" class="@TabClass("image")" @onclick="@(() => UpdateMode("image"))">图生图</button>
-                            <button type="button" class="@TabClass("edit")" @onclick="@(() => UpdateMode("edit"))">图片编辑</button>
-                            <button type="button" class="@TabClass("variation")" @onclick="@(() => UpdateMode("variation"))">变化</button>
+                            <button type="button" class="@TabClass("generate")" title="文生图" @onclick="@(() => UpdateMode("generate"))">文生图</button>
+                            <button type="button" class="@TabClass("image")" title="图生图" @onclick="@(() => UpdateMode("image"))">图生图</button>
+                            <button type="button" class="@TabClass("edit")" title="图片编辑" @onclick="@(() => UpdateMode("edit"))">图片编辑</button>
+                            <button type="button" class="@TabClass("variation")" title="变化" @onclick="@(() => UpdateMode("variation"))">变化</button>
                         </nav>
 
                         @if (ActiveSession.Mode is "image" or "edit" or "variation")
@@ -622,6 +637,7 @@
                                 <button type="button"
                                         class="sender-context-chip"
                                         title="@chip.Description"
+                                        aria-label="@($"{chip.Title}：{chip.Value}")"
                                         @onclick="() => InvokeSenderContextChip(chip)">
                                     <span class="sender-context-chip-icon" aria-hidden="true">
                                         <Icon Type="@chip.Icon" Theme="IconThemeType.Outline" />
@@ -678,13 +694,15 @@
                      role="dialog"
                      aria-modal="true"
                      aria-labelledby="settings-title"
+                     tabindex="-1"
+                     @onkeydown="HandleOverlayKeyDown"
                      @onclick:stopPropagation>
                 <header class="settings-header">
                     <div>
                         <span class="workspace-eyebrow">设置中心</span>
                         <h2 id="settings-title">本地工作台设置</h2>
                     </div>
-                    <button type="button" title="关闭" @onclick="CloseSettings">
+                    <button type="button" title="关闭" aria-label="关闭设置中心" @onclick="CloseSettings">
                         <Icon Type="close" Theme="IconThemeType.Outline" />
                     </button>
                 </header>
@@ -718,6 +736,7 @@
                                             aria-selected="@SettingsCategorySelected(category.Id)"
                                             aria-controls="@SettingsCategoryPanelId(category.Id)"
                                             class="@SettingsCategoryButtonClass(category.Id)"
+                                            title="@category.Description"
                                             @onclick="@(() => SelectSettingsCategory(category.Id))">
                                         <Icon Type="@category.Icon" Theme="IconThemeType.Outline" />
                                         <span>
@@ -942,7 +961,7 @@
                                                 <strong>智能体、技能、指令、挂钩、MCP 与插件</strong>
                                                 <span>仅展示开源 UI 与本地配置占位。</span>
                                             </div>
-                                            <button type="button" class="studio-button studio-button-light" @onclick="OpenCapabilityCenterFromSettings">
+                                            <button type="button" class="studio-button studio-button-light" title="打开能力中心" @onclick="OpenCapabilityCenterFromSettings">
                                                 <Icon Type="appstore" Theme="IconThemeType.Outline" />
                                                 <span>打开</span>
                                             </button>
@@ -977,18 +996,18 @@
                     </div>
 
                     <div class="settings-actions">
-                        <button type="button" class="studio-button studio-button-light" disabled="@(!AccountLoggedIn || _accountBusy)" @onclick="RefreshAccountProfile">
+                        <button type="button" class="studio-button studio-button-light" title="刷新余额" disabled="@(!AccountLoggedIn || _accountBusy)" @onclick="RefreshAccountProfile">
                             <Icon Type="reload" Theme="IconThemeType.Outline" />
                             <span>刷新余额</span>
                         </button>
                         @if (HasPendingPaymentOrder)
                         {
-                            <button type="button" class="studio-button studio-button-light" @onclick="ShowPendingPaymentOrder">
+                            <button type="button" class="studio-button studio-button-light" title="查看待支付订单" @onclick="ShowPendingPaymentOrder">
                                 <Icon Type="qrcode" Theme="IconThemeType.Outline" />
                                 <span>查看待支付订单</span>
                             </button>
                         }
-                        <button type="button" class="studio-button studio-button-ghost" disabled="@(!AccountLoggedIn || _accountBusy)" @onclick="SignOutAccount">
+                        <button type="button" class="studio-button studio-button-ghost" title="退出登录" disabled="@(!AccountLoggedIn || _accountBusy)" @onclick="SignOutAccount">
                             <Icon Type="logout" Theme="IconThemeType.Outline" />
                             <span>退出登录</span>
                         </button>
@@ -999,7 +1018,7 @@
                             <label class="studio-label">充值金额</label>
                             <input class="studio-input" type="number" min="1" step="1" value="@_rechargeAmount" @onchange="UpdateRechargeAmount" />
                         </div>
-                        <button type="button" class="studio-button studio-button-primary" disabled="@(!AccountLoggedIn || _accountBusy)" @onclick="CreateRechargeOrder">
+                        <button type="button" class="studio-button studio-button-primary" title="生成支付二维码" disabled="@(!AccountLoggedIn || _accountBusy)" @onclick="CreateRechargeOrder">
                             <Icon Type="credit-card" Theme="IconThemeType.Outline" />
                             <span>生成二维码</span>
                         </button>
@@ -1017,7 +1036,7 @@
     @if (_exitConfirmOpen)
     {
         <div class="confirm-backdrop" @onclick="CancelExit">
-            <section class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="exit-confirm-title" @onclick:stopPropagation>
+            <section class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="exit-confirm-title" tabindex="-1" @onkeydown="HandleOverlayKeyDown" @onclick:stopPropagation>
                 <header>
                     <div>
                         <span class="workspace-eyebrow">退出 IoTCoWork</span>
@@ -1026,10 +1045,10 @@
                 </header>
                 <p>当前窗口和后台托盘进程都会关闭，正在进行的生成任务也会停止。</p>
                 <footer>
-                    <button type="button" class="studio-button studio-button-light" @onclick="CancelExit">
+                    <button type="button" class="studio-button studio-button-light" title="取消退出" @onclick="CancelExit">
                         <span>取消</span>
                     </button>
-                    <button type="button" class="studio-button studio-button-danger" @onclick="ConfirmExitAsync">
+                    <button type="button" class="studio-button studio-button-danger" title="退出应用" @onclick="ConfirmExitAsync">
                         <Icon Type="poweroff" Theme="IconThemeType.Outline" />
                         <span>退出</span>
                     </button>
@@ -1040,14 +1059,14 @@
 
     @if (_paymentOverlayOpen && _activePaymentOrder is not null)
     {
-        <div class="payment-backdrop">
-            <section class="payment-dialog" role="dialog" aria-modal="true" aria-labelledby="payment-title">
+        <div class="payment-backdrop" @onclick="ClosePaymentOverlay">
+            <section class="payment-dialog" role="dialog" aria-modal="true" aria-labelledby="payment-title" tabindex="-1" @onkeydown="HandleOverlayKeyDown" @onclick:stopPropagation>
                 <header>
                     <div>
                         <span class="workspace-eyebrow">微信支付</span>
                         <h2 id="payment-title">@PaymentTitle</h2>
                     </div>
-                    <button type="button" title="关闭" @onclick="ClosePaymentOverlay">
+                    <button type="button" title="关闭" aria-label="关闭支付弹层" @onclick="ClosePaymentOverlay">
                         <Icon Type="close" Theme="IconThemeType.Outline" />
                     </button>
                 </header>
@@ -1104,15 +1123,15 @@
                 <footer>
                     @if (!PaymentSucceeded && !PaymentExpired)
                     {
-                        <button type="button" class="studio-button studio-button-light" disabled="@_paymentPolling" @onclick="VerifyPaymentNow">
+                        <button type="button" class="studio-button studio-button-light" title="我已完成支付" disabled="@_paymentPolling" @onclick="VerifyPaymentNow">
                             <Icon Type="sync" Theme="IconThemeType.Outline" />
                             <span>我已完成支付</span>
                         </button>
-                        <button type="button" class="studio-button studio-button-ghost" disabled="@_paymentCancelling" @onclick="CancelPaymentOrder">
+                        <button type="button" class="studio-button studio-button-ghost" title="取消订单" disabled="@_paymentCancelling" @onclick="CancelPaymentOrder">
                             <span>@(_paymentCancelling ? "取消中" : "取消订单")</span>
                         </button>
                     }
-                    <button type="button" class="studio-button studio-button-primary" @onclick="ClosePaymentOverlay">
+                    <button type="button" class="studio-button studio-button-primary" title="关闭支付弹层" @onclick="ClosePaymentOverlay">
                         <span>@(PaymentSucceeded || PaymentExpired ? "完成" : "稍后查看")</span>
                     </button>
                 </footer>
@@ -1123,23 +1142,23 @@
     @if (_previewImage is not null)
     {
         <div class="image-preview-backdrop" @onclick="CloseImagePreview">
-            <section class="@ImagePreviewDialogClass" role="dialog" aria-modal="true" aria-labelledby="image-preview-title" @onclick:stopPropagation>
+            <section class="@ImagePreviewDialogClass" role="dialog" aria-modal="true" aria-labelledby="image-preview-title" tabindex="-1" @onkeydown="HandleOverlayKeyDown" @onclick:stopPropagation>
                 <header>
                     <div>
                         <span class="workspace-eyebrow">图片预览</span>
                         <h2 id="image-preview-title">@ImagePreviewTitle</h2>
                     </div>
                     <div class="image-preview-actions">
-                        <button type="button" class="@ImagePreviewEditButtonClass" title="@(_previewEditing ? "退出编辑" : "编辑图片")" @onclick="ToggleImagePreviewEdit">
+                        <button type="button" class="@ImagePreviewEditButtonClass" title="@(_previewEditing ? "退出编辑" : "编辑图片")" aria-label="@(_previewEditing ? "退出编辑" : "编辑图片")" @onclick="ToggleImagePreviewEdit">
                             <Icon Type="edit" Theme="IconThemeType.Outline" />
                         </button>
-                        <button type="button" title="@(_previewZoomed ? "适应窗口" : "放大查看")" @onclick="ToggleImagePreviewZoom">
+                        <button type="button" title="@(_previewZoomed ? "适应窗口" : "放大查看")" aria-label="@(_previewZoomed ? "适应窗口" : "放大查看")" @onclick="ToggleImagePreviewZoom">
                             <Icon Type="@(_previewZoomed ? "fullscreen-exit" : "zoom-in")" Theme="IconThemeType.Outline" />
                         </button>
-                        <button type="button" title="下载" @onclick="DownloadPreviewImage">
+                        <button type="button" title="下载" aria-label="下载预览图片" @onclick="DownloadPreviewImage">
                             <Icon Type="download" Theme="IconThemeType.Outline" />
                         </button>
-                        <button type="button" title="关闭" @onclick="CloseImagePreview">
+                        <button type="button" title="关闭" aria-label="关闭图片预览" @onclick="CloseImagePreview">
                             <Icon Type="close" Theme="IconThemeType.Outline" />
                         </button>
                     </div>
@@ -1162,7 +1181,7 @@
                                     <span class="workspace-eyebrow">编辑</span>
                                     <h3>局部修改</h3>
                                 </div>
-                                <button type="button" title="清空标注" @onclick="ClearPreviewMask">
+                                <button type="button" title="清空标注" aria-label="清空标注" @onclick="ClearPreviewMask">
                                     <Icon Type="delete" Theme="IconThemeType.Outline" />
                                 </button>
                             </header>
@@ -1186,11 +1205,11 @@
                             }
 
                             <footer>
-                                <button type="button" class="studio-button studio-button-light" @onclick="ClearPreviewMask">
+                                <button type="button" class="studio-button studio-button-light" title="清空标注" @onclick="ClearPreviewMask">
                                     <Icon Type="delete" Theme="IconThemeType.Outline" />
                                     <span>清空标注</span>
                                 </button>
-                                <button type="button" class="studio-button studio-button-primary" disabled="@PreviewEditSubmitDisabled" @onclick="SubmitPreviewEdit">
+                                <button type="button" class="studio-button studio-button-primary" title="修改图片" disabled="@PreviewEditSubmitDisabled" @onclick="SubmitPreviewEdit">
                                     <Icon Type="@(_loading ? "loading" : "highlight")" Theme="IconThemeType.Outline" />
                                     <span>@(_loading ? "生成中" : "修改图片")</span>
                                 </button>
@@ -1204,8 +1223,8 @@
 
     @if (RequiresAuthOverlay)
     {
-        <div class="auth-backdrop">
-            <section class="auth-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+        <div class="auth-backdrop" @onclick="HandleAuthBackdropClick">
+            <section class="auth-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-title" tabindex="-1" @onkeydown="HandleOverlayKeyDown" @onclick:stopPropagation>
                 <div class="auth-brand">
                     <div class="studio-logo" aria-hidden="true">
                         <img src="favicon.svg" alt="" />
@@ -1217,8 +1236,8 @@
                 </div>
 
                 <div class="auth-tabs" role="tablist">
-                    <button type="button" class="@AuthTabClass(false)" @onclick="@(() => SetAuthMode(false))">登录</button>
-                    <button type="button" class="@AuthTabClass(true)" @onclick="@(() => SetAuthMode(true))">注册</button>
+                    <button type="button" role="tab" aria-selected="@AuthTabSelected(false)" class="@AuthTabClass(false)" title="登录" @onclick="@(() => SetAuthMode(false))">登录</button>
+                    <button type="button" role="tab" aria-selected="@AuthTabSelected(true)" class="@AuthTabClass(true)" title="注册" @onclick="@(() => SetAuthMode(true))">注册</button>
                 </div>
 
                 <div class="studio-form-grid account-grid auth-grid">
@@ -1232,7 +1251,7 @@
                     </div>
                 </div>
 
-                <button type="button" class="auth-proxy-link" @onclick="OpenAuthProxySettings">
+                <button type="button" class="auth-proxy-link" title="代理设置" @onclick="OpenAuthProxySettings">
                     <Icon Type="global" Theme="IconThemeType.Outline" />
                     <span>代理设置</span>
                     @if (!string.IsNullOrWhiteSpace(Settings.NetworkProxyUrl))
@@ -1246,7 +1265,7 @@
                     <p class="@AccountMessageClass">@_accountMessage</p>
                 }
 
-                <button type="button" class="studio-button studio-button-primary auth-submit" disabled="@_accountBusy" @onclick="SubmitAuth">
+                <button type="button" class="studio-button studio-button-primary auth-submit" title="@AuthButtonText" disabled="@_accountBusy" @onclick="SubmitAuth">
                     <Icon Type="@(_accountBusy ? "loading" : _accountRegisterOpen ? "user-add" : "login")" Theme="IconThemeType.Outline" />
                     <span>@AuthButtonText</span>
                 </button>
@@ -1254,13 +1273,13 @@
 
             @if (_authProxyOpen)
             {
-                <section class="auth-proxy-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-proxy-title" @onclick:stopPropagation>
+                <section class="auth-proxy-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-proxy-title" tabindex="-1" @onkeydown="HandleOverlayKeyDown" @onclick:stopPropagation>
                     <header>
                         <div>
                             <span class="workspace-eyebrow">连接设置</span>
                             <h2 id="auth-proxy-title">网络代理</h2>
                         </div>
-                        <button type="button" title="关闭" @onclick="CloseAuthProxySettings">
+                        <button type="button" title="关闭" aria-label="关闭代理设置" @onclick="CloseAuthProxySettings">
                             <Icon Type="close" Theme="IconThemeType.Outline" />
                         </button>
                     </header>
@@ -1271,7 +1290,7 @@
                     </div>
 
                     <footer>
-                        <button type="button" class="studio-button studio-button-light" @onclick="CloseAuthProxySettings">
+                        <button type="button" class="studio-button studio-button-light" title="完成代理设置" @onclick="CloseAuthProxySettings">
                             <span>完成</span>
                         </button>
                     </footer>

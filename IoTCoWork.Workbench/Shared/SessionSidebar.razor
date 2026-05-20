@@ -1,7 +1,7 @@
 <aside class="@Class" aria-label="会话">
     @if (Collapsed)
     {
-        <button type="button" class="panel-rail-button" title="展开会话" @onclick="ToggleCollapsed">
+        <button type="button" class="panel-rail-button" title="展开会话" aria-label="展开会话" @onclick="ToggleCollapsed">
             <Icon Type="menu-unfold" Theme="IconThemeType.Outline" />
             <span class="sr-only">展开会话</span>
         </button>
@@ -13,14 +13,14 @@
     {
         <section class="studio-panel history-panel">
             <div class="history-actions">
-                <button type="button" class="studio-button studio-button-light" @onclick="OnNewSession">
+                <button type="button" class="studio-button studio-button-light" title="新建会话" @onclick="OnNewSession">
                     <Icon Type="plus" Theme="IconThemeType.Outline" />
                     <span>新建会话</span>
                 </button>
-                <button type="button" class="studio-button studio-button-ghost" title="清空历史" @onclick="OnClearHistory">
+                <button type="button" class="studio-button studio-button-ghost" title="清空历史" aria-label="清空历史" @onclick="OnClearHistory">
                     <Icon Type="clear" Theme="IconThemeType.Outline" />
                 </button>
-                <button type="button" class="studio-button studio-button-ghost" title="折叠会话" @onclick="ToggleCollapsed">
+                <button type="button" class="studio-button studio-button-ghost" title="折叠会话" aria-label="折叠会话" @onclick="ToggleCollapsed">
                     <Icon Type="menu-fold" Theme="IconThemeType.Outline" />
                 </button>
             </div>

@@ -596,6 +596,12 @@ public partial class Home
     private bool IsCurrentResolution(ResolutionPreset preset) =>
         string.Equals(CurrentResolution.Tier, preset.Tier, StringComparison.Ordinal);
 
+    private string IsCurrentAspectRatioText(AspectRatioPreset preset) =>
+        IsCurrentAspectRatio(preset) ? "true" : "false";
+
+    private string IsCurrentResolutionText(ResolutionPreset preset) =>
+        IsCurrentResolution(preset) ? "true" : "false";
+
     private static string QualityOptionLabel(string value) => value switch
     {
         "auto" => "自动",
@@ -768,6 +774,7 @@ public partial class Home
     }
 
     private string AuthTabClass(bool register) => _accountRegisterOpen == register ? "active" : string.Empty;
+    private string AuthTabSelected(bool register) => _accountRegisterOpen == register ? "true" : "false";
     private void SetLeftSidebarCollapsed(bool collapsed) => _leftSidebarCollapsed = collapsed;
     private static string MessageClass(StudioMessage message) => $"thread-message {message.Role}";
     private static string MessageRoleLabel(string role) => role switch
@@ -1951,11 +1958,83 @@ public partial class Home
         }
     }
 
-    private void OpenSettings() => _settingsOpen = true;
+    private void HandleShellKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Escape")
+        {
+            CloseTransientUi();
+        }
+    }
+
+    private void HandleOverlayKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Escape")
+        {
+            CloseTransientUi();
+        }
+    }
+
+    private void CloseTransientUi()
+    {
+        if (_authProxyOpen)
+        {
+            CloseAuthProxySettings();
+            return;
+        }
+
+        if (_previewImage is not null)
+        {
+            CloseImagePreview();
+            return;
+        }
+
+        if (_paymentOverlayOpen)
+        {
+            _paymentOverlayOpen = false;
+            return;
+        }
+
+        if (_exitConfirmOpen)
+        {
+            CancelExit();
+            return;
+        }
+
+        if (_settingsOpen)
+        {
+            CloseSettings();
+            return;
+        }
+
+        if (_capabilityCenterOpen)
+        {
+            CloseCapabilityCenter();
+            return;
+        }
+
+        if (_accountMenuOpen)
+        {
+            CloseAccountMenu();
+            return;
+        }
+
+        _ratioMenuOpen = false;
+        _resolutionMenuOpen = false;
+    }
+
+    private void OpenSettings()
+    {
+        _ratioMenuOpen = false;
+        _resolutionMenuOpen = false;
+        _settingsOpen = true;
+    }
+
     private void CloseSettings() => _settingsOpen = false;
     private void OpenCapabilityCenter()
     {
         CloseAccountMenu();
+        _ratioMenuOpen = false;
+        _resolutionMenuOpen = false;
         _capabilityCenterOpen = true;
     }
 
@@ -1984,6 +2063,14 @@ public partial class Home
 
     private void OpenAuthProxySettings() => _authProxyOpen = true;
     private void CloseAuthProxySettings() => _authProxyOpen = false;
+
+    private void HandleAuthBackdropClick()
+    {
+        if (_authProxyOpen)
+        {
+            CloseAuthProxySettings();
+        }
+    }
 
     private async Task CheckForUpdatesAsync()
     {

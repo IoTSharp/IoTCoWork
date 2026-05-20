@@ -47,6 +47,7 @@
                                     aria-selected="@IsSelectedCategory(category.Key)"
                                     aria-controls="@PanelId(category.Key)"
                                     class="@CategoryButtonClass(category.Key)"
+                                    title="@category.Description"
                                     @onclick="@(() => SelectCategory(category.Key))">
                                 <Icon Type="@category.Icon" Theme="IconThemeType.Outline" />
                                 <span>
