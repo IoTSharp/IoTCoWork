@@ -1,0 +1,350 @@
+<div class="capability-center-backdrop" @onclick="CloseAsync">
+    <section class="capability-center-dialog"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="capability-center-title"
+             aria-describedby="capability-center-description"
+             tabindex="-1"
+             @onclick:stopPropagation
+             @onkeydown="HandleKeyDown">
+        <header class="capability-center-header">
+            <div>
+                <span class="workspace-eyebrow">能力中心</span>
+                <h2 id="capability-center-title">本地能力配置</h2>
+                <p id="capability-center-description">查看智能体、技能、指令、挂钩、MCP 服务器与插件的本地扩展槽位。</p>
+            </div>
+            <button type="button" title="关闭" aria-label="关闭能力中心" @onclick="CloseAsync">
+                <Icon Type="close" Theme="IconThemeType.Outline" />
+            </button>
+        </header>
+
+        <div class="capability-center-body">
+            <aside class="capability-nav" aria-label="能力分类">
+                <label class="capability-search">
+                    <Icon Type="search" Theme="IconThemeType.Outline" />
+                    <input type="search"
+                           autocomplete="off"
+                           placeholder="搜索能力分类"
+                           @bind="_searchText"
+                           @bind:event="oninput" />
+                </label>
+
+                @if (FilteredCategories.Count == 0)
+                {
+                    <div class="capability-search-empty">
+                        <Icon Type="inbox" Theme="IconThemeType.Outline" />
+                        <span>没有匹配的分类</span>
+                    </div>
+                }
+                else
+                {
+                    <nav role="tablist" aria-label="能力中心导航">
+                        @foreach (var category in FilteredCategories)
+                        {
+                            <button type="button"
+                                    role="tab"
+                                    id="@TabId(category.Key)"
+                                    aria-selected="@IsSelectedCategory(category.Key)"
+                                    aria-controls="@PanelId(category.Key)"
+                                    class="@CategoryButtonClass(category.Key)"
+                                    @onclick="@(() => SelectCategory(category.Key))">
+                                <Icon Type="@category.Icon" Theme="IconThemeType.Outline" />
+                                <span>
+                                    <strong>@category.Title</strong>
+                                    <small>@category.Description</small>
+                                </span>
+                                <em>@category.Count</em>
+                                <small class="capability-status">@category.Status</small>
+                            </button>
+                        }
+                    </nav>
+                }
+            </aside>
+
+            <section class="capability-detail"
+                     role="@(ActiveCategory is null ? null : "tabpanel")"
+                     id="@(ActiveCategory is null ? null : PanelId(ActiveCategory.Key))"
+                     aria-labelledby="@(ActiveCategory is null ? null : TabId(ActiveCategory.Key))"
+                     aria-live="polite">
+                @if (ActiveCategory is null)
+                {
+                    <div class="capability-empty-state">
+                        <Icon Type="inbox" Theme="IconThemeType.Outline" />
+                        <h3>没有可显示的能力分类</h3>
+                        <p>清空搜索条件后可以查看本地能力槽位。</p>
+                    </div>
+                }
+                else
+                {
+                    <header class="capability-detail-header">
+                        <div class="capability-detail-title">
+                            <span class="capability-detail-icon" aria-hidden="true">
+                                <Icon Type="@ActiveCategory.Icon" Theme="IconThemeType.Outline" />
+                            </span>
+                            <div>
+                                <span class="workspace-eyebrow">@ActiveCategory.Status</span>
+                                <h3>@ActiveCategory.Title</h3>
+                                <p>@ActiveCategory.Summary</p>
+                            </div>
+                        </div>
+
+                        <dl class="capability-metrics" aria-label="能力状态">
+                            <div>
+                                <dt>已配置</dt>
+                                <dd>@ActiveCategory.Count</dd>
+                            </div>
+                            <div>
+                                <dt>来源</dt>
+                                <dd>本地</dd>
+                            </div>
+                            <div>
+                                <dt>状态</dt>
+                                <dd>@ActiveCategory.Status</dd>
+                            </div>
+                        </dl>
+                    </header>
+
+                    <div class="capability-empty-state">
+                        <Icon Type="@ActiveCategory.Icon" Theme="IconThemeType.Outline" />
+                        <h3>@ActiveCategory.EmptyTitle</h3>
+                        <p>@ActiveCategory.EmptyDescription</p>
+                    </div>
+
+                    <section class="capability-local-config" aria-label="本地配置占位">
+                        <div class="capability-section-title">
+                            <Icon Type="setting" Theme="IconThemeType.Outline" />
+                            <strong>本地配置占位</strong>
+                        </div>
+                        <dl>
+                            @foreach (var row in ActiveCategory.ConfigRows)
+                            {
+                                <div>
+                                    <dt>@row.Label</dt>
+                                    <dd>@row.Value</dd>
+                                </div>
+                            }
+                        </dl>
+                    </section>
+
+                    @if (ActiveCategory.Key == "mcp")
+                    {
+                        <section class="mcp-local-services" aria-label="MCP 本地服务">
+                            <div class="capability-section-title">
+                                <Icon Type="api" Theme="IconThemeType.Outline" />
+                                <strong>MCP 本地服务</strong>
+                            </div>
+                            <div class="mcp-service-list">
+                                @foreach (var server in LocalMcpServers)
+                                {
+                                    <article>
+                                        <div>
+                                            <strong>@server.Name</strong>
+                                            <span>@server.Transport</span>
+                                        </div>
+                                        <p>@server.Description</p>
+                                        <small>@server.Status</small>
+                                    </article>
+                                }
+                            </div>
+                        </section>
+                    }
+
+                    <footer class="capability-extension-note">
+                        <Icon Type="safety" Theme="IconThemeType.Outline" />
+                        <span>这里只保留开源 UI、本地清单和扩展点；实际连接与策略由后续插件自行提供。</span>
+                    </footer>
+                }
+            </section>
+        </div>
+    </section>
+</div>
+
+@code {
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private string _activeCategoryKey = "agents";
+    private string _searchText = string.Empty;
+
+    private static readonly IReadOnlyList<CapabilityCategory> Categories =
+    [
+        new(
+            Key: "agents",
+            Title: "智能体",
+            Description: "本地智能体入口",
+            Icon: "robot",
+            Count: 0,
+            Status: "未配置",
+            Summary: "展示本地工作台可发现的智能体槽位，后续由插件或本地配置贡献。",
+            EmptyTitle: "暂无本地智能体",
+            EmptyDescription: "这里不预置在线编排，只保留可扩展的智能体入口。",
+            Keywords: ["agent", "assistant", "智能体"],
+            ConfigRows:
+            [
+                new("配置来源", "本地 workspace"),
+                new("贡献点", "capabilities.agents"),
+                new("默认启用", "否"),
+            ]),
+        new(
+            Key: "skills",
+            Title: "技能",
+            Description: "工具化能力",
+            Icon: "tool",
+            Count: 0,
+            Status: "未配置",
+            Summary: "展示可被工作台调用的本地技能清单占位，用于后续插件贡献。",
+            EmptyTitle: "暂无本地技能",
+            EmptyDescription: "技能目录为空，后续可从本地插件或开源 SDK 注册。",
+            Keywords: ["skill", "tool", "技能"],
+            ConfigRows:
+            [
+                new("配置来源", "本地 skills 目录"),
+                new("贡献点", "capabilities.skills"),
+                new("执行范围", "本地工作台"),
+            ]),
+        new(
+            Key: "instructions",
+            Title: "指令",
+            Description: "提示与约束片段",
+            Icon: "file-text",
+            Count: 0,
+            Status: "未配置",
+            Summary: "展示可复用的本地指令片段占位，内容只来自本地配置或开源插件。",
+            EmptyTitle: "暂无本地指令",
+            EmptyDescription: "可在后续版本从工程文件或插件清单加载本地指令。",
+            Keywords: ["instruction", "prompt", "指令"],
+            ConfigRows:
+            [
+                new("配置来源", "本地 instructions 目录"),
+                new("贡献点", "capabilities.instructions"),
+                new("同步方式", "未接入"),
+            ]),
+        new(
+            Key: "hooks",
+            Title: "挂钩",
+            Description: "本地事件扩展",
+            Icon: "branches",
+            Count: 0,
+            Status: "未配置",
+            Summary: "展示生成、保存、导出等本地事件的扩展槽位。",
+            EmptyTitle: "暂无本地挂钩",
+            EmptyDescription: "挂钩只描述本地事件扩展点，不接入远程策略。",
+            Keywords: ["hook", "event", "挂钩"],
+            ConfigRows:
+            [
+                new("配置来源", "本地 hooks 目录"),
+                new("贡献点", "capabilities.hooks"),
+                new("触发方式", "待定义"),
+            ]),
+        new(
+            Key: "mcp",
+            Title: "MCP 服务器",
+            Description: "本地服务配置",
+            Icon: "api",
+            Count: 0,
+            Status: "本地占位",
+            Summary: "仅展示本机 MCP 服务槽位和后续扩展点，不主动连接任何服务。",
+            EmptyTitle: "暂无已启用 MCP 服务器",
+            EmptyDescription: "可先记录本地 stdio 或 HTTP 服务意图，实际连接逻辑后续再接入。",
+            Keywords: ["mcp", "server", "stdio", "http", "服务器"],
+            ConfigRows:
+            [
+                new("配置来源", "本地 mcp.servers"),
+                new("贡献点", "capabilities.mcpServers"),
+                new("连接状态", "未连接"),
+            ]),
+        new(
+            Key: "plugins",
+            Title: "插件",
+            Description: "扩展包入口",
+            Icon: "appstore",
+            Count: 0,
+            Status: "未配置",
+            Summary: "展示开源插件贡献点占位，后续可由本地 manifest 或插件 SDK 发现。",
+            EmptyTitle: "暂无本地插件",
+            EmptyDescription: "插件清单为空，后续可从本地 manifest 或 SDK 发现。",
+            Keywords: ["plugin", "extension", "插件"],
+            ConfigRows:
+            [
+                new("配置来源", "本地 plugins 目录"),
+                new("贡献点", "capabilities.plugins"),
+                new("加载状态", "未加载"),
+            ]),
+    ];
+
+    private static readonly IReadOnlyList<McpLocalServer> LocalMcpServers =
+    [
+        new("本地 stdio 服务", "stdio", "为命令行工具预留的本地服务槽位。", "待配置"),
+        new("本地 HTTP 服务", "http://localhost", "为本机 HTTP MCP 服务预留的展示槽位。", "待配置"),
+    ];
+
+    private IReadOnlyList<CapabilityCategory> FilteredCategories
+    {
+        get
+        {
+            var query = _searchText.Trim();
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                return Categories;
+            }
+
+            return Categories
+                .Where(category => category.Matches(query))
+                .ToArray();
+        }
+    }
+
+    private CapabilityCategory? ActiveCategory =>
+        FilteredCategories.FirstOrDefault(category => category.Key == _activeCategoryKey)
+        ?? FilteredCategories.FirstOrDefault();
+
+    private string CategoryButtonClass(string key) =>
+        IsSelectedCategory(key) == "true" ? "active" : string.Empty;
+
+    private string IsSelectedCategory(string key) =>
+        string.Equals(ActiveCategory?.Key, key, StringComparison.Ordinal) ? "true" : "false";
+
+    private static string TabId(string key) => $"capability-tab-{key}";
+
+    private static string PanelId(string key) => $"capability-panel-{key}";
+
+    private void SelectCategory(string key)
+    {
+        _activeCategoryKey = key;
+    }
+
+    private Task HandleKeyDown(KeyboardEventArgs args)
+    {
+        return args.Key == "Escape" ? CloseAsync() : Task.CompletedTask;
+    }
+
+    private Task CloseAsync()
+    {
+        return OnClose.InvokeAsync();
+    }
+
+    private sealed record CapabilityCategory(
+        string Key,
+        string Title,
+        string Description,
+        string Icon,
+        int Count,
+        string Status,
+        string Summary,
+        string EmptyTitle,
+        string EmptyDescription,
+        IReadOnlyList<string> Keywords,
+        IReadOnlyList<ConfigRow> ConfigRows)
+    {
+        public bool Matches(string query)
+        {
+            return Title.Contains(query, StringComparison.OrdinalIgnoreCase)
+                || Description.Contains(query, StringComparison.OrdinalIgnoreCase)
+                || Summary.Contains(query, StringComparison.OrdinalIgnoreCase)
+                || Keywords.Any(keyword => keyword.Contains(query, StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
+    private sealed record ConfigRow(string Label, string Value);
+
+    private sealed record McpLocalServer(string Name, string Transport, string Description, string Status);
+}

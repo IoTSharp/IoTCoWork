@@ -25,6 +25,10 @@
             </div>
 
             <div class="studio-topbar-actions" native-web-no-drag omni-no-drag>
+                <button type="button" class="studio-button studio-button-light capability-topbar-button" title="能力中心" @onclick="OpenCapabilityCenter">
+                    <Icon Type="appstore" Theme="IconThemeType.Outline" />
+                    <span>能力中心</span>
+                </button>
                 <div class="account-menu-host" @onkeydown="HandleAccountMenuKeyDown">
                     <button id="account-menu-button"
                             type="button"
@@ -513,6 +517,11 @@
         </div>
     </div>
 
+    @if (_capabilityCenterOpen)
+    {
+        <CapabilityCenter OnClose="CloseCapabilityCenter" />
+    }
+
     @if (_settingsOpen)
     {
         <div class="settings-backdrop" @onclick="CloseSettings">
@@ -625,6 +634,24 @@
                                 </button>
                             }
                         </div>
+                    </div>
+
+                    <div class="settings-divider"></div>
+
+                    <div class="settings-section-title">
+                        <strong>能力中心</strong>
+                        <span>本地扩展点</span>
+                    </div>
+
+                    <div class="settings-link-panel">
+                        <div>
+                            <strong>智能体、技能、指令、挂钩、MCP 与插件</strong>
+                            <span>仅展示开源 UI 与本地配置占位。</span>
+                        </div>
+                        <button type="button" class="studio-button studio-button-light" @onclick="OpenCapabilityCenterFromSettings">
+                            <Icon Type="appstore" Theme="IconThemeType.Outline" />
+                            <span>打开</span>
+                        </button>
                     </div>
 
                     <div class="settings-divider"></div>

@@ -286,6 +286,10 @@ h2:focus {
     background: rgba(255, 255, 255, 0.13);
 }
 
+.capability-topbar-button {
+    white-space: nowrap;
+}
+
 .account-menu-host {
     position: relative;
     display: grid;
@@ -1920,6 +1924,40 @@ html[data-native-web-window-style="vscode"] .window-controls {
     gap: 8px;
 }
 
+.settings-link-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border: 1px solid var(--studio-line);
+    border-radius: 8px;
+    background: var(--studio-soft-strong);
+}
+
+.settings-link-panel div {
+    display: grid;
+    min-width: 0;
+    gap: 3px;
+}
+
+.settings-link-panel strong,
+.settings-link-panel span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.settings-link-panel strong {
+    color: var(--studio-ink);
+    font-size: 13px;
+}
+
+.settings-link-panel span {
+    color: var(--studio-muted);
+    font-size: 12px;
+}
+
 .update-panel {
     display: grid;
     gap: 9px;
@@ -2022,6 +2060,422 @@ html[data-native-web-window-style="vscode"] .window-controls {
     color: var(--studio-code-text);
     font-size: 12px;
     white-space: pre-wrap;
+}
+
+.capability-center-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1260;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    background: var(--studio-modal-overlay);
+    backdrop-filter: blur(10px);
+}
+
+.capability-center-dialog {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    width: min(1040px, 100%);
+    height: min(720px, calc(100vh - 36px));
+    min-height: 0;
+    overflow: hidden;
+    border: 1px solid var(--studio-line);
+    border-radius: 8px;
+    background: var(--studio-panel);
+    box-shadow: var(--studio-shadow);
+}
+
+.capability-center-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 18px;
+    border-bottom: 1px solid var(--studio-line);
+    background: var(--studio-panel-translucent);
+}
+
+.capability-center-header h2 {
+    margin: 3px 0 0;
+    color: var(--studio-ink);
+    font-size: 22px;
+    line-height: 1.2;
+}
+
+.capability-center-header p {
+    margin: 6px 0 0;
+    color: var(--studio-muted-strong);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.capability-center-header > button,
+.settings-drawer header button,
+.auth-proxy-dialog header button,
+.payment-dialog header button {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 6px;
+    color: var(--studio-ink);
+    background: var(--studio-soft);
+}
+
+.capability-center-header > button:hover {
+    background: var(--studio-soft-strong);
+}
+
+.capability-center-header > button:focus-visible,
+.capability-nav button:focus-visible,
+.capability-search input:focus-visible {
+    outline: 2px solid var(--studio-accent);
+    outline-offset: 2px;
+}
+
+.capability-center-body {
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr);
+    min-height: 0;
+}
+
+.capability-nav {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 10px;
+    min-width: 0;
+    min-height: 0;
+    padding: 14px;
+    border-right: 1px solid var(--studio-line);
+    background: var(--studio-panel-alt);
+}
+
+.capability-search {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    padding: 0 10px;
+    border: 1px solid var(--studio-line);
+    border-radius: 8px;
+    color: var(--studio-muted);
+    background: var(--studio-input-bg);
+}
+
+.capability-search input {
+    min-width: 0;
+    height: 34px;
+    border: 0;
+    outline: 0;
+    color: var(--studio-ink);
+    background: transparent;
+    font: inherit;
+    font-size: 13px;
+}
+
+.capability-nav nav {
+    display: grid;
+    align-content: start;
+    gap: 6px;
+    min-height: 0;
+    overflow: auto;
+}
+
+.capability-nav button {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: 10px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    color: var(--studio-ink);
+    background: transparent;
+    text-align: left;
+}
+
+.capability-nav button:hover,
+.capability-nav button.active {
+    border-color: var(--studio-line);
+    background: var(--studio-control);
+}
+
+.capability-nav button.active {
+    border-color: var(--studio-accent-line);
+    box-shadow: inset 3px 0 0 var(--studio-accent);
+}
+
+.capability-nav button > .anticon {
+    color: var(--studio-accent);
+    font-size: 17px;
+}
+
+.capability-nav button span {
+    display: grid;
+    min-width: 0;
+    gap: 2px;
+}
+
+.capability-nav button strong,
+.capability-nav button small,
+.capability-nav button em {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.capability-nav button strong {
+    font-size: 13px;
+}
+
+.capability-nav button small,
+.capability-search-empty span {
+    color: var(--studio-muted);
+    font-size: 11px;
+}
+
+.capability-nav button em {
+    min-width: 28px;
+    padding: 3px 7px;
+    border-radius: 999px;
+    color: var(--studio-accent-ink);
+    background: var(--studio-accent-soft);
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 900;
+    text-align: center;
+}
+
+.capability-status {
+    grid-column: 2 / 4;
+    justify-self: start;
+}
+
+.capability-search-empty {
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 8px;
+    min-height: 160px;
+    color: var(--studio-muted);
+}
+
+.capability-detail {
+    display: grid;
+    grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+    align-content: start;
+    gap: 14px;
+    min-width: 0;
+    min-height: 0;
+    overflow: auto;
+    padding: 18px;
+}
+
+.capability-detail-header {
+    display: grid;
+    gap: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--studio-line);
+}
+
+.capability-detail-title {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 12px;
+    align-items: center;
+}
+
+.capability-detail-icon {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border: 1px solid var(--studio-accent-line);
+    border-radius: 8px;
+    color: var(--studio-accent-ink);
+    background: var(--studio-accent-soft);
+    font-size: 18px;
+}
+
+.capability-detail h3 {
+    margin: 2px 0 0;
+    color: var(--studio-ink);
+    font-size: 20px;
+    line-height: 1.2;
+}
+
+.capability-detail p {
+    margin: 5px 0 0;
+    color: var(--studio-muted-strong);
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.capability-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin: 0;
+}
+
+.capability-metrics div,
+.capability-local-config,
+.mcp-local-services,
+.capability-empty-state,
+.capability-extension-note {
+    border: 1px solid var(--studio-line);
+    border-radius: 8px;
+    background: var(--studio-soft-strong);
+}
+
+.capability-metrics div {
+    display: grid;
+    gap: 3px;
+    padding: 10px;
+}
+
+.capability-metrics dt,
+.capability-metrics dd,
+.capability-local-config dt,
+.capability-local-config dd {
+    margin: 0;
+}
+
+.capability-metrics dt,
+.capability-local-config dt {
+    color: var(--studio-muted);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.capability-metrics dd,
+.capability-local-config dd {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--studio-ink);
+    font-size: 13px;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.capability-empty-state {
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    padding: 24px;
+    text-align: center;
+}
+
+.capability-empty-state > .anticon {
+    color: var(--studio-accent);
+    font-size: 28px;
+}
+
+.capability-empty-state h3 {
+    margin: 4px 0 0;
+    font-size: 16px;
+}
+
+.capability-empty-state p {
+    max-width: 520px;
+}
+
+.capability-local-config,
+.mcp-local-services {
+    display: grid;
+    gap: 10px;
+    padding: 12px;
+}
+
+.capability-section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--studio-ink);
+    font-size: 13px;
+}
+
+.capability-section-title .anticon {
+    color: var(--studio-accent);
+}
+
+.capability-local-config dl {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+}
+
+.capability-local-config dl div {
+    display: grid;
+    grid-template-columns: 90px minmax(0, 1fr);
+    gap: 10px;
+}
+
+.mcp-service-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.mcp-service-list article {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+    padding: 10px;
+    border: 1px solid var(--studio-line);
+    border-radius: 8px;
+    background: var(--studio-control);
+}
+
+.mcp-service-list article div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.mcp-service-list strong,
+.mcp-service-list span,
+.mcp-service-list small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mcp-service-list strong {
+    color: var(--studio-ink);
+    font-size: 13px;
+}
+
+.mcp-service-list span,
+.mcp-service-list small {
+    color: var(--studio-muted);
+    font-size: 11px;
+}
+
+.mcp-service-list p {
+    margin: 0;
+    font-size: 12px;
+}
+
+.capability-extension-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px;
+    color: var(--studio-muted-strong);
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.capability-extension-note .anticon {
+    margin-top: 2px;
+    color: var(--studio-accent);
 }
 
 .confirm-backdrop,
@@ -2725,6 +3179,10 @@ code {
         min-height: 46px;
     }
 
+    .capability-topbar-button span {
+        display: none;
+    }
+
     .account-menu-host {
         margin-left: auto;
     }
@@ -2827,8 +3285,58 @@ code {
         width: 100vw;
     }
 
+    .settings-link-panel,
+    .capability-center-body,
+    .capability-metrics,
+    .mcp-service-list {
+        grid-template-columns: 1fr;
+    }
+
+    .capability-center-backdrop {
+        padding: 10px;
+    }
+
+    .capability-center-dialog {
+        height: calc(100vh - 20px);
+    }
+
+    .capability-center-header {
+        align-items: flex-start;
+        padding: 14px;
+    }
+
+    .capability-center-header h2 {
+        font-size: 19px;
+    }
+
+    .capability-center-body {
+        overflow: auto;
+    }
+
+    .capability-nav {
+        border-right: 0;
+        border-bottom: 1px solid var(--studio-line);
+    }
+
+    .capability-nav nav {
+        grid-template-columns: 1fr;
+        max-height: none;
+        overflow: visible;
+    }
+
+    .capability-detail {
+        overflow: visible;
+        padding: 14px;
+    }
+
+    .capability-local-config dl div {
+        grid-template-columns: 1fr;
+        gap: 3px;
+    }
+
     .auth-dialog,
     .auth-proxy-dialog,
+    .capability-center-dialog,
     .payment-dialog,
     .image-preview-dialog {
         max-height: calc(100vh - 24px);

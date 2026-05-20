@@ -110,6 +110,7 @@ public partial class Home
     private bool _leftSidebarCollapsed;
     private bool _settingsOpen;
     private bool _accountMenuOpen;
+    private bool _capabilityCenterOpen;
     private bool _exitConfirmOpen;
     private bool _accountBusy;
     private bool _accountRegisterOpen;
@@ -1693,6 +1694,23 @@ public partial class Home
 
     private void OpenSettings() => _settingsOpen = true;
     private void CloseSettings() => _settingsOpen = false;
+    private void OpenCapabilityCenter()
+    {
+        CloseAccountMenu();
+        _capabilityCenterOpen = true;
+    }
+
+    private void CloseCapabilityCenter()
+    {
+        _capabilityCenterOpen = false;
+    }
+
+    private void OpenCapabilityCenterFromSettings()
+    {
+        _settingsOpen = false;
+        OpenCapabilityCenter();
+    }
+
     private void OpenSettingsFromAccountMenu()
     {
         CloseAccountMenu();
