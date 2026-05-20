@@ -525,18 +525,287 @@
     @if (_settingsOpen)
     {
         <div class="settings-backdrop" @onclick="CloseSettings">
-            <section class="settings-drawer" @onclick:stopPropagation>
-                <header>
+            <section class="settings-drawer"
+                     role="dialog"
+                     aria-modal="true"
+                     aria-labelledby="settings-title"
+                     @onclick:stopPropagation>
+                <header class="settings-header">
                     <div>
-                        <span class="workspace-eyebrow">我的账户</span>
-                        <h2>余额与充值</h2>
+                        <span class="workspace-eyebrow">设置中心</span>
+                        <h2 id="settings-title">本地工作台设置</h2>
                     </div>
                     <button type="button" title="关闭" @onclick="CloseSettings">
                         <Icon Type="close" Theme="IconThemeType.Outline" />
                     </button>
                 </header>
 
-                <section class="settings-section">
+                <div class="settings-center">
+                    <aside class="settings-nav" aria-label="设置分类">
+                        <label class="settings-search">
+                            <Icon Type="search" Theme="IconThemeType.Outline" />
+                            <input type="search"
+                                   autocomplete="off"
+                                   placeholder="搜索设置"
+                                   value="@_settingsSearchText"
+                                   @oninput="UpdateSettingsSearch" />
+                        </label>
+
+                        @if (FilteredSettingsCategories.Count == 0)
+                        {
+                            <div class="settings-search-empty">
+                                <Icon Type="inbox" Theme="IconThemeType.Outline" />
+                                <span>没有匹配的设置</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <nav role="tablist" aria-label="设置中心导航">
+                                @foreach (var category in FilteredSettingsCategories)
+                                {
+                                    <button type="button"
+                                            role="tab"
+                                            id="@SettingsCategoryTabId(category.Key)"
+                                            aria-selected="@SettingsCategorySelected(category.Key)"
+                                            aria-controls="@SettingsCategoryPanelId(category.Key)"
+                                            class="@SettingsCategoryButtonClass(category.Key)"
+                                            @onclick="@(() => SelectSettingsCategory(category.Key))">
+                                        <Icon Type="@category.Icon" Theme="IconThemeType.Outline" />
+                                        <span>
+                                            <strong>@category.Title</strong>
+                                            <small>@category.Description</small>
+                                        </span>
+                                        <em>@SettingsCategoryStatus(category)</em>
+                                    </button>
+                                }
+                            </nav>
+                        }
+                    </aside>
+
+                    <section class="settings-content"
+                             role="@(ActiveSettingsCategory is null ? null : "tabpanel")"
+                             id="@(ActiveSettingsCategory is null ? null : SettingsCategoryPanelId(ActiveSettingsCategory.Key))"
+                             aria-labelledby="@(ActiveSettingsCategory is null ? null : SettingsCategoryTabId(ActiveSettingsCategory.Key))">
+                        @if (ActiveSettingsCategory is null)
+                        {
+                            <div class="settings-empty-state">
+                                <Icon Type="inbox" Theme="IconThemeType.Outline" />
+                                <h3>没有可显示的设置</h3>
+                                <p>清空搜索条件后可以查看本地工作台设置。</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <header class="settings-content-header">
+                                <div>
+                                    <span class="workspace-eyebrow">@SettingsCategoryStatus(ActiveSettingsCategory)</span>
+                                    <h3>@ActiveSettingsCategory.Title</h3>
+                                    <p>@ActiveSettingsCategory.Description</p>
+                                </div>
+                            </header>
+
+                            @switch (ActiveSettingsCategory.Key)
+                            {
+                                case "appearance":
+                                    <section class="settings-section">
+                                        <div class="settings-section-title">
+                                            <strong>界面主题</strong>
+                                            <span>当前 @ThemeModeLabel(Settings.ThemeMode)</span>
+                                        </div>
+
+                                        <nav class="theme-segment" aria-label="界面主题">
+                                            <button type="button" class="@ThemeOptionClass("system")" title="跟随系统" @onclick="@(() => UpdateThemeMode("system"))">
+                                                <Icon Type="desktop" Theme="IconThemeType.Outline" />
+                                                <span>系统</span>
+                                            </button>
+                                            <button type="button" class="@ThemeOptionClass("light")" title="浅色主题" @onclick="@(() => UpdateThemeMode("light"))">
+                                                <Icon Type="bulb" Theme="IconThemeType.Outline" />
+                                                <span>浅色</span>
+                                            </button>
+                                            <button type="button" class="@ThemeOptionClass("dark")" title="深色主题" @onclick="@(() => UpdateThemeMode("dark"))">
+                                                <Icon Type="moon" Theme="IconThemeType.Outline" />
+                                                <span>深色</span>
+                                            </button>
+                                        </nav>
+                                    </section>
+                                    break;
+
+                                case "shortcuts":
+                                    <section class="settings-section">
+                                        <div class="settings-empty-state compact">
+                                            <Icon Type="keyboard" Theme="IconThemeType.Outline" />
+                                            <h3>暂无可编辑快捷键</h3>
+                                            <p>这里只保留本地快捷键设置槽位，后续由开源插件或本地配置贡献。</p>
+                                        </div>
+                                    </section>
+                                    break;
+
+                                case "model":
+                                    <section class="settings-section">
+                                        <div class="settings-section-title">
+                                            <strong>模型</strong>
+                                            <span>@Settings.Model</span>
+                                        </div>
+
+                                        <div class="studio-form-grid settings-model-grid">
+                                            <FieldSelect Label="模型" Value="@Settings.Model" Options="@_modelOptions" OnChange="@UpdateModel" />
+                                            <FieldSelect Label="质量" Value="@Settings.Quality" Options="@CurrentQualityOptions" OnChange="@UpdateQuality" />
+                                            <FieldNumber Label="数量" Value="@_count" OnChange="@UpdateCount" Min="1" Max="10" />
+                                            @if (CurrentModelCapabilities.SupportsOutputFormat)
+                                            {
+                                                <FieldSelect Label="格式" Value="@Settings.Format" Options="@CurrentFormatOptions" OnChange="@UpdateFormat" />
+                                            }
+                                            @if (CurrentModelCapabilities.Styles.Count > 0)
+                                            {
+                                                <FieldSelect Label="风格" Value="@Settings.Style" Options="@CurrentStyleOptions" OnChange="@UpdateStyle" />
+                                            }
+                                            @if (CurrentModelCapabilities.SupportsBackground)
+                                            {
+                                                <FieldSelect Label="背景" Value="@Settings.Background" Options="@CurrentBackgroundOptions" OnChange="@UpdateBackground" />
+                                            }
+                                            @if (CurrentModelCapabilities.SupportsOutputCompression && Settings.Format != "png")
+                                            {
+                                                <FieldNumber Label="压缩" Value="@Settings.Compression" OnChange="@UpdateCompression" Min="0" Max="100" />
+                                            }
+                                            @if (CurrentModelCapabilities.SupportsModeration)
+                                            {
+                                                <FieldSelect Label="审核" Value="@Settings.Moderation" Options="@_moderationOptions" OnChange="@UpdateModeration" />
+                                            }
+                                            @if (CurrentModelCapabilities.SupportsInputFidelity)
+                                            {
+                                                <FieldSelect Label="输入保真" Value="@Settings.InputFidelity" Options="@_fidelityOptions" OnChange="@UpdateFidelity" />
+                                            }
+                                            @if (CurrentModelCapabilities.SupportsStream)
+                                            {
+                                                <div class="studio-field">
+                                                    <label class="studio-label">请求模式</label>
+                                                    <select class="studio-select" value="@Settings.RequestMode" @onchange="UpdateRequestMode">
+                                                        <option value="stream">流式</option>
+                                                        <option value="sync">同步</option>
+                                                    </select>
+                                                </div>
+                                            }
+                                            @if (CurrentModelCapabilities.SupportsPartialImages)
+                                            {
+                                                <FieldNumber Label="Partial" Value="@Settings.PartialImages" OnChange="@UpdatePartial" Min="0" Max="3" />
+                                            }
+                                            <div class="studio-field">
+                                                <label class="studio-label">用户标识</label>
+                                                <input class="studio-input" placeholder="可选" value="@Settings.User" @onchange="UpdateUser" />
+                                            </div>
+                                        </div>
+
+                                        <div class="settings-divider"></div>
+
+                                        <div class="settings-section-title">
+                                            <strong>提示词润色</strong>
+                                            <span>当前 @PromptPolishModeLabel</span>
+                                        </div>
+
+                                        <nav class="polish-segment" aria-label="提示词润色策略">
+                                            @foreach (var option in _promptPolishOptions)
+                                            {
+                                                <button type="button"
+                                                        class="@PromptPolishOptionClass(option.Value)"
+                                                        title="@option.Description"
+                                                        @onclick="@(() => UpdatePromptPolishMode(option.Value))">
+                                                    <span>@option.Label</span>
+                                                    <small>@option.Description</small>
+                                                </button>
+                                            }
+                                        </nav>
+
+                                        <p class="actual-params-summary">@ActualRequestSummary</p>
+
+                                        <label class="studio-label">高级 JSON</label>
+                                        <textarea class="studio-textarea json-input"
+                                                  placeholder='{"style": "..."}'
+                                                  value="@Settings.AdvancedJson"
+                                                  @oninput="UpdateAdvancedJson"></textarea>
+                                    </section>
+                                    break;
+
+                                case "network":
+                                    <section class="settings-section">
+                                        <div class="settings-section-title">
+                                            <strong>本地网络</strong>
+                                            <span>@(string.IsNullOrWhiteSpace(Settings.NetworkProxyUrl) ? "未启用代理" : "已配置代理")</span>
+                                        </div>
+
+                                        <div class="studio-field">
+                                            <label class="studio-label">本机代理地址</label>
+                                            <input class="studio-input" autocomplete="off" placeholder="http://127.0.0.1:7890" value="@Settings.NetworkProxyUrl" @onchange="UpdateAccountProxyUrl" />
+                                        </div>
+
+                                        <div class="settings-status-panel">
+                                            <span class="@ServerStatusClass">
+                                                <span class="server-status-dot" aria-hidden="true"></span>
+                                                @ServerStatusText
+                                            </span>
+                                            <small>@ServerStatusTitle</small>
+                                        </div>
+                                    </section>
+                                    break;
+
+                                case "updates":
+                                    <section class="settings-section">
+                                        <div class="settings-section-title">
+                                            <strong>应用更新</strong>
+                                            <span>@UpdateStatusLabel</span>
+                                        </div>
+
+                                        <div class="@UpdatePanelClass">
+                                            <div class="update-version-row">
+                                                <span>当前版本</span>
+                                                <strong>@AppVersion</strong>
+                                            </div>
+                                            <div class="update-version-row">
+                                                <span>最新版本</span>
+                                                <strong>@LatestUpdateVersionLabel</strong>
+                                            </div>
+                                            <p>@UpdateMessage</p>
+                                            <div class="settings-actions">
+                                                <button type="button" class="studio-button studio-button-light" disabled="@_updateChecking" @onclick="CheckForUpdatesAsync">
+                                                    <Icon Type="@(_updateChecking ? "loading" : "cloud-sync")" Theme="IconThemeType.Outline" />
+                                                    <span>@(_updateChecking ? "检查中" : "检查更新")</span>
+                                                </button>
+                                                @if (_updateInfo?.UpdateAvailable == true)
+                                                {
+                                                    <button type="button" class="studio-button studio-button-primary" disabled="@(!_updateInfo.CanInstall || _updateInstalling)" @onclick="InstallUpdateAsync">
+                                                        <Icon Type="@(_updateInstalling ? "loading" : "download")" Theme="IconThemeType.Outline" />
+                                                        <span>@(_updateInstalling ? "下载中" : "自动更新")</span>
+                                                    </button>
+                                                }
+                                            </div>
+                                        </div>
+                                    </section>
+                                    break;
+
+                                case "capabilities":
+                                    <section class="settings-section">
+                                        <div class="settings-section-title">
+                                            <strong>能力中心</strong>
+                                            <span>本地扩展点</span>
+                                        </div>
+
+                                        <div class="settings-link-panel">
+                                            <div>
+                                                <strong>智能体、技能、指令、挂钩、MCP 与插件</strong>
+                                                <span>仅展示开源 UI 与本地配置占位。</span>
+                                            </div>
+                                            <button type="button" class="studio-button studio-button-light" @onclick="OpenCapabilityCenterFromSettings">
+                                                <Icon Type="appstore" Theme="IconThemeType.Outline" />
+                                                <span>打开</span>
+                                            </button>
+                                        </div>
+                                    </section>
+                                    break;
+                            }
+                        }
+                    </section>
+                </div>
+
+                <section class="settings-account-strip" aria-label="账户服务">
                     <div class="account-summary account-summary-compact">
                         <div>
                             <span>账户</span>
@@ -560,117 +829,10 @@
                                 <span>查看待支付订单</span>
                             </button>
                         }
-                    </div>
-
-                    <div class="settings-divider"></div>
-
-                    <div class="settings-section-title">
-                        <strong>外观</strong>
-                        <span>当前 @ThemeModeLabel(Settings.ThemeMode)</span>
-                    </div>
-
-                    <nav class="theme-segment" aria-label="界面主题">
-                        <button type="button" class="@ThemeOptionClass("system")" title="跟随系统" @onclick="@(() => UpdateThemeMode("system"))">
-                            <Icon Type="desktop" Theme="IconThemeType.Outline" />
-                            <span>系统</span>
+                        <button type="button" class="studio-button studio-button-ghost" disabled="@(!AccountLoggedIn || _accountBusy)" @onclick="SignOutAccount">
+                            <Icon Type="logout" Theme="IconThemeType.Outline" />
+                            <span>退出登录</span>
                         </button>
-                        <button type="button" class="@ThemeOptionClass("light")" title="浅色主题" @onclick="@(() => UpdateThemeMode("light"))">
-                            <Icon Type="bulb" Theme="IconThemeType.Outline" />
-                            <span>浅色</span>
-                        </button>
-                        <button type="button" class="@ThemeOptionClass("dark")" title="深色主题" @onclick="@(() => UpdateThemeMode("dark"))">
-                            <Icon Type="moon" Theme="IconThemeType.Outline" />
-                            <span>深色</span>
-                        </button>
-                    </nav>
-
-                    <div class="settings-divider"></div>
-
-                    <div class="settings-section-title">
-                        <strong>提示词润色</strong>
-                        <span>当前 @PromptPolishModeLabel</span>
-                    </div>
-
-                    <nav class="polish-segment" aria-label="提示词润色策略">
-                        @foreach (var option in _promptPolishOptions)
-                        {
-                            <button type="button"
-                                    class="@PromptPolishOptionClass(option.Value)"
-                                    title="@option.Description"
-                                    @onclick="@(() => UpdatePromptPolishMode(option.Value))">
-                                <span>@option.Label</span>
-                                <small>@option.Description</small>
-                            </button>
-                        }
-                    </nav>
-
-                    <div class="settings-divider"></div>
-
-                    <div class="settings-section-title">
-                        <strong>应用更新</strong>
-                        <span>@UpdateStatusLabel</span>
-                    </div>
-
-                    <div class="@UpdatePanelClass">
-                        <div class="update-version-row">
-                            <span>当前版本</span>
-                            <strong>@AppVersion</strong>
-                        </div>
-                        <div class="update-version-row">
-                            <span>最新版本</span>
-                            <strong>@LatestUpdateVersionLabel</strong>
-                        </div>
-                        <p>@UpdateMessage</p>
-                        <div class="settings-actions">
-                            <button type="button" class="studio-button studio-button-light" disabled="@_updateChecking" @onclick="CheckForUpdatesAsync">
-                                <Icon Type="@(_updateChecking ? "loading" : "cloud-sync")" Theme="IconThemeType.Outline" />
-                                <span>@(_updateChecking ? "检查中" : "检查更新")</span>
-                            </button>
-                            @if (_updateInfo?.UpdateAvailable == true)
-                            {
-                                <button type="button" class="studio-button studio-button-primary" disabled="@(!_updateInfo.CanInstall || _updateInstalling)" @onclick="InstallUpdateAsync">
-                                    <Icon Type="@(_updateInstalling ? "loading" : "download")" Theme="IconThemeType.Outline" />
-                                    <span>@(_updateInstalling ? "下载中" : "自动更新")</span>
-                                </button>
-                            }
-                        </div>
-                    </div>
-
-                    <div class="settings-divider"></div>
-
-                    <div class="settings-section-title">
-                        <strong>能力中心</strong>
-                        <span>本地扩展点</span>
-                    </div>
-
-                    <div class="settings-link-panel">
-                        <div>
-                            <strong>智能体、技能、指令、挂钩、MCP 与插件</strong>
-                            <span>仅展示开源 UI 与本地配置占位。</span>
-                        </div>
-                        <button type="button" class="studio-button studio-button-light" @onclick="OpenCapabilityCenterFromSettings">
-                            <Icon Type="appstore" Theme="IconThemeType.Outline" />
-                            <span>打开</span>
-                        </button>
-                    </div>
-
-                    <div class="settings-divider"></div>
-
-                    <div class="settings-section-title">
-                        <strong>网络代理</strong>
-                        <span>远程 SaaS 与 AI 网关接口</span>
-                    </div>
-
-                    <div class="studio-field">
-                        <label class="studio-label">代理地址</label>
-                        <input class="studio-input" autocomplete="off" placeholder="http://127.0.0.1:7890" value="@Settings.NetworkProxyUrl" @onchange="UpdateAccountProxyUrl" />
-                    </div>
-
-                    <div class="settings-divider"></div>
-
-                    <div class="settings-section-title">
-                        <strong>账户充值</strong>
-                        <span>微信扫码</span>
                     </div>
 
                     <div class="recharge-row recharge-row-simple">
@@ -689,13 +851,6 @@
                         <p class="@AccountMessageClass">@_accountMessage</p>
                     }
                 </section>
-
-                <footer class="settings-footer">
-                    <button type="button" class="studio-button studio-button-ghost" disabled="@(!AccountLoggedIn || _accountBusy)" @onclick="SignOutAccount">
-                        <Icon Type="logout" Theme="IconThemeType.Outline" />
-                        <span>退出登录</span>
-                    </button>
-                </footer>
             </section>
         </div>
     }

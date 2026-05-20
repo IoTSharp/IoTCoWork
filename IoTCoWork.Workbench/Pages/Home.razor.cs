@@ -95,6 +95,15 @@ public partial class Home
         new("ask", "每次询问", "提交作图需求后询问是否先润色。"),
         new("auto", "自动润色", "先润色提示词，再生成图片。"),
     ];
+    private static readonly IReadOnlyList<SettingsCategory> SettingsCategories =
+    [
+        new("appearance", "外观", "主题与界面显示", "skin", ["theme", "appearance", "外观", "主题"]),
+        new("shortcuts", "快捷键", "本地键盘入口", "keyboard", ["shortcut", "hotkey", "快捷键", "键盘"]),
+        new("model", "模型", "作图模型与请求参数", "experiment", ["model", "image", "模型", "质量", "格式"]),
+        new("network", "本地网络", "本机代理与连接状态", "global", ["network", "proxy", "网络", "代理"]),
+        new("updates", "更新", "应用版本检查", "cloud-sync", ["update", "release", "更新", "版本"]),
+        new("capabilities", "能力中心", "本地扩展点入口", "appstore", ["capability", "plugin", "mcp", "能力", "插件"]),
+    ];
     private readonly IReadOnlyList<string> _promptIdeas =
     [
         "一张极简产品海报，玻璃茶杯悬浮在白色背景中",
@@ -109,6 +118,8 @@ public partial class Home
     private string _loadingLabel = "正在请求图像接口";
     private bool _leftSidebarCollapsed;
     private bool _settingsOpen;
+    private string _activeSettingsCategoryKey = "appearance";
+    private string _settingsSearchText = string.Empty;
     private bool _accountMenuOpen;
     private bool _capabilityCenterOpen;
     private bool _exitConfirmOpen;
@@ -336,6 +347,26 @@ public partial class Home
             })
             .ToArray();
 
+    private IReadOnlyList<SettingsCategory> FilteredSettingsCategories
+    {
+        get
+        {
+            var query = _settingsSearchText.Trim();
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                return SettingsCategories;
+            }
+
+            return SettingsCategories
+                .Where(category => category.Matches(query))
+                .ToArray();
+        }
+    }
+
+    private SettingsCategory? ActiveSettingsCategory =>
+        FilteredSettingsCategories.FirstOrDefault(category => category.Key == _activeSettingsCategoryKey)
+        ?? FilteredSettingsCategories.FirstOrDefault();
+
     protected override async Task OnInitializedAsync()
     {
         _snapshot = await Storage.LoadAsync();
@@ -508,6 +539,39 @@ public partial class Home
     };
     private string PromptPolishOptionClass(string mode) =>
         Settings.PromptPolishMode == mode ? "active" : string.Empty;
+    private string SettingsCategoryButtonClass(string key) =>
+        string.Equals(ActiveSettingsCategory?.Key, key, StringComparison.Ordinal)
+            ? "active"
+            : string.Empty;
+
+    private string SettingsCategorySelected(string key) =>
+        string.Equals(ActiveSettingsCategory?.Key, key, StringComparison.Ordinal) ? "true" : "false";
+
+    private string SettingsCategoryPanelId(string key) => $"settings-panel-{key}";
+
+    private string SettingsCategoryTabId(string key) => $"settings-tab-{key}";
+
+    private string SettingsCategoryStatus(SettingsCategory category) => category.Key switch
+    {
+        "appearance" => ThemeModeLabel(Settings.ThemeMode),
+        "shortcuts" => "只读",
+        "model" => Settings.Model,
+        "network" => string.IsNullOrWhiteSpace(Settings.NetworkProxyUrl) ? "未启用" : "已配置",
+        "updates" => UpdateStatusLabel,
+        "capabilities" => "本地占位",
+        _ => string.Empty,
+    };
+
+    private void SelectSettingsCategory(string key)
+    {
+        _activeSettingsCategoryKey = key;
+    }
+
+    private void UpdateSettingsSearch(ChangeEventArgs args)
+    {
+        _settingsSearchText = args.Value?.ToString() ?? string.Empty;
+    }
+
     private string AuthTabClass(bool register) => _accountRegisterOpen == register ? "active" : string.Empty;
     private void SetLeftSidebarCollapsed(bool collapsed) => _leftSidebarCollapsed = collapsed;
     private static string MessageClass(StudioMessage message) => $"thread-message {message.Role}";
@@ -2238,6 +2302,21 @@ public partial class Home
     }
 
     private sealed record ResolutionPreset(string Tier, string Label, string Description);
+    private sealed record SettingsCategory(
+        string Key,
+        string Title,
+        string Description,
+        string Icon,
+        IReadOnlyList<string> Keywords)
+    {
+        public bool Matches(string query)
+        {
+            return Title.Contains(query, StringComparison.OrdinalIgnoreCase)
+                || Description.Contains(query, StringComparison.OrdinalIgnoreCase)
+                || Keywords.Any(keyword => keyword.Contains(query, StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
     private sealed record PendingPrompt(string Text, string MessageId);
     private sealed record ImageRevisionRequest(string ImageUrl, string Prompt);
     private sealed record PromptPolishOption(string Value, string Label, string Description);
