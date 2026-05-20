@@ -410,8 +410,15 @@ window.imageStudio = {
   },
   window: {
     invoke: async function (command) {
-      const api = globalThis.omni && globalThis.omni.window;
+      const api = (globalThis.nativeWeb && globalThis.nativeWeb.window)
+        || (globalThis.omni && globalThis.omni.window);
       let action = api && api[command];
+      if (typeof action !== 'function' && command === 'exit' && globalThis.nativeWeb) {
+        action = function () {
+          return globalThis.nativeWeb.invoke('window.exit');
+        };
+      }
+
       if (typeof action !== 'function' && command === 'exit' && globalThis.omni) {
         action = function () {
           return globalThis.omni.invoke('window.exit');

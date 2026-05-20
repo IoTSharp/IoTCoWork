@@ -13,7 +13,7 @@
 
 <XProvider Theme="@ProviderTheme" Tokens="@ThemeTokens" Class="@RootThemeClass">
     <div class="studio-shell">
-        <header class="studio-topbar" omni-drag>
+        <header class="studio-topbar" native-web-drag omni-drag>
             <div class="studio-brand">
                 <div class="studio-logo" aria-hidden="true">
                     <img src="favicon.svg" alt="" />
@@ -24,7 +24,7 @@
                 </div>
             </div>
 
-            <div class="studio-topbar-actions" omni-no-drag>
+            <div class="studio-topbar-actions" native-web-no-drag omni-no-drag>
                 <button type="button" class="studio-button studio-button-light" title="我的账户" @onclick="OpenSettings">
                     <Icon Type="user" Theme="IconThemeType.Outline" />
                     <span>我的账户</span>

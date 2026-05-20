@@ -89,7 +89,7 @@ public sealed class SaaSAccountClient
             throw new InvalidOperationException("请填写密码。");
         }
 
-        await SendAsync<PlatformRegisterResponse>(
+        await SendWithoutResultAsync(
             settings,
             HttpMethod.Post,
             "auth/register",
@@ -310,6 +310,23 @@ public sealed class SaaSAccountClient
         }
     }
 
+    private async Task SendWithoutResultAsync(
+        StudioSettings settings,
+        HttpMethod method,
+        string path,
+        object? body,
+        string? accessToken,
+        CancellationToken cancellationToken)
+    {
+        await SendAsync<EmptyResponse>(
+            settings,
+            method,
+            path,
+            body,
+            accessToken,
+            cancellationToken);
+    }
+
     private async Task<T> SendOnceAsync<T>(
         StudioSettings settings,
         HttpMethod method,
@@ -353,6 +370,11 @@ public sealed class SaaSAccountClient
         if (!response.IsSuccessStatusCode)
         {
             throw new HttpRequestException($"账户服务返回 {(int)response.StatusCode} {response.ReasonPhrase}: {ExtractErrorMessage(raw)}");
+        }
+
+        if (typeof(T) == typeof(EmptyResponse))
+        {
+            return (T)(object)EmptyResponse.Value;
         }
 
         if (typeof(T) == typeof(JsonElement))
@@ -456,5 +478,10 @@ public sealed class SaaSAccountClient
 
     private sealed class SaaSProxyUnavailableException : Exception
     {
+    }
+
+    private readonly struct EmptyResponse
+    {
+        public static readonly EmptyResponse Value = new();
     }
 }

@@ -293,7 +293,9 @@ h2:focus {
 }
 
 html[data-omni-window-style="frameless"] .window-controls,
-html[data-omni-window-style="vscode"] .window-controls {
+html[data-omni-window-style="vscode"] .window-controls,
+html[data-native-web-window-style="frameless"] .window-controls,
+html[data-native-web-window-style="vscode"] .window-controls {
     display: flex;
 }
 
