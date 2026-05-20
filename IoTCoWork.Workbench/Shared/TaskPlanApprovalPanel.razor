@@ -1,0 +1,464 @@
+<section class="context-section task-plan-panel" aria-labelledby="task-plan-title">
+    <header class="task-plan-header">
+        <div>
+            <div class="context-section-title">
+                <Icon Type="branches" Theme="IconThemeType.Outline" />
+                <strong id="task-plan-title">任务计划</strong>
+            </div>
+            <p>@CurrentPreview.Summary</p>
+        </div>
+        <span class="@PreviewBadgeClass">
+            <Icon Type="@PreviewIcon" Theme="IconThemeType.Outline" />
+            <span>@PreviewLabel</span>
+        </span>
+    </header>
+
+    <div class="task-plan-state-strip" role="tablist" aria-label="任务状态">
+        @foreach (var option in _stateOptions)
+        {
+            <button type="button"
+                    class="@StateOptionClass(option.State)"
+                    role="tab"
+                    aria-selected="@IsSelectedState(option.State)"
+                    @onclick="@(() => SelectState(option.State))">
+                <span class="@StateDotClass(option.State)" aria-hidden="true"></span>
+                <span>@option.Label</span>
+            </button>
+        }
+    </div>
+
+    @if (_selectedState == TaskPlanPreviewState.Empty)
+    {
+        <div class="task-plan-empty">
+            <Icon Type="profile" Theme="IconThemeType.Outline" />
+            <strong>暂无任务计划</strong>
+            <span>当前会话还没有活跃计划。</span>
+        </div>
+    }
+    else
+    {
+        <div class="@PreviewSummaryClass">
+            <div>
+                <span>Run</span>
+                <strong>@CurrentPreview.TraceLabel</strong>
+            </div>
+            <div>
+                <span>模式</span>
+                <strong>@ModeLabel</strong>
+            </div>
+            <div>
+                <span>进度</span>
+                <strong>@CurrentPreview.Progress%</strong>
+            </div>
+        </div>
+
+        <ol class="task-plan-step-list" aria-label="计划步骤">
+            @foreach (var step in CurrentPreview.Steps)
+            {
+                <li class="@PlanItemClass(step.Status)">
+                    <span class="task-plan-step-index">@step.Order</span>
+                    <div>
+                        <strong>@step.Title</strong>
+                        <small>@step.Detail</small>
+                    </div>
+                    <span class="@StatusPillClass(step.Status)">
+                        <Icon Type="@StatusIcon(step.Status)" Theme="IconThemeType.Outline" />
+                        <span>@StatusLabel(step.Status)</span>
+                    </span>
+                </li>
+            }
+        </ol>
+
+        <section class="task-plan-subsection" aria-labelledby="task-plan-tools-title">
+            <div class="task-plan-subsection-title">
+                <Icon Type="tool" Theme="IconThemeType.Outline" />
+                <strong id="task-plan-tools-title">工具调用</strong>
+            </div>
+            <ul class="task-plan-tool-list">
+                @foreach (var tool in CurrentPreview.Tools)
+                {
+                    <li class="@PlanItemClass(tool.Status)">
+                        <div>
+                            <strong>@tool.Name</strong>
+                            <small>@tool.Description</small>
+                        </div>
+                        <code>@tool.ToolId</code>
+                        <span class="@StatusPillClass(tool.Status)">@StatusLabel(tool.Status)</span>
+                    </li>
+                }
+            </ul>
+        </section>
+
+        <section class="task-plan-subsection" aria-labelledby="task-plan-approvals-title">
+            <div class="task-plan-subsection-title">
+                <Icon Type="safety" Theme="IconThemeType.Outline" />
+                <strong id="task-plan-approvals-title">审批节点</strong>
+            </div>
+            <ul class="task-plan-approval-list">
+                @foreach (var approval in CurrentPreview.Approvals)
+                {
+                    <li class="@PlanItemClass(approval.Status)">
+                        <span>@approval.NodeId</span>
+                        <div>
+                            <strong>@approval.Title</strong>
+                            <small>@approval.Description</small>
+                            @if (approval.Status == TaskPlanItemStatus.WaitingApproval)
+                            {
+                                <div class="task-plan-approval-actions">
+                                    <button type="button" class="studio-button studio-button-primary" @onclick="ApprovePreview">
+                                        <Icon Type="check-circle" Theme="IconThemeType.Outline" />
+                                        <span>确认模拟</span>
+                                    </button>
+                                    <button type="button" class="studio-button studio-button-light" @onclick="RejectPreview">
+                                        <Icon Type="close-circle" Theme="IconThemeType.Outline" />
+                                        <span>退回模拟</span>
+                                    </button>
+                                </div>
+                            }
+                        </div>
+                        <span class="@StatusPillClass(approval.Status)">@StatusLabel(approval.Status)</span>
+                    </li>
+                }
+            </ul>
+        </section>
+
+        <section class="task-plan-subsection" aria-labelledby="task-plan-results-title">
+            <div class="task-plan-subsection-title">
+                <Icon Type="file-done" Theme="IconThemeType.Outline" />
+                <strong id="task-plan-results-title">执行结果</strong>
+            </div>
+            <ul class="task-plan-result-list">
+                @foreach (var result in CurrentPreview.Results)
+                {
+                    <li class="@PlanItemClass(result.Status)">
+                        <Icon Type="@StatusIcon(result.Status)" Theme="IconThemeType.Outline" />
+                        <div>
+                            <strong>@result.Title</strong>
+                            <small>@result.Description</small>
+                        </div>
+                    </li>
+                }
+            </ul>
+        </section>
+    }
+</section>
+
+@code {
+    [Parameter] public string TaskTitle { get; set; } = "当前任务";
+    [Parameter] public string ModeLabel { get; set; } = "文生图";
+    [Parameter] public string Model { get; set; } = "未选择";
+    [Parameter] public bool IsHostLoading { get; set; }
+    [Parameter] public int ArtifactCount { get; set; }
+
+    private readonly IReadOnlyList<TaskPlanStateOption> _stateOptions =
+    [
+        new(TaskPlanPreviewState.Empty, "空白"),
+        new(TaskPlanPreviewState.Loading, "加载"),
+        new(TaskPlanPreviewState.Running, "运行中"),
+        new(TaskPlanPreviewState.WaitingApproval, "待确认"),
+        new(TaskPlanPreviewState.Succeeded, "成功"),
+        new(TaskPlanPreviewState.Failed, "失败"),
+        new(TaskPlanPreviewState.PartialSucceeded, "部分成功"),
+    ];
+
+    private TaskPlanPreviewState _selectedState = TaskPlanPreviewState.Empty;
+    private bool _stateSelectedByUser;
+
+    private TaskPlanPreview CurrentPreview => BuildPreview(_selectedState);
+    private string PreviewLabel => StateLabel(_selectedState);
+    private string PreviewIcon => StateIcon(_selectedState);
+    private string PreviewBadgeClass => $"task-plan-badge {StateCss(_selectedState)}";
+    private string PreviewSummaryClass => $"task-plan-summary {StateCss(_selectedState)}";
+
+    protected override void OnParametersSet()
+    {
+        if (_stateSelectedByUser)
+        {
+            return;
+        }
+
+        _selectedState = IsHostLoading
+            ? TaskPlanPreviewState.Running
+            : ArtifactCount > 0
+                ? TaskPlanPreviewState.Succeeded
+                : TaskPlanPreviewState.Empty;
+    }
+
+    private void SelectState(TaskPlanPreviewState state)
+    {
+        _selectedState = state;
+        _stateSelectedByUser = true;
+    }
+
+    private void ApprovePreview() => SelectState(TaskPlanPreviewState.Succeeded);
+    private void RejectPreview() => SelectState(TaskPlanPreviewState.Failed);
+    private bool IsSelectedState(TaskPlanPreviewState state) => _selectedState == state;
+    private string StateOptionClass(TaskPlanPreviewState state) =>
+        $"task-plan-state-option {StateCss(state)}{(IsSelectedState(state) ? " active" : string.Empty)}";
+    private static string StateDotClass(TaskPlanPreviewState state) => $"task-plan-state-dot {StateCss(state)}";
+    private static string PlanItemClass(TaskPlanItemStatus status) => $"task-plan-item {ItemStatusCss(status)}";
+    private static string StatusPillClass(TaskPlanItemStatus status) => $"task-plan-status-pill {ItemStatusCss(status)}";
+
+    private TaskPlanPreview BuildPreview(TaskPlanPreviewState state)
+    {
+        var title = string.IsNullOrWhiteSpace(TaskTitle) ? "当前任务" : TaskTitle;
+        var model = string.IsNullOrWhiteSpace(Model) ? "未选择模型" : Model;
+
+        return state switch
+        {
+            TaskPlanPreviewState.Empty => new(
+                "暂无任务计划",
+                "等待新的本地任务草稿。",
+                "run-none",
+                0,
+                [],
+                [],
+                [],
+                []),
+
+            TaskPlanPreviewState.Loading => new(
+                title,
+                $"正在读取 {ModeLabel} 的本地计划草稿。",
+                "run-loading",
+                18,
+                [
+                    new(1, "读取上下文", "加载会话、目标端与输出位置。", TaskPlanItemStatus.Loading),
+                    new(2, "生成计划骨架", "整理计划步骤、工具清单与审批节点。", TaskPlanItemStatus.NotStarted),
+                    new(3, "准备结果视图", "等待模拟结果占位。", TaskPlanItemStatus.NotStarted),
+                ],
+                [
+                    new("local.workspace.read", "读取本地 workspace", "读取本地会话和工程草稿。", TaskPlanItemStatus.Loading),
+                    new("local.policy.preview", "预览审批策略", "计算本地审批节点。", TaskPlanItemStatus.NotStarted),
+                ],
+                [
+                    new("AP-001", "计划确认", "计划草稿加载完成后进入确认。", TaskPlanItemStatus.NotStarted),
+                ],
+                [
+                    new("等待计划", "计划步骤尚未完成加载。", TaskPlanItemStatus.Loading),
+                ]),
+
+            TaskPlanPreviewState.Running => new(
+                title,
+                $"{ModeLabel} · {model} · 本地执行预览。",
+                "run-local-042",
+                58,
+                [
+                    new(1, "解析目标", "已识别 workspace、边缘目标与输出位置。", TaskPlanItemStatus.Succeeded),
+                    new(2, "生成草稿", "正在生成本地计划和产物说明。", TaskPlanItemStatus.Running),
+                    new(3, "汇总结果", "等待工具调用返回模拟摘要。", TaskPlanItemStatus.NotStarted),
+                ],
+                [
+                    new("local.workspace.read", "读取本地 workspace", "读取会话、参数与附件索引。", TaskPlanItemStatus.Succeeded),
+                    new("local.codegen.preview", "生成代码预览", "只创建本地草稿，不调用远程工具。", TaskPlanItemStatus.Running),
+                    new("local.artifact.stage", "暂存产物摘要", "等待计划步骤完成。", TaskPlanItemStatus.NotStarted),
+                ],
+                [
+                    new("AP-001", "计划确认", "低风险草稿已自动通过。", TaskPlanItemStatus.Succeeded),
+                    new("AP-002", "写入草稿", "本地草稿写入前等待工具摘要。", TaskPlanItemStatus.NotStarted),
+                ],
+                [
+                    new("计划草稿", "已生成 2 个步骤，剩余 1 个步骤运行中。", TaskPlanItemStatus.Running),
+                ]),
+
+            TaskPlanPreviewState.WaitingApproval => new(
+                title,
+                "计划已暂停，等待人工确认。",
+                "run-approval-009",
+                72,
+                [
+                    new(1, "解析目标", "已完成本地上下文读取。", TaskPlanItemStatus.Succeeded),
+                    new(2, "生成草稿", "已生成可审阅的计划草稿。", TaskPlanItemStatus.Succeeded),
+                    new(3, "写入产物", "等待人工确认后继续。", TaskPlanItemStatus.WaitingApproval),
+                ],
+                [
+                    new("local.workspace.read", "读取本地 workspace", "读取会话与目标配置。", TaskPlanItemStatus.Succeeded),
+                    new("local.codegen.preview", "生成代码预览", "已生成待确认草稿。", TaskPlanItemStatus.Succeeded),
+                    new("local.artifact.write", "写入本地草稿", "等待确认，不会自动执行。", TaskPlanItemStatus.WaitingApproval),
+                ],
+                [
+                    new("AP-001", "计划确认", "计划结构已确认。", TaskPlanItemStatus.Succeeded),
+                    new("AP-002", "草稿写入确认", "确认后仅更新本地预览状态。", TaskPlanItemStatus.WaitingApproval),
+                ],
+                [
+                    new("待确认草稿", "2 个计划步骤已完成，1 个节点等待确认。", TaskPlanItemStatus.WaitingApproval),
+                ]),
+
+            TaskPlanPreviewState.Succeeded => new(
+                title,
+                "计划、工具调用、审批与结果均已完成。",
+                "run-success-118",
+                100,
+                [
+                    new(1, "解析目标", "已完成本地上下文读取。", TaskPlanItemStatus.Succeeded),
+                    new(2, "生成草稿", "已生成计划和产物摘要。", TaskPlanItemStatus.Succeeded),
+                    new(3, "汇总结果", "已完成执行结果归档。", TaskPlanItemStatus.Succeeded),
+                ],
+                [
+                    new("local.workspace.read", "读取本地 workspace", "已读取会话、参数与附件索引。", TaskPlanItemStatus.Succeeded),
+                    new("local.codegen.preview", "生成代码预览", "已生成本地草稿预览。", TaskPlanItemStatus.Succeeded),
+                    new("local.artifact.stage", "暂存产物摘要", "已写入当前会话摘要。", TaskPlanItemStatus.Succeeded),
+                ],
+                [
+                    new("AP-001", "计划确认", "审批节点已完成。", TaskPlanItemStatus.Succeeded),
+                    new("AP-002", "草稿写入确认", "本地确认已完成。", TaskPlanItemStatus.Succeeded),
+                ],
+                [
+                    new("计划完成", "3 个步骤全部完成。", TaskPlanItemStatus.Succeeded),
+                    new("产物摘要", ArtifactCount > 0 ? $"当前会话已有 {ArtifactCount} 个产物。" : "已生成模拟产物摘要。", TaskPlanItemStatus.Succeeded),
+                ]),
+
+            TaskPlanPreviewState.Failed => new(
+                title,
+                "计划执行失败，错误保留在本地结果视图。",
+                "run-failed-017",
+                64,
+                [
+                    new(1, "解析目标", "已完成本地上下文读取。", TaskPlanItemStatus.Succeeded),
+                    new(2, "生成草稿", "工具返回失败状态。", TaskPlanItemStatus.Failed),
+                    new(3, "汇总结果", "失败后停止后续步骤。", TaskPlanItemStatus.Skipped),
+                ],
+                [
+                    new("local.workspace.read", "读取本地 workspace", "已读取会话与目标配置。", TaskPlanItemStatus.Succeeded),
+                    new("local.codegen.preview", "生成代码预览", "模拟校验未通过。", TaskPlanItemStatus.Failed),
+                    new("local.artifact.stage", "暂存产物摘要", "失败后跳过。", TaskPlanItemStatus.Skipped),
+                ],
+                [
+                    new("AP-001", "计划确认", "计划确认已完成。", TaskPlanItemStatus.Succeeded),
+                    new("AP-002", "失败复核", "需要修正计划后重新运行。", TaskPlanItemStatus.Failed),
+                ],
+                [
+                    new("本地校验失败", "输出目录缺少可写入的草稿位置。", TaskPlanItemStatus.Failed),
+                ]),
+
+            _ => new(
+                title,
+                "部分步骤完成，失败节点已停止。",
+                "run-partial-063",
+                82,
+                [
+                    new(1, "解析目标", "已完成本地上下文读取。", TaskPlanItemStatus.Succeeded),
+                    new(2, "生成草稿", "计划草稿已生成。", TaskPlanItemStatus.Succeeded),
+                    new(3, "汇总结果", "产物摘要写入失败。", TaskPlanItemStatus.PartialSucceeded),
+                ],
+                [
+                    new("local.workspace.read", "读取本地 workspace", "已读取会话与目标配置。", TaskPlanItemStatus.Succeeded),
+                    new("local.codegen.preview", "生成代码预览", "已生成本地草稿预览。", TaskPlanItemStatus.Succeeded),
+                    new("local.artifact.stage", "暂存产物摘要", "摘要写入失败，保留草稿。", TaskPlanItemStatus.Failed),
+                ],
+                [
+                    new("AP-001", "计划确认", "审批节点已完成。", TaskPlanItemStatus.Succeeded),
+                    new("AP-002", "草稿写入确认", "本地确认已完成。", TaskPlanItemStatus.Succeeded),
+                ],
+                [
+                    new("计划草稿", "计划和代码预览已完成。", TaskPlanItemStatus.Succeeded),
+                    new("产物摘要", "摘要暂存失败，可保留草稿继续处理。", TaskPlanItemStatus.PartialSucceeded),
+                ]),
+        };
+    }
+
+    private static string StateLabel(TaskPlanPreviewState state) => state switch
+    {
+        TaskPlanPreviewState.Empty => "空白",
+        TaskPlanPreviewState.Loading => "加载",
+        TaskPlanPreviewState.Running => "运行中",
+        TaskPlanPreviewState.WaitingApproval => "待确认",
+        TaskPlanPreviewState.Succeeded => "成功",
+        TaskPlanPreviewState.Failed => "失败",
+        _ => "部分成功",
+    };
+
+    private static string StateIcon(TaskPlanPreviewState state) => state switch
+    {
+        TaskPlanPreviewState.Empty => "profile",
+        TaskPlanPreviewState.Loading => "loading",
+        TaskPlanPreviewState.Running => "sync",
+        TaskPlanPreviewState.WaitingApproval => "clock-circle",
+        TaskPlanPreviewState.Succeeded => "check-circle",
+        TaskPlanPreviewState.Failed => "close-circle",
+        _ => "warning",
+    };
+
+    private static string StateCss(TaskPlanPreviewState state) => state switch
+    {
+        TaskPlanPreviewState.Empty => "is-empty",
+        TaskPlanPreviewState.Loading => "is-loading",
+        TaskPlanPreviewState.Running => "is-running",
+        TaskPlanPreviewState.WaitingApproval => "is-waiting",
+        TaskPlanPreviewState.Succeeded => "is-success",
+        TaskPlanPreviewState.Failed => "is-failed",
+        _ => "is-partial",
+    };
+
+    private static string StatusLabel(TaskPlanItemStatus status) => status switch
+    {
+        TaskPlanItemStatus.NotStarted => "未开始",
+        TaskPlanItemStatus.Loading => "加载中",
+        TaskPlanItemStatus.Running => "运行中",
+        TaskPlanItemStatus.WaitingApproval => "待确认",
+        TaskPlanItemStatus.Succeeded => "成功",
+        TaskPlanItemStatus.Failed => "失败",
+        TaskPlanItemStatus.Skipped => "跳过",
+        _ => "部分成功",
+    };
+
+    private static string StatusIcon(TaskPlanItemStatus status) => status switch
+    {
+        TaskPlanItemStatus.Loading => "loading",
+        TaskPlanItemStatus.Running => "sync",
+        TaskPlanItemStatus.WaitingApproval => "clock-circle",
+        TaskPlanItemStatus.Succeeded => "check-circle",
+        TaskPlanItemStatus.Failed => "close-circle",
+        TaskPlanItemStatus.PartialSucceeded => "warning",
+        _ => "minus-circle",
+    };
+
+    private static string ItemStatusCss(TaskPlanItemStatus status) => status switch
+    {
+        TaskPlanItemStatus.Loading => "is-loading",
+        TaskPlanItemStatus.Running => "is-running",
+        TaskPlanItemStatus.WaitingApproval => "is-waiting",
+        TaskPlanItemStatus.Succeeded => "is-success",
+        TaskPlanItemStatus.Failed => "is-failed",
+        TaskPlanItemStatus.Skipped => "is-muted",
+        TaskPlanItemStatus.PartialSucceeded => "is-partial",
+        _ => "is-empty",
+    };
+
+    private enum TaskPlanPreviewState
+    {
+        Empty,
+        Loading,
+        Running,
+        WaitingApproval,
+        Succeeded,
+        Failed,
+        PartialSucceeded,
+    }
+
+    private enum TaskPlanItemStatus
+    {
+        NotStarted,
+        Loading,
+        Running,
+        WaitingApproval,
+        Succeeded,
+        Failed,
+        Skipped,
+        PartialSucceeded,
+    }
+
+    private sealed record TaskPlanStateOption(TaskPlanPreviewState State, string Label);
+    private sealed record TaskPlanPreview(
+        string Title,
+        string Summary,
+        string TraceLabel,
+        int Progress,
+        IReadOnlyList<TaskPlanStep> Steps,
+        IReadOnlyList<ToolCallPreview> Tools,
+        IReadOnlyList<ApprovalPreview> Approvals,
+        IReadOnlyList<ResultPreview> Results);
+    private sealed record TaskPlanStep(int Order, string Title, string Detail, TaskPlanItemStatus Status);
+    private sealed record ToolCallPreview(string ToolId, string Name, string Description, TaskPlanItemStatus Status);
+    private sealed record ApprovalPreview(string NodeId, string Title, string Description, TaskPlanItemStatus Status);
+    private sealed record ResultPreview(string Title, string Description, TaskPlanItemStatus Status);
+}

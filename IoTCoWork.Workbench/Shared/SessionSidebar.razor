@@ -34,6 +34,22 @@
                             OnDelete="@OnDelete"
                             Title="会话"
                             Class="studio-conversations" />
+
+            @if (Contributions.Count > 0)
+            {
+                <nav class="sidebar-contribution-list" aria-label="导航贡献点">
+                    @foreach (var item in Contributions)
+                    {
+                        <button type="button" title="@item.Description" disabled="@string.IsNullOrWhiteSpace(item.ActionId)">
+                            <Icon Type="@item.Icon" Theme="IconThemeType.Outline" />
+                            <span>
+                                <strong>@item.Title</strong>
+                                <small>@item.Description</small>
+                            </span>
+                        </button>
+                    }
+                </nav>
+            }
         </section>
 
         <footer class="@ServerStatusClass" title="@ServerStatusTitle">
@@ -54,6 +70,7 @@
     [Parameter] public EventCallback<XConversationItem> OnDelete { get; set; }
     [Parameter] public EventCallback OnNewSession { get; set; }
     [Parameter] public EventCallback OnClearHistory { get; set; }
+    [Parameter] public IReadOnlyList<NavigationContribution> Contributions { get; set; } = [];
     [Parameter] public string ServerStatusClass { get; set; } = string.Empty;
     [Parameter] public string ServerStatusText { get; set; } = string.Empty;
     [Parameter] public string ServerStatusTitle { get; set; } = string.Empty;

@@ -1,6 +1,7 @@
 using AntDesign;
 using AntDesign.X;
 using AntDesign.X.Components;
+using IoTCoWork.Workbench.Extensibility;
 using IoTCoWork.Workbench.Models;
 using IoTCoWork.Workbench.Services;
 using Microsoft.AspNetCore.Components;
@@ -15,6 +16,8 @@ namespace IoTCoWork.Workbench.Pages;
 
 public partial class Home
 {
+    [Inject] private WorkbenchContributionCatalog Contributions { get; set; } = default!;
+
     private const string AppName = "IoTCoWork";
     private static readonly string AppVersion = FormatAppVersion(
         typeof(Home).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
@@ -95,20 +98,36 @@ public partial class Home
         new("ask", "每次询问", "提交作图需求后询问是否先润色。"),
         new("auto", "自动润色", "先润色提示词，再生成图片。"),
     ];
-    private static readonly IReadOnlyList<SettingsCategory> SettingsCategories =
+    private readonly IReadOnlyList<SenderContextOption> _edgeTargetOptions =
     [
-        new("appearance", "外观", "主题与界面显示", "skin", ["theme", "appearance", "外观", "主题"]),
-        new("shortcuts", "快捷键", "本地键盘入口", "keyboard", ["shortcut", "hotkey", "快捷键", "键盘"]),
-        new("model", "模型", "作图模型与请求参数", "experiment", ["model", "image", "模型", "质量", "格式"]),
-        new("network", "本地网络", "本机代理与连接状态", "global", ["network", "proxy", "网络", "代理"]),
-        new("updates", "更新", "应用版本检查", "cloud-sync", ["update", "release", "更新", "版本"]),
-        new("capabilities", "能力中心", "本地扩展点入口", "appstore", ["capability", "plugin", "mcp", "能力", "插件"]),
+        new("csharp-aot", "C# AOT", "生成面向 IoTEdge 的 C# AOT 草稿。"),
+        new("linux-c", "Linux C", "生成面向 IoTEdge.Linux 的 C 源码草稿。"),
+        new("stm32-basic", "STM32 BASIC", "生成面向 IoTEdge.Stm32 的 BASIC 草稿。"),
+    ];
+    private readonly IReadOnlyList<SenderContextOption> _approvalModeOptions =
+    [
+        new("perRun", "每次审批", "提交前按每次运行审批处理。"),
+        new("manual", "手动确认", "需要人工确认后再继续。"),
+        new("once", "本次会话一次", "当前会话确认一次后继续。"),
+        new("never", "不审批", "仅作为低风险本地草稿占位。"),
+    ];
+    private readonly IReadOnlyList<SenderContextOption> _outputLocationOptions =
+    [
+        new("session", "当前会话", "生成结果保存在当前本地会话。"),
+        new("workspace", "Workspace 草稿", "生成结果暂存到本地 workspace 草稿。"),
+        new("downloads", "下载目录", "生成后优先导出到本机下载目录。"),
     ];
     private readonly IReadOnlyList<string> _promptIdeas =
     [
         "一张极简产品海报，玻璃茶杯悬浮在白色背景中",
         "赛博城市夜景，中文霓虹标牌，电影级构图",
         "毛玻璃质感的 AI 作图应用图标，适合桌面端",
+    ];
+    private readonly IReadOnlyList<WorkspaceSuggestionAction> _workspaceSuggestionActions =
+    [
+        new("target", "生成目标端草稿", "梳理 C# AOT 采集回路、上报通道和异常处理草稿。", "branches"),
+        new("audit", "检查生成边界", "列出本地脚本生成的权限、审计、用量和安全检查清单。", "safety"),
+        new("artifact", "准备产物说明", "为当前 workspace 输出 README、构建步骤和产物目录摘要。", "file-done"),
     ];
     private const string PromptConfirmRole = "prompt-confirm";
     private StudioSnapshot _snapshot = CreateInitialSnapshot();
@@ -163,6 +182,9 @@ public partial class Home
     private PendingPrompt? _pendingPrompt;
     private bool _ratioMenuOpen;
     private bool _resolutionMenuOpen;
+    private int _selectedEdgeTargetIndex;
+    private int _selectedApprovalModeIndex;
+    private int _selectedOutputLocationIndex;
     private GeneratedImage? _previewImage;
     private string _previewAlt = string.Empty;
     private bool _previewZoomed;
@@ -314,6 +336,43 @@ public partial class Home
     private string EffectiveImageSize => BuildImageSize(EffectiveAspectRatio, Settings.ResolutionTier);
     private string EffectiveQuality => CurrentModelCapabilities.Qualities.Contains(Settings.Quality) ? Settings.Quality : CurrentModelCapabilities.Qualities[0];
     private string EffectiveFormatLabel => CurrentModelCapabilities.SupportsOutputFormat ? Settings.Format.ToUpperInvariant() : "默认格式";
+    private SenderContextOption SelectedEdgeTarget => SenderContextOptionAt(_edgeTargetOptions, _selectedEdgeTargetIndex);
+    private SenderContextOption SelectedApprovalMode => SenderContextOptionAt(_approvalModeOptions, _selectedApprovalModeIndex);
+    private SenderContextOption SelectedOutputLocation => SenderContextOptionAt(_outputLocationOptions, _selectedOutputLocationIndex);
+    private WorkbenchContributionContext ContributionContext => new(
+        AppName,
+        ActiveSession.Title,
+        ModeLabel,
+        WorkspaceStatus,
+        Settings.Model,
+        EffectiveImageSize,
+        LatestImages.Count,
+        _loading);
+    private IReadOnlyList<NavigationContribution> NavigationContributions =>
+        Contributions.GetNavigation(ContributionContext);
+    private IReadOnlyList<ContextTabContribution> ContextTabContributions =>
+        Contributions.GetContextTabs(ContributionContext);
+    private IReadOnlyList<SettingsCategoryContribution> SettingsCategoryContributions =>
+        Contributions.GetSettingsCategories(ContributionContext);
+    private IReadOnlyList<SenderContextChipContribution> SenderContextChipContributions =>
+        Contributions.GetSenderContextChips(ContributionContext)
+            .Select(ResolveSenderContextChip)
+            .ToArray();
+    private int WorkspaceSessionCount => _snapshot.Sessions.Count;
+    private int WorkspaceArtifactCount => CountWorkspaceArtifacts();
+    private string WorkspaceOverviewStatus => _loading
+        ? "运行中"
+        : ActiveSession.Messages.Count == 0
+            ? "空会话"
+            : "已记录";
+    private string WorkspaceOverviewUpdatedAt => ActiveSession.UpdatedAt.ToLocalTime().ToString("MM-dd HH:mm");
+    private string ExternalIoTSharpUrl => "https://iotsharp.example.com/";
+    private string WorkspaceChipValue => AppName;
+    private string WorkspaceChipTitle => $"Workspace：{AppName} · 当前会话：{ActiveSession.Title}";
+    private string EdgeTargetChipTitle => $"边缘目标：{SelectedEdgeTarget.Description}";
+    private string ModelChipTitle => $"模型：{Settings.Model}";
+    private string ApprovalModeChipTitle => $"审批模式：{SelectedApprovalMode.Description}";
+    private string OutputLocationChipTitle => $"输出位置：{SelectedOutputLocation.Description}";
     private string ActualRequestSummary =>
         $"实际参数：model={Settings.Model}，size={EffectiveImageSize}，quality={EffectiveQuality}" +
         (CurrentModelCapabilities.SupportsOutputFormat ? $"，output_format={Settings.Format}" : string.Empty) +
@@ -332,6 +391,45 @@ public partial class Home
     private IReadOnlyList<GeneratedImage> LatestImages =>
         ActiveSession.Messages.LastOrDefault(message => message.Images.Count > 0)?.Images ?? [];
 
+    private IReadOnlyList<WorkspaceTaskSummary> RecentWorkspaceTasks =>
+        _snapshot.Sessions
+            .OrderByDescending(session => session.UpdatedAt)
+            .Take(4)
+            .Select(session => new WorkspaceTaskSummary(
+                session.Id,
+                string.IsNullOrWhiteSpace(session.Title) ? "未命名任务" : session.Title,
+                ModeName(session.Mode),
+                session.Messages.Count == 0 ? "未开始" : $"{session.Messages.Count} 条记录",
+                session.UpdatedAt.ToLocalTime().ToString("MM-dd HH:mm"),
+                session.Id == _snapshot.ActiveSessionId))
+            .ToArray();
+
+    private IReadOnlyList<WorkspaceArtifactSummary> RecentWorkspaceArtifacts
+    {
+        get
+        {
+            var artifacts = _snapshot.Sessions
+                .SelectMany(session => session.Messages
+                    .Where(message => message.Images.Count > 0)
+                    .SelectMany(message => message.Images.Select((image, index) => new WorkspaceArtifactSummary(
+                        string.IsNullOrWhiteSpace(message.Content) ? "生成产物" : message.Content,
+                        $"{ModeName(session.Mode)} · {message.CreatedAt.ToLocalTime():MM-dd HH:mm}",
+                        image.MimeType ?? Settings.Format,
+                        message.CreatedAt,
+                        index + 1))))
+                .OrderByDescending(artifact => artifact.CreatedAt)
+                .Take(3)
+                .ToArray();
+
+            return artifacts.Length == 0
+                ? [
+                    new("等待首个产物", "生成结果会保存在当前本地会话", "local", DateTimeOffset.MinValue, 0),
+                    new("代码生成草稿", "后续由本地 CodeGen 草稿或插件扩展点注入", "draft", DateTimeOffset.MinValue, 0),
+                ]
+                : artifacts;
+        }
+    }
+
     private IReadOnlyList<XConversationItem> ConversationItems =>
         _snapshot.Sessions
             .OrderByDescending(session => session.UpdatedAt)
@@ -347,24 +445,24 @@ public partial class Home
             })
             .ToArray();
 
-    private IReadOnlyList<SettingsCategory> FilteredSettingsCategories
+    private IReadOnlyList<SettingsCategoryContribution> FilteredSettingsCategories
     {
         get
         {
             var query = _settingsSearchText.Trim();
             if (string.IsNullOrWhiteSpace(query))
             {
-                return SettingsCategories;
+                return SettingsCategoryContributions;
             }
 
-            return SettingsCategories
+            return SettingsCategoryContributions
                 .Where(category => category.Matches(query))
                 .ToArray();
         }
     }
 
-    private SettingsCategory? ActiveSettingsCategory =>
-        FilteredSettingsCategories.FirstOrDefault(category => category.Key == _activeSettingsCategoryKey)
+    private SettingsCategoryContribution? ActiveSettingsCategory =>
+        FilteredSettingsCategories.FirstOrDefault(category => category.Id == _activeSettingsCategoryKey)
         ?? FilteredSettingsCategories.FirstOrDefault();
 
     protected override async Task OnInitializedAsync()
@@ -512,6 +610,103 @@ public partial class Home
     private static bool IsGptImage2Model(string model) =>
         model.Equals("gpt-image-2", StringComparison.OrdinalIgnoreCase) ||
         model.Equals("gpt-image-2-2026-04-21", StringComparison.OrdinalIgnoreCase);
+    private static SenderContextOption SenderContextOptionAt(IReadOnlyList<SenderContextOption> options, int index) =>
+        options.Count == 0 ? new("none", "未设置", "暂无本地上下文。") : options[Math.Clamp(index, 0, options.Count - 1)];
+
+    private int CountWorkspaceArtifacts() =>
+        _snapshot.Sessions.Sum(session => session.Messages.Sum(message => message.Images.Count));
+
+    private void CycleEdgeTarget()
+    {
+        _selectedEdgeTargetIndex = NextIndex(_selectedEdgeTargetIndex, _edgeTargetOptions.Count);
+    }
+
+    private void SelectEdgeTarget(string value)
+    {
+        var index = _edgeTargetOptions
+            .Select((option, optionIndex) => new { option, optionIndex })
+            .FirstOrDefault(item => string.Equals(item.option.Value, value, StringComparison.OrdinalIgnoreCase))
+            ?.optionIndex;
+
+        if (index.HasValue)
+        {
+            _selectedEdgeTargetIndex = index.Value;
+        }
+    }
+
+    private async Task CycleSenderModel()
+    {
+        var modelIndex = _modelOptions
+            .Select((model, index) => new { model, index })
+            .FirstOrDefault(item => string.Equals(item.model, Settings.Model, StringComparison.OrdinalIgnoreCase))
+            ?.index ?? -1;
+        var nextModel = _modelOptions[modelIndex < 0 ? 0 : NextIndex(modelIndex, _modelOptions.Count)];
+        await UpdateModel(nextModel);
+    }
+
+    private void CycleApprovalMode()
+    {
+        _selectedApprovalModeIndex = NextIndex(_selectedApprovalModeIndex, _approvalModeOptions.Count);
+    }
+
+    private void CycleOutputLocation()
+    {
+        _selectedOutputLocationIndex = NextIndex(_selectedOutputLocationIndex, _outputLocationOptions.Count);
+    }
+
+    private SenderContextChipContribution ResolveSenderContextChip(SenderContextChipContribution chip)
+    {
+        return chip.Id switch
+        {
+            "workspace" => chip with
+            {
+                Value = WorkspaceChipValue,
+                Description = WorkspaceChipTitle,
+                IsStatic = true,
+            },
+            "edge-target" => chip with
+            {
+                Value = SelectedEdgeTarget.Label,
+                Description = EdgeTargetChipTitle,
+                ActionId = "cycle-edge-target",
+            },
+            "model" => chip with
+            {
+                Value = Settings.Model,
+                Description = ModelChipTitle,
+                ActionId = "cycle-model",
+            },
+            "approval" => chip with
+            {
+                Value = SelectedApprovalMode.Label,
+                Description = ApprovalModeChipTitle,
+                ActionId = "cycle-approval",
+            },
+            "output" => chip with
+            {
+                Value = SelectedOutputLocation.Label,
+                Description = OutputLocationChipTitle,
+                ActionId = "cycle-output",
+            },
+            _ => chip,
+        };
+    }
+
+    private Task InvokeSenderContextChip(SenderContextChipContribution chip)
+    {
+        return chip.ActionId switch
+        {
+            "cycle-edge-target" => InvokeAsync(CycleEdgeTarget),
+            "cycle-model" => CycleSenderModel(),
+            "cycle-approval" => InvokeAsync(CycleApprovalMode),
+            "cycle-output" => InvokeAsync(CycleOutputLocation),
+            _ => Task.CompletedTask,
+        };
+    }
+
+    private static int NextIndex(int current, int count) =>
+        count <= 0 ? 0 : (Math.Max(current, 0) + 1) % count;
+
     private void CoerceImageSettingsForCurrentModel()
     {
         ImageModelCatalog.NormalizeSettings(Settings, ActiveSession.Mode);
@@ -540,18 +735,18 @@ public partial class Home
     private string PromptPolishOptionClass(string mode) =>
         Settings.PromptPolishMode == mode ? "active" : string.Empty;
     private string SettingsCategoryButtonClass(string key) =>
-        string.Equals(ActiveSettingsCategory?.Key, key, StringComparison.Ordinal)
+        string.Equals(ActiveSettingsCategory?.Id, key, StringComparison.Ordinal)
             ? "active"
             : string.Empty;
 
     private string SettingsCategorySelected(string key) =>
-        string.Equals(ActiveSettingsCategory?.Key, key, StringComparison.Ordinal) ? "true" : "false";
+        string.Equals(ActiveSettingsCategory?.Id, key, StringComparison.Ordinal) ? "true" : "false";
 
     private string SettingsCategoryPanelId(string key) => $"settings-panel-{key}";
 
     private string SettingsCategoryTabId(string key) => $"settings-tab-{key}";
 
-    private string SettingsCategoryStatus(SettingsCategory category) => category.Key switch
+    private string SettingsCategoryStatus(SettingsCategoryContribution category) => category.Id switch
     {
         "appearance" => ThemeModeLabel(Settings.ThemeMode),
         "shortcuts" => "只读",
@@ -559,7 +754,7 @@ public partial class Home
         "network" => string.IsNullOrWhiteSpace(Settings.NetworkProxyUrl) ? "未启用" : "已配置",
         "updates" => UpdateStatusLabel,
         "capabilities" => "本地占位",
-        _ => string.Empty,
+        _ => string.IsNullOrWhiteSpace(category.Status) ? "插件" : category.Status,
     };
 
     private void SelectSettingsCategory(string key)
@@ -2302,24 +2497,13 @@ public partial class Home
     }
 
     private sealed record ResolutionPreset(string Tier, string Label, string Description);
-    private sealed record SettingsCategory(
-        string Key,
-        string Title,
-        string Description,
-        string Icon,
-        IReadOnlyList<string> Keywords)
-    {
-        public bool Matches(string query)
-        {
-            return Title.Contains(query, StringComparison.OrdinalIgnoreCase)
-                || Description.Contains(query, StringComparison.OrdinalIgnoreCase)
-                || Keywords.Any(keyword => keyword.Contains(query, StringComparison.OrdinalIgnoreCase));
-        }
-    }
-
     private sealed record PendingPrompt(string Text, string MessageId);
     private sealed record ImageRevisionRequest(string ImageUrl, string Prompt);
     private sealed record PromptPolishOption(string Value, string Label, string Description);
+    private sealed record SenderContextOption(string Value, string Label, string Description);
+    private sealed record WorkspaceSuggestionAction(string Key, string Title, string Prompt, string Icon);
+    private sealed record WorkspaceTaskSummary(string SessionId, string Title, string Mode, string Detail, string UpdatedAt, bool IsActive);
+    private sealed record WorkspaceArtifactSummary(string Title, string Detail, string Kind, DateTimeOffset CreatedAt, int Index);
     private sealed record SenderImageAttachment(string Id, ImageReferenceFile ReferenceFile, XAttachmentItem Attachment);
 
     private sealed class ImageDownloadResult

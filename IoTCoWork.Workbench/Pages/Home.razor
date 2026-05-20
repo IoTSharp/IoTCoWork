@@ -159,6 +159,7 @@
                             Collapsed="@_leftSidebarCollapsed"
                             CollapsedChanged="@SetLeftSidebarCollapsed"
                             Items="@ConversationItems"
+                            Contributions="@NavigationContributions"
                             ActiveKey="@_snapshot.ActiveSessionId"
                             ActiveKeyChanged="@ActivateSession"
                             OnRename="@RenameSession"
@@ -187,25 +188,140 @@
                 <section class="@CanvasClass">
                     @if (ActiveSession.Messages.Count == 0 && !_loading)
                     {
-                        <div class="empty-canvas">
-                            <XWelcome Title="准备开始作图"
-                                      Description="在底部输入描述，生成结果会永久保存在当前会话。"
-                                      Class="studio-welcome">
-                                <IconTemplate>
-                                    <div class="welcome-mark">
-                                        <Icon Type="picture" Theme="IconThemeType.Outline" />
+                        <div class="workspace-overview">
+                            <section class="workspace-overview-hero" aria-labelledby="workspace-overview-title">
+                                <div class="workspace-overview-copy">
+                                    <span class="workspace-eyebrow">Workspace</span>
+                                    <h3 id="workspace-overview-title">@AppName</h3>
+                                    <p>@WorkspaceStatus</p>
+                                </div>
+                                <div class="workspace-overview-status" aria-label="Workspace 状态">
+                                    <div>
+                                        <span>状态</span>
+                                        <strong>@WorkspaceOverviewStatus</strong>
                                     </div>
-                                </IconTemplate>
-                            </XWelcome>
-                            <div class="prompt-shortcuts">
-                                @foreach (var item in _promptIdeas)
-                                {
-                                    <button type="button" @onclick="() => UsePrompt(item)">
-                                        <Icon Type="bulb" Theme="IconThemeType.Outline" />
-                                        <span>@item</span>
-                                    </button>
-                                }
-                            </div>
+                                    <div>
+                                        <span>会话</span>
+                                        <strong>@WorkspaceSessionCount</strong>
+                                    </div>
+                                    <div>
+                                        <span>产物</span>
+                                        <strong>@WorkspaceArtifactCount</strong>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section class="workspace-overview-grid" aria-label="工作区总览">
+                                <div class="workspace-overview-section workspace-overview-section-wide">
+                                    <header>
+                                        <div>
+                                            <span class="workspace-eyebrow">最近任务</span>
+                                            <h4>本地会话</h4>
+                                        </div>
+                                        <small>更新 @WorkspaceOverviewUpdatedAt</small>
+                                    </header>
+                                    <ol class="overview-task-list">
+                                        @foreach (var task in RecentWorkspaceTasks)
+                                        {
+                                            <li class="@(task.IsActive ? "active" : null)">
+                                                <button type="button" @onclick="() => ActivateSession(task.SessionId)">
+                                                    <Icon Type="message" Theme="IconThemeType.Outline" />
+                                                    <span>
+                                                        <strong>@task.Title</strong>
+                                                        <small>@task.Mode · @task.Detail</small>
+                                                    </span>
+                                                    <time>@task.UpdatedAt</time>
+                                                </button>
+                                            </li>
+                                        }
+                                    </ol>
+                                </div>
+
+                                <div class="workspace-overview-section">
+                                    <header>
+                                        <div>
+                                            <span class="workspace-eyebrow">边缘目标</span>
+                                            <h4>@SelectedEdgeTarget.Label</h4>
+                                        </div>
+                                    </header>
+                                    <div class="overview-target-stack">
+                                        @foreach (var target in _edgeTargetOptions)
+                                        {
+                                            <button type="button"
+                                                    class="@(target == SelectedEdgeTarget ? "active" : null)"
+                                                    title="@target.Description"
+                                                    @onclick="() => SelectEdgeTarget(target.Value)">
+                                                <Icon Type="thunderbolt" Theme="IconThemeType.Outline" />
+                                                <span>
+                                                    <strong>@target.Label</strong>
+                                                    <small>@target.Value</small>
+                                                </span>
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="workspace-overview-section">
+                                    <header>
+                                        <div>
+                                            <span class="workspace-eyebrow">最近产物</span>
+                                            <h4>本地结果</h4>
+                                        </div>
+                                    </header>
+                                    <ol class="overview-artifact-list">
+                                        @foreach (var artifact in RecentWorkspaceArtifacts)
+                                        {
+                                            <li>
+                                                <Icon Type="file-done" Theme="IconThemeType.Outline" />
+                                                <span>
+                                                    <strong>@artifact.Title</strong>
+                                                    <small>@artifact.Detail</small>
+                                                </span>
+                                                <em>@artifact.Kind</em>
+                                            </li>
+                                        }
+                                    </ol>
+                                </div>
+
+                                <div class="workspace-overview-section overview-boundary-panel">
+                                    <header>
+                                        <div>
+                                            <span class="workspace-eyebrow">IoTSharp 实例</span>
+                                            <h4>外部设备入口</h4>
+                                        </div>
+                                    </header>
+                                    <p>设备管理、遥测、属性、事件与告警由用户自有 IoTSharp 实例承载。</p>
+                                    <a class="studio-button studio-button-light"
+                                       href="@ExternalIoTSharpUrl"
+                                       target="_blank"
+                                       rel="noopener noreferrer"
+                                       title="占位跳转：用户自有 IoTSharp 实例地址">
+                                        <Icon Type="export" Theme="IconThemeType.Outline" />
+                                        <span>外部实例占位</span>
+                                    </a>
+                                </div>
+                            </section>
+
+                            <section class="workspace-suggestion-panel" aria-labelledby="workspace-suggestions-title">
+                                <header>
+                                    <div>
+                                        <span class="workspace-eyebrow">AI 建议动作</span>
+                                        <h4 id="workspace-suggestions-title">下一步</h4>
+                                    </div>
+                                </header>
+                                <div class="workspace-suggestion-list">
+                                    @foreach (var item in _workspaceSuggestionActions)
+                                    {
+                                        <button type="button" @onclick="() => UsePrompt(item.Prompt)">
+                                            <Icon Type="@item.Icon" Theme="IconThemeType.Outline" />
+                                            <span>
+                                                <strong>@item.Title</strong>
+                                                <small>@item.Prompt</small>
+                                            </span>
+                                        </button>
+                                    }
+                                </div>
+                            </section>
                         </div>
                     }
                     else
@@ -487,6 +603,36 @@
                                   @oninput="UpdateAdvancedJson"></textarea>
                     </details>
 
+                    <div class="sender-context-bar" aria-label="任务上下文">
+                        @foreach (var chip in SenderContextChipContributions)
+                        {
+                            @if (chip.IsStatic || string.IsNullOrWhiteSpace(chip.ActionId))
+                            {
+                                <div class="sender-context-chip sender-context-chip-static"
+                                     title="@chip.Description">
+                                    <span class="sender-context-chip-icon" aria-hidden="true">
+                                        <Icon Type="@chip.Icon" Theme="IconThemeType.Outline" />
+                                    </span>
+                                    <span class="sender-context-chip-label">@chip.Title</span>
+                                    <strong>@chip.Value</strong>
+                                </div>
+                            }
+                            else
+                            {
+                                <button type="button"
+                                        class="sender-context-chip"
+                                        title="@chip.Description"
+                                        @onclick="() => InvokeSenderContextChip(chip)">
+                                    <span class="sender-context-chip-icon" aria-hidden="true">
+                                        <Icon Type="@chip.Icon" Theme="IconThemeType.Outline" />
+                                    </span>
+                                    <span class="sender-context-chip-label">@chip.Title</span>
+                                    <strong>@chip.Value</strong>
+                                </button>
+                            }
+                        }
+                    </div>
+
                     <XSender @bind-Value="_senderText"
                              Placeholder="输入作图描述，按 Enter 生成..."
                              Loading="@_loading"
@@ -512,6 +658,9 @@
                                    WorkspaceStatus="@WorkspaceStatus"
                                    Model="@Settings.Model"
                                    TargetSize="@EffectiveImageSize"
+                                   IsHostLoading="@_loading"
+                                   ArtifactCount="@LatestImages.Count"
+                                   Tabs="@ContextTabContributions"
                                    ServerStatusClass="@ContextServerStatusClass"
                                    ServerStatusText="@ServerStatusText" />
         </div>
@@ -565,11 +714,11 @@
                                 {
                                     <button type="button"
                                             role="tab"
-                                            id="@SettingsCategoryTabId(category.Key)"
-                                            aria-selected="@SettingsCategorySelected(category.Key)"
-                                            aria-controls="@SettingsCategoryPanelId(category.Key)"
-                                            class="@SettingsCategoryButtonClass(category.Key)"
-                                            @onclick="@(() => SelectSettingsCategory(category.Key))">
+                                            id="@SettingsCategoryTabId(category.Id)"
+                                            aria-selected="@SettingsCategorySelected(category.Id)"
+                                            aria-controls="@SettingsCategoryPanelId(category.Id)"
+                                            class="@SettingsCategoryButtonClass(category.Id)"
+                                            @onclick="@(() => SelectSettingsCategory(category.Id))">
                                         <Icon Type="@category.Icon" Theme="IconThemeType.Outline" />
                                         <span>
                                             <strong>@category.Title</strong>
@@ -584,8 +733,8 @@
 
                     <section class="settings-content"
                              role="@(ActiveSettingsCategory is null ? null : "tabpanel")"
-                             id="@(ActiveSettingsCategory is null ? null : SettingsCategoryPanelId(ActiveSettingsCategory.Key))"
-                             aria-labelledby="@(ActiveSettingsCategory is null ? null : SettingsCategoryTabId(ActiveSettingsCategory.Key))">
+                             id="@(ActiveSettingsCategory is null ? null : SettingsCategoryPanelId(ActiveSettingsCategory.Id))"
+                             aria-labelledby="@(ActiveSettingsCategory is null ? null : SettingsCategoryTabId(ActiveSettingsCategory.Id))">
                         @if (ActiveSettingsCategory is null)
                         {
                             <div class="settings-empty-state">
@@ -604,7 +753,7 @@
                                 </div>
                             </header>
 
-                            @switch (ActiveSettingsCategory.Key)
+                            @switch (ActiveSettingsCategory.Id)
                             {
                                 case "appearance":
                                     <section class="settings-section">
@@ -797,6 +946,16 @@
                                                 <Icon Type="appstore" Theme="IconThemeType.Outline" />
                                                 <span>打开</span>
                                             </button>
+                                        </div>
+                                    </section>
+                                    break;
+
+                                default:
+                                    <section class="settings-section">
+                                        <div class="settings-empty-state compact">
+                                            <Icon Type="@ActiveSettingsCategory.Icon" Theme="IconThemeType.Outline" />
+                                            <h3>@ActiveSettingsCategory.Title</h3>
+                                            <p>该分类由开源贡献点声明。具体设置面板应由上层仓库或外部插件提供。</p>
                                         </div>
                                     </section>
                                     break;

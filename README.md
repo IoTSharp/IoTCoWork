@@ -67,6 +67,7 @@ VS Code 调试可直接使用 `IoTCoWork: 一键运行桌面版`。该配置会�
 - [信息架构](docs/ai-workbench-information-architecture.md)
 - [组件映射](docs/ai-workbench-component-mapping.md)
 - [插件与工具契约](docs/ai-workbench-plugin-tool-contract.md)
+- [插件贡献点](docs/ai-workbench-contribution-points.md)
 - [物联网业务方案蓝图](docs/iot-workspace-business-model.md)
 - [物联网业务方案字段表](docs/iot-workspace-business-profile-fields.md)
 - [物联网业务方案 JSON Schema](schemas/iot-workspace-business-profile.schema.json)

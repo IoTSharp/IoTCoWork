@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using IoTCoWork.Workbench;
+using IoTCoWork.Workbench.Extensibility;
 using IoTCoWork.Workbench.Services;
 using AntDesign;
 using AntDesign.X;
@@ -19,6 +20,8 @@ builder.Services.AddScoped<ImageGenerationClient>();
 builder.Services.AddScoped<PromptChatClient>();
 builder.Services.AddScoped<SaaSAccountClient>();
 builder.Services.AddScoped<AppUpdateClient>();
+builder.Services.AddSingleton<IWorkbenchContributionProvider, BuiltinWorkbenchContributionProvider>();
+builder.Services.AddSingleton<WorkbenchContributionCatalog>();
 builder.Services.AddAntDesign();
 builder.Services.AddAntDesignX();
 

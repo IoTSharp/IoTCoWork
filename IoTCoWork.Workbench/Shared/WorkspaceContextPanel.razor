@@ -9,80 +9,156 @@
         </span>
     </header>
 
-    <section class="context-section">
-        <div class="context-section-title">
-            <Icon Type="folder-open" Theme="IconThemeType.Outline" />
-            <strong>当前会话</strong>
-        </div>
-        <dl class="context-facts">
-            <div>
-                <dt>任务</dt>
-                <dd>@ActiveSessionTitle</dd>
-            </div>
-            <div>
-                <dt>模式</dt>
-                <dd>@ModeLabel</dd>
-            </div>
-            <div>
-                <dt>状态</dt>
-                <dd>@WorkspaceStatus</dd>
-            </div>
-        </dl>
+    <nav class="context-tabs" role="tablist" aria-label="右侧上下文">
+        @foreach (var tab in ContextTabs)
+        {
+            <button type="button"
+                    id="@TabId(tab.Id)"
+                    class="@TabButtonClass(tab.Id)"
+                    role="tab"
+                    aria-selected="@IsActiveTab(tab.Id)"
+                    aria-controls="@PanelId(tab.Id)"
+                    title="@tab.Description"
+                    @onclick="@(() => SelectTab(tab.Id))">
+                <Icon Type="@tab.Icon" Theme="IconThemeType.Outline" />
+                <span>@tab.Title</span>
+                @if (tab.Badge is not null)
+                {
+                    <strong>@tab.Badge</strong>
+                }
+            </button>
+        }
+    </nav>
+
+    <section id="@PanelId(_activeTab)"
+             class="context-tab-panel"
+             role="tabpanel"
+             aria-labelledby="@TabId(_activeTab)">
+        @switch (_activeTab)
+        {
+            case "artifacts":
+                <section class="context-section context-section-open" aria-labelledby="context-artifacts-title">
+                    <div class="context-section-title">
+                        <Icon Type="file-done" Theme="IconThemeType.Outline" />
+                        <strong id="context-artifacts-title">产物</strong>
+                    </div>
+                    <ol class="context-artifact-list">
+                        @foreach (var artifact in ArtifactItems)
+                        {
+                            <li>
+                                <div>
+                                    <span>@artifact.Name</span>
+                                    <small>@artifact.Detail</small>
+                                </div>
+                                <em>@artifact.Kind</em>
+                            </li>
+                        }
+                    </ol>
+                </section>
+                break;
+
+            case "tools":
+                <TaskPlanApprovalPanel TaskTitle="@ActiveSessionTitle"
+                                       ModeLabel="@ModeLabel"
+                                       Model="@Model"
+                                       IsHostLoading="@IsHostLoading"
+                                       ArtifactCount="@ArtifactCount" />
+                break;
+
+            case "logs":
+                <section class="context-section context-section-open" aria-labelledby="context-logs-title">
+                    <div class="context-section-title">
+                        <Icon Type="profile" Theme="IconThemeType.Outline" />
+                        <strong id="context-logs-title">日志</strong>
+                    </div>
+                    <ol class="context-log-list">
+                        @foreach (var log in LogItems)
+                        {
+                            <li class="@LogItemClass(log.Level)">
+                                <time>@log.Time</time>
+                                <div>
+                                    <span>@log.Title</span>
+                                    <small>@log.Detail</small>
+                                </div>
+                            </li>
+                        }
+                    </ol>
+                </section>
+                break;
+
+            case "risk":
+                <section class="context-section context-section-open context-risk-section" aria-labelledby="context-risk-title">
+                    <div class="context-section-title">
+                        <Icon Type="safety" Theme="IconThemeType.Outline" />
+                        <strong id="context-risk-title">风险</strong>
+                    </div>
+                    <ol class="context-risk-list">
+                        @foreach (var risk in RiskItems)
+                        {
+                            <li class="@RiskItemClass(risk.Level)">
+                                <span>@risk.Level</span>
+                                <div>
+                                    <strong>@risk.Title</strong>
+                                    <small>@risk.Detail</small>
+                                </div>
+                            </li>
+                        }
+                    </ol>
+                </section>
+                break;
+
+            case "tree":
+                <section class="context-section context-section-open" aria-labelledby="context-tree-title">
+                    <div class="context-section-title">
+                        <Icon Type="folder-open" Theme="IconThemeType.Outline" />
+                        <strong id="context-tree-title">工程树</strong>
+                    </div>
+                    <dl class="context-facts">
+                        <div>
+                            <dt>任务</dt>
+                            <dd>@ActiveSessionTitle</dd>
+                        </div>
+                        <div>
+                            <dt>模式</dt>
+                            <dd>@ModeLabel</dd>
+                        </div>
+                        <div>
+                            <dt>状态</dt>
+                            <dd>@WorkspaceStatus</dd>
+                        </div>
+                    </dl>
+                    <ul class="context-tree-list">
+                        @foreach (var node in ProjectTreeItems)
+                        {
+                            <li style="@TreeNodeStyle(node.Level)">
+                                <Icon Type="@node.Icon" Theme="IconThemeType.Outline" />
+                                <span>@node.Name</span>
+                                <small>@node.Meta</small>
+                            </li>
+                        }
+                    </ul>
+                </section>
+                break;
+
+            default:
+                <section class="context-section context-section-open" aria-labelledby="context-plugin-tab-title">
+                    <div class="context-section-title">
+                        <Icon Type="@ActiveTabContribution.Icon" Theme="IconThemeType.Outline" />
+                        <strong id="context-plugin-tab-title">@ActiveTabContribution.Title</strong>
+                    </div>
+                    <div class="context-plugin-placeholder">
+                        <strong>@ActiveTabContribution.Description</strong>
+                        <span>该 Tab 由开源贡献点声明。具体渲染内容应由上层仓库或外部插件提供。</span>
+                    </div>
+                </section>
+                break;
+        }
     </section>
 
-    <section class="context-section">
-        <div class="context-section-title">
-            <Icon Type="thunderbolt" Theme="IconThemeType.Outline" />
-            <strong>本地目标</strong>
-        </div>
-        <div class="context-target-list">
-            <span>C# AOT</span>
-            <span>Linux C</span>
-            <span>STM32 BASIC</span>
-        </div>
-    </section>
-
-    <section class="context-section">
-        <div class="context-section-title">
-            <Icon Type="build" Theme="IconThemeType.Outline" />
-            <strong>生成参数</strong>
-        </div>
-        <dl class="context-facts">
-            <div>
-                <dt>模型</dt>
-                <dd>@Model</dd>
-            </div>
-            <div>
-                <dt>尺寸</dt>
-                <dd>@TargetSize</dd>
-            </div>
-        </dl>
-    </section>
-
-    <section class="context-section">
-        <div class="context-section-title">
-            <Icon Type="file-done" Theme="IconThemeType.Outline" />
-            <strong>最近产物</strong>
-        </div>
-        <ol class="context-activity-list">
-            <li>
-                <span>等待生成结果</span>
-                <small>产物会保存在当前会话</small>
-            </li>
-            <li>
-                <span>代码生成链路</span>
-                <small>后续由 CodeGen 插件注入</small>
-            </li>
-        </ol>
-    </section>
-
-    <section class="context-section context-section-muted">
-        <div class="context-section-title">
-            <Icon Type="safety" Theme="IconThemeType.Outline" />
-            <strong>边界提示</strong>
-        </div>
-        <p>这里只展示本地工程上下文。设备管理与业务数据入口应跳转用户自有 IoTSharp 实例。</p>
-    </section>
+    <footer class="context-boundary-note">
+        <Icon Type="safety-certificate" Theme="IconThemeType.Outline" />
+        <p>仅展示本地工程上下文与公开工程模型占位；设备管理、业务遥测入口应跳转用户自有 IoTSharp 实例。</p>
+    </footer>
 </aside>
 
 @code {
@@ -92,6 +168,114 @@
     [Parameter] public string WorkspaceStatus { get; set; } = "已就绪";
     [Parameter] public string Model { get; set; } = "未选择";
     [Parameter] public string TargetSize { get; set; } = "未设置";
+    [Parameter] public bool IsHostLoading { get; set; }
+    [Parameter] public int ArtifactCount { get; set; }
+    [Parameter] public IReadOnlyList<ContextTabContribution> Tabs { get; set; } = [];
     [Parameter] public string ServerStatusClass { get; set; } = "server-status checking compact";
     [Parameter] public string ServerStatusText { get; set; } = "正在检查服务";
+
+    private string _activeTab = "tree";
+
+    private IReadOnlyList<ContextTabContribution> ContextTabs =>
+        Tabs.Count == 0 ? BuiltinTabs : Tabs;
+
+    private ContextTabContribution ActiveTabContribution =>
+        ContextTabs.FirstOrDefault(tab => string.Equals(tab.Id, _activeTab, StringComparison.Ordinal))
+        ?? ContextTabs.FirstOrDefault()
+        ?? new("tree", "工程树", "本地 workspace 结构。", "folder-open");
+
+    private IReadOnlyList<ContextTabContribution> BuiltinTabs =>
+    [
+        new("tree", "工程树", "本地 workspace 结构。", "folder-open", 10),
+        new("artifacts", "产物", "当前会话产物摘要。", "file-done", 20)
+        {
+            Badge = ArtifactCount > 0 ? ArtifactCount.ToString() : null,
+        },
+        new("tools", "工具运行", "本地任务计划与工具运行。", "tool", 30)
+        {
+            Badge = IsHostLoading ? "运行" : null,
+        },
+        new("logs", "日志", "本地工作台日志。", "profile", 40),
+        new("risk", "风险", "边界与安全风险。", "safety", 50)
+        {
+            Badge = HighRiskCount.ToString(),
+        },
+    ];
+
+    private IReadOnlyList<ProjectTreeNode> ProjectTreeItems =>
+    [
+        new(0, WorkspaceName, "本地 workspace", "project"),
+        new(1, "sessions", $"{ActiveSessionTitle} · {ModeLabel}", "message"),
+        new(1, "targets", "C# AOT / Linux C / STM32 BASIC", "branches"),
+        new(1, "artifacts", ArtifactCount > 0 ? $"{ArtifactCount} 个会话产物" : "等待生成", "file-done"),
+        new(1, "policies", "本地审批与风险占位", "safety"),
+        new(1, "public-model", $"{Model} · {TargetSize}", "experiment"),
+    ];
+
+    private IReadOnlyList<ArtifactItem> ArtifactItems =>
+        ArtifactCount > 0
+            ? BuildGeneratedArtifacts()
+            : [
+                new("等待生成结果", "产物会保存在当前本地会话。", "local"),
+                new("代码生成链路", "后续由公开插件扩展点或 CodeGen 草稿注入。", "placeholder"),
+                new("目标端草稿", "C# AOT、Linux C、STM32 BASIC 仅为本地输出目标。", "draft"),
+            ];
+
+    private IReadOnlyList<ContextLogItem> LogItems =>
+    [
+        new("09:20", "info", "加载 workspace", $"已读取 {WorkspaceName} 本地上下文。"),
+        new("09:21", "info", "同步会话状态", WorkspaceStatus),
+        new("09:22", IsHostLoading ? "running" : "info", "工具运行视图", IsHostLoading ? "本地预览运行中。" : "暂无活跃运行。"),
+        new("09:23", "warning", "边界检查", "未启用设备管理 API，未接收业务遥测数据。"),
+    ];
+
+    private IReadOnlyList<RiskItem> RiskItems =>
+    [
+        new("高", "禁止接收业务遥测", "右侧面板只能展示本地占位或公开工程模型，不展示真实上行业务数据。"),
+        new("高", "禁止设备管理 API", "设备注册、心跳、配置、命令与固件入口必须由用户自有 IoTSharp 实例承载。"),
+        new("中", "产物仅为本地草稿", "生成摘要保存在当前会话，不在工作台外壳实现租户、计费或 License。"),
+        new("低", "工具运行是本地预览", "工具状态来自本组件占位与会话参数，不代表云端编排结果。"),
+    ];
+
+    private int HighRiskCount => RiskItems.Count(item => item.Level == "高");
+
+    protected override void OnParametersSet()
+    {
+        if (!ContextTabs.Any(tab => string.Equals(tab.Id, _activeTab, StringComparison.Ordinal)))
+        {
+            _activeTab = ContextTabs.FirstOrDefault()?.Id ?? "tree";
+        }
+    }
+
+    private void SelectTab(string tab) => _activeTab = tab;
+    private bool IsActiveTab(string tab) => string.Equals(_activeTab, tab, StringComparison.Ordinal);
+    private string TabButtonClass(string tab) => $"context-tab-button{(IsActiveTab(tab) ? " active" : string.Empty)}";
+    private static string TabId(string tab) => $"context-tab-{SafeDomId(tab)}";
+    private static string PanelId(string tab) => $"context-panel-{SafeDomId(tab)}";
+    private static string SafeDomId(string value) => string.Concat(value.Select(character =>
+        char.IsLetterOrDigit(character) || character == '-' || character == '_' ? character : '-'));
+    private static string TreeNodeStyle(int level) => $"padding-left: {9 + Math.Max(0, level) * 16}px;";
+    private static string LogItemClass(string level) => $"context-log-item is-{level}";
+    private static string RiskItemClass(string level) => level == "高" ? "is-high" : level == "中" ? "is-medium" : "is-low";
+
+    private IReadOnlyList<ArtifactItem> BuildGeneratedArtifacts()
+    {
+        var items = new List<ArtifactItem>(ArtifactCount + 2)
+        {
+            new("最近生成产物", $"{ArtifactCount} 个结果来自当前本地会话。", "session"),
+            new("请求参数摘要", $"{Model} · {TargetSize}", "model"),
+        };
+
+        for (var index = 1; index <= ArtifactCount; index++)
+        {
+            items.Add(new($"会话产物 {index:00}", $"{ActiveSessionTitle} 的本地结果引用。", "image"));
+        }
+
+        return items;
+    }
+
+    private sealed record ProjectTreeNode(int Level, string Name, string Meta, string Icon);
+    private sealed record ArtifactItem(string Name, string Detail, string Kind);
+    private sealed record ContextLogItem(string Time, string Level, string Title, string Detail);
+    private sealed record RiskItem(string Level, string Title, string Detail);
 }
