@@ -5,6 +5,7 @@ using IoTCoWork.Workbench.Models;
 using IoTCoWork.Workbench.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.AspNetCore.Components.Web;
 using System.Net.Http.Json;
 using Microsoft.JSInterop;
 using QRCoder;
@@ -108,6 +109,7 @@ public partial class Home
     private string _loadingLabel = "正在请求图像接口";
     private bool _leftSidebarCollapsed;
     private bool _settingsOpen;
+    private bool _accountMenuOpen;
     private bool _exitConfirmOpen;
     private bool _accountBusy;
     private bool _accountRegisterOpen;
@@ -180,6 +182,28 @@ public partial class Home
     private XThemeTokens ThemeTokens => EffectiveTheme == "dark" ? DarkTokens : LightTokens;
     private string RootThemeClass => $"studio-provider theme-{EffectiveTheme}";
     private string AccountEmail => string.IsNullOrWhiteSpace(Settings.SaaSUser?.Email) ? "未登录" : Settings.SaaSUser.Email;
+    private string AccountDisplayName => ResolveAccountDisplayName();
+    private string AccountAvatarUrl => Settings.SaaSUser?.AvatarUrl?.Trim() ?? string.Empty;
+    private string AccountInitials => ResolveAccountInitials(AccountDisplayName, Settings.SaaSUser?.Email);
+    private string AccountConnectionLabel => AccountReady
+        ? "已连接"
+        : AccountLoggedIn
+            ? "待完成云端连接"
+            : "未登录";
+    private string AccountServiceLabel => string.IsNullOrWhiteSpace(Settings.SaaSUser?.AccountService?.Status)
+        ? "未配置"
+        : Settings.SaaSUser.AccountService.Status;
+    private string AccountServiceDetail => string.IsNullOrWhiteSpace(Settings.SaaSUser?.AccountService?.Detail)
+        ? "暂无账户服务状态"
+        : Settings.SaaSUser.AccountService.Detail;
+    private string AccountMenuButtonTitle => AccountLoggedIn ? $"账户：{AccountDisplayName}" : "账户菜单";
+    private string AccountMenuExpanded => _accountMenuOpen ? "true" : "false";
+    private string AccountAvatarButtonClass => $"account-avatar-button{(_accountMenuOpen ? " active" : string.Empty)}";
+    private string AccountPresenceClass => AccountReady
+        ? "account-presence is-ready"
+        : AccountLoggedIn
+            ? "account-presence is-partial"
+            : "account-presence";
     private string BalanceLabel => Settings.SaaSUser is null ? "--" : FormatMoney(Settings.SaaSUser.Balance);
     private string HeaderSubtitle => AppVersion;
     private string AccountMessageClass => _accountMessageIsError ? "settings-message error" : "settings-message";
@@ -217,6 +241,7 @@ public partial class Home
         $"studio-body{(_leftSidebarCollapsed ? " left-collapsed" : string.Empty)}";
     private string SidebarClass => _leftSidebarCollapsed ? "studio-sidebar is-collapsed" : "studio-sidebar";
     private string CanvasClass => _loading ? "workspace-canvas is-loading" : "workspace-canvas";
+    private string ContextServerStatusClass => $"{ServerStatusClass} compact";
     private string WorkspaceStatus => _loading ? "正在生成，请保持窗口打开" : LatestImages.Count == 0 ? "已就绪，可以开始作图" : $"已生成 {LatestImages.Count} 张图片";
     private string AuthButtonText => _accountBusy ? "处理中..." : _accountRegisterOpen ? "创建并登录" : "登录";
     private string PaymentTitle => PaymentSucceeded
@@ -1608,8 +1633,78 @@ public partial class Home
         }
     }
 
+    private static string ResolveAccountInitials(string displayName, string? email)
+    {
+        var source = !string.IsNullOrWhiteSpace(displayName) && displayName != "未登录"
+            ? displayName
+            : email;
+        source = source?.Trim();
+        if (string.IsNullOrWhiteSpace(source))
+        {
+            return "未";
+        }
+
+        return source[..1].ToUpperInvariant();
+    }
+
+    private string ResolveAccountDisplayName()
+    {
+        if (!string.IsNullOrWhiteSpace(Settings.SaaSUser?.DisplayName))
+        {
+            return Settings.SaaSUser.DisplayName.Trim();
+        }
+
+        if (!string.IsNullOrWhiteSpace(Settings.SaaSUser?.Email))
+        {
+            return Settings.SaaSUser.Email.Trim();
+        }
+
+        return "未登录";
+    }
+
+    private string AccountThemeChecked(string mode) =>
+        string.Equals(Settings.ThemeMode, mode, StringComparison.OrdinalIgnoreCase) ? "true" : "false";
+
+    private void ToggleAccountMenu()
+    {
+        _accountMenuOpen = !_accountMenuOpen;
+    }
+
+    private void CloseAccountMenu()
+    {
+        _accountMenuOpen = false;
+    }
+
+    private void HandleAccountMenuKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Escape")
+        {
+            CloseAccountMenu();
+        }
+    }
+
+    private void HandleAccountMenuButtonKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "ArrowDown")
+        {
+            _accountMenuOpen = true;
+        }
+    }
+
     private void OpenSettings() => _settingsOpen = true;
     private void CloseSettings() => _settingsOpen = false;
+    private void OpenSettingsFromAccountMenu()
+    {
+        CloseAccountMenu();
+        OpenSettings();
+    }
+
+    private async Task SignOutFromAccountMenu()
+    {
+        CloseAccountMenu();
+        await SignOutAccount();
+    }
+
     private void OpenAuthProxySettings() => _authProxyOpen = true;
     private void CloseAuthProxySettings() => _authProxyOpen = false;
 

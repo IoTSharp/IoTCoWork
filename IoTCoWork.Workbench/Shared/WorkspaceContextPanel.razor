@@ -1,0 +1,97 @@
+<aside class="workspace-context-panel" aria-label="工程上下文">
+    <header class="context-panel-header">
+        <div>
+            <span class="workspace-eyebrow">工程上下文</span>
+            <h2>@WorkspaceName</h2>
+        </div>
+        <span class="@ServerStatusClass" title="@ServerStatusText">
+            <span class="server-status-dot" aria-hidden="true"></span>
+        </span>
+    </header>
+
+    <section class="context-section">
+        <div class="context-section-title">
+            <Icon Type="folder-open" Theme="IconThemeType.Outline" />
+            <strong>当前会话</strong>
+        </div>
+        <dl class="context-facts">
+            <div>
+                <dt>任务</dt>
+                <dd>@ActiveSessionTitle</dd>
+            </div>
+            <div>
+                <dt>模式</dt>
+                <dd>@ModeLabel</dd>
+            </div>
+            <div>
+                <dt>状态</dt>
+                <dd>@WorkspaceStatus</dd>
+            </div>
+        </dl>
+    </section>
+
+    <section class="context-section">
+        <div class="context-section-title">
+            <Icon Type="thunderbolt" Theme="IconThemeType.Outline" />
+            <strong>本地目标</strong>
+        </div>
+        <div class="context-target-list">
+            <span>C# AOT</span>
+            <span>Linux C</span>
+            <span>STM32 BASIC</span>
+        </div>
+    </section>
+
+    <section class="context-section">
+        <div class="context-section-title">
+            <Icon Type="build" Theme="IconThemeType.Outline" />
+            <strong>生成参数</strong>
+        </div>
+        <dl class="context-facts">
+            <div>
+                <dt>模型</dt>
+                <dd>@Model</dd>
+            </div>
+            <div>
+                <dt>尺寸</dt>
+                <dd>@TargetSize</dd>
+            </div>
+        </dl>
+    </section>
+
+    <section class="context-section">
+        <div class="context-section-title">
+            <Icon Type="file-done" Theme="IconThemeType.Outline" />
+            <strong>最近产物</strong>
+        </div>
+        <ol class="context-activity-list">
+            <li>
+                <span>等待生成结果</span>
+                <small>产物会保存在当前会话</small>
+            </li>
+            <li>
+                <span>代码生成链路</span>
+                <small>后续由 CodeGen 插件注入</small>
+            </li>
+        </ol>
+    </section>
+
+    <section class="context-section context-section-muted">
+        <div class="context-section-title">
+            <Icon Type="safety" Theme="IconThemeType.Outline" />
+            <strong>边界提示</strong>
+        </div>
+        <p>这里只展示本地工程上下文。设备管理与业务数据入口应跳转用户自有 IoTSharp 实例。</p>
+    </section>
+</aside>
+
+@code {
+    [Parameter] public string WorkspaceName { get; set; } = "IoTCoWork";
+    [Parameter] public string ActiveSessionTitle { get; set; } = "新会话";
+    [Parameter] public string ModeLabel { get; set; } = "文生图";
+    [Parameter] public string WorkspaceStatus { get; set; } = "已就绪";
+    [Parameter] public string Model { get; set; } = "未选择";
+    [Parameter] public string TargetSize { get; set; } = "未设置";
+    [Parameter] public string ServerStatusClass { get; set; } = "server-status checking compact";
+    [Parameter] public string ServerStatusText { get; set; } = "正在检查服务";
+}

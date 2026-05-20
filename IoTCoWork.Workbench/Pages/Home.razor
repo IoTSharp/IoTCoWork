@@ -25,10 +25,117 @@
             </div>
 
             <div class="studio-topbar-actions" native-web-no-drag omni-no-drag>
-                <button type="button" class="studio-button studio-button-light" title="我的账户" @onclick="OpenSettings">
-                    <Icon Type="user" Theme="IconThemeType.Outline" />
-                    <span>我的账户</span>
-                </button>
+                <div class="account-menu-host" @onkeydown="HandleAccountMenuKeyDown">
+                    <button id="account-menu-button"
+                            type="button"
+                            class="@AccountAvatarButtonClass"
+                            title="@AccountMenuButtonTitle"
+                            aria-label="@AccountMenuButtonTitle"
+                            aria-haspopup="menu"
+                            aria-expanded="@AccountMenuExpanded"
+                            aria-controls="account-menu-popover"
+                            @onclick="ToggleAccountMenu"
+                            @onkeydown="HandleAccountMenuButtonKeyDown">
+                        <span class="account-avatar" aria-hidden="true">
+                            @if (!string.IsNullOrWhiteSpace(AccountAvatarUrl))
+                            {
+                                <img src="@AccountAvatarUrl" alt="" />
+                            }
+                            else
+                            {
+                                <span>@AccountInitials</span>
+                            }
+                        </span>
+                        <span class="@AccountPresenceClass" aria-hidden="true"></span>
+                    </button>
+
+                    @if (_accountMenuOpen)
+                    {
+                        <button type="button" class="account-menu-scrim" tabindex="-1" aria-label="关闭账户菜单" @onclick="CloseAccountMenu"></button>
+                        <section id="account-menu-popover" class="account-menu-popover" role="menu" aria-labelledby="account-menu-button">
+                            <header class="account-menu-header">
+                                <div class="account-menu-avatar" aria-hidden="true">
+                                    @if (!string.IsNullOrWhiteSpace(AccountAvatarUrl))
+                                    {
+                                        <img src="@AccountAvatarUrl" alt="" />
+                                    }
+                                    else
+                                    {
+                                        <span>@AccountInitials</span>
+                                    }
+                                </div>
+                                <div class="account-menu-identity">
+                                    <strong>@AccountDisplayName</strong>
+                                    <span>@AccountEmail</span>
+                                    <small>@AccountConnectionLabel</small>
+                                </div>
+                            </header>
+
+                            <div class="account-menu-status" role="presentation">
+                                <span>账户服务</span>
+                                <strong>@AccountServiceLabel</strong>
+                                <small>@AccountServiceDetail</small>
+                            </div>
+
+                            <div class="account-menu-group" role="group" aria-label="账户">
+                                <button type="button" role="menuitem" @onclick="OpenSettingsFromAccountMenu">
+                                    <Icon Type="setting" Theme="IconThemeType.Outline" />
+                                    <span>
+                                        <strong>账户与设置</strong>
+                                        <small>打开账户详情</small>
+                                    </span>
+                                </button>
+                            </div>
+
+                            <div class="account-menu-group account-menu-theme" role="group" aria-label="主题">
+                                <div class="account-menu-label">主题</div>
+                                <div class="account-theme-options">
+                                    <button type="button"
+                                            role="menuitemradio"
+                                            aria-checked="@AccountThemeChecked("system")"
+                                            class="@ThemeOptionClass("system")"
+                                            title="跟随系统"
+                                            @onclick="@(() => UpdateThemeMode("system"))">
+                                        <Icon Type="desktop" Theme="IconThemeType.Outline" />
+                                        <span>系统</span>
+                                    </button>
+                                    <button type="button"
+                                            role="menuitemradio"
+                                            aria-checked="@AccountThemeChecked("light")"
+                                            class="@ThemeOptionClass("light")"
+                                            title="浅色主题"
+                                            @onclick="@(() => UpdateThemeMode("light"))">
+                                        <Icon Type="bulb" Theme="IconThemeType.Outline" />
+                                        <span>浅色</span>
+                                    </button>
+                                    <button type="button"
+                                            role="menuitemradio"
+                                            aria-checked="@AccountThemeChecked("dark")"
+                                            class="@ThemeOptionClass("dark")"
+                                            title="深色主题"
+                                            @onclick="@(() => UpdateThemeMode("dark"))">
+                                        <Icon Type="moon" Theme="IconThemeType.Outline" />
+                                        <span>深色</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="account-menu-group" role="group" aria-label="登录">
+                                <button type="button"
+                                        role="menuitem"
+                                        class="account-menu-action-danger"
+                                        disabled="@(!AccountLoggedIn || _accountBusy)"
+                                        @onclick="SignOutFromAccountMenu">
+                                    <Icon Type="@(_accountBusy ? "loading" : "logout")" Theme="IconThemeType.Outline" />
+                                    <span>
+                                        <strong>@(_accountBusy ? "处理中" : "退出登录")</strong>
+                                        <small>@(AccountLoggedIn ? "清除本地账户令牌" : "当前未登录")</small>
+                                    </span>
+                                </button>
+                            </div>
+                        </section>
+                    }
+                </div>
                 <div class="window-controls" aria-label="窗口控制">
                     <button type="button" class="window-control" title="最小化" aria-label="最小化" @onclick="MinimizeWindowAsync">
                         <Icon Type="minus" Theme="IconThemeType.Outline" />
@@ -395,6 +502,14 @@
                 </section>
             </main>
 
+            <WorkspaceContextPanel WorkspaceName="@AppName"
+                                   ActiveSessionTitle="@ActiveSession.Title"
+                                   ModeLabel="@ModeLabel"
+                                   WorkspaceStatus="@WorkspaceStatus"
+                                   Model="@Settings.Model"
+                                   TargetSize="@EffectiveImageSize"
+                                   ServerStatusClass="@ContextServerStatusClass"
+                                   ServerStatusText="@ServerStatusText" />
         </div>
     </div>
 
