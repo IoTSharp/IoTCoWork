@@ -1,11 +1,13 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using IoTSharp.SaaS.Contracts.WorkspaceGeneration;
 
 namespace IoTCoWork.Workbench.Models;
 
 public sealed class StudioSettings
 {
     public const string DefaultAiGatewayBaseUrl = "https://iotsharp.online/v1/";
+    public const string DefaultSaaSWorkspaceBaseUrl = WorkspaceGenerationClientDefaults.BaseAddress;
 
     private string? _legacyBaseUrl;
     private string? _legacyAccessToken;
@@ -13,6 +15,7 @@ public sealed class StudioSettings
     public string AiGatewayBaseUrl { get; set; } = DefaultAiGatewayBaseUrl;
     public string NetworkProxyUrl { get; set; } = string.Empty;
     public string AiGatewayAccessToken { get; set; } = string.Empty;
+    public string SaaSWorkspaceBaseUrl { get; set; } = DefaultSaaSWorkspaceBaseUrl;
     public string DeviceLocalId { get; set; } = $"iotcowork-{Guid.NewGuid():N}";
 
     [JsonPropertyName("apiKey")]
@@ -90,6 +93,7 @@ public sealed class StudioSettings
         }
 
         AiGatewayBaseUrl = NormalizeAbsoluteUrl(AiGatewayBaseUrl, DefaultAiGatewayBaseUrl);
+        SaaSWorkspaceBaseUrl = NormalizeAbsoluteUrl(SaaSWorkspaceBaseUrl, DefaultSaaSWorkspaceBaseUrl);
         NetworkProxyUrl = NetworkProxyUrl.Trim();
         AiGatewayAccessToken = AiGatewayAccessToken.Trim();
         if (string.IsNullOrWhiteSpace(DeviceLocalId))

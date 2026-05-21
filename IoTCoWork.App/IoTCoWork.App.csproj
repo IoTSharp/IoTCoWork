@@ -61,7 +61,7 @@
     <ProjectReference Include="..\external\NativeWebHost\src\NativeWebHost.Windows\NativeWebHost.Windows.csproj" />
   </ItemGroup>
 
-  <Target Name="PublishIoTCoWorkWasmForDebugHost" BeforeTargets="Build" Condition="'$(SkipIoTCoWorkWasmPublish)' != 'true' and '$(IoTCoWorkEmbedWasmAssets)' != 'true'">
+  <Target Name="PublishIoTCoWorkWasmForDebugHost" BeforeTargets="Build" Condition="'$(SkipIoTCoWorkWasmPublish)' != 'true' and '$(IoTCoWorkEmbedWasmAssets)' != 'true' and '$(SolutionDir)' == ''">
     <MSBuild Projects="..\IoTCoWork.Workbench\IoTCoWork.Workbench.csproj"
              Targets="Publish"
              Properties="Configuration=$(Configuration);TargetFramework=net10.0;Version=$(Version);InformationalVersion=$(InformationalVersion);RunAOTCompilation=$(IoTCoWorkWasmRunAotCompilation);PublishDir=$(IoTCoWorkWasmPublishDir)"
@@ -71,7 +71,7 @@
   <Target Name="CopyIoTCoWorkWasmDebugOutput"
           BeforeTargets="Build"
           DependsOnTargets="PublishIoTCoWorkWasmForDebugHost"
-          Condition="'$(SkipIoTCoWorkWasmPublish)' != 'true' and '$(IoTCoWorkEmbedWasmAssets)' != 'true'">
+          Condition="'$(SkipIoTCoWorkWasmPublish)' != 'true' and '$(IoTCoWorkEmbedWasmAssets)' != 'true' and '$(SolutionDir)' == ''">
     <ItemGroup>
       <_IoTCoWorkWasmDebugAsset Include="$(IoTCoWorkWasmPublishDir)wwwroot\**\*" />
       <_IoTCoWorkWasmDebugAsset Remove="@(_IoTCoWorkWasmDebugAsset)" Condition="$([System.IO.Directory]::Exists('%(_IoTCoWorkWasmDebugAsset.FullPath)'))" />
@@ -82,7 +82,7 @@
           SkipUnchangedFiles="true" />
   </Target>
 
-  <Target Name="PublishIoTCoWorkWasmForHost" BeforeTargets="AssignTargetPaths" Condition="'$(SkipIoTCoWorkWasmPublish)' != 'true' and '$(IoTCoWorkEmbedWasmAssets)' == 'true'">
+  <Target Name="PublishIoTCoWorkWasmForHost" BeforeTargets="AssignTargetPaths" Condition="'$(SkipIoTCoWorkWasmPublish)' != 'true' and '$(IoTCoWorkEmbedWasmAssets)' == 'true' and '$(SolutionDir)' == ''">
     <Exec Command="&quot;$(IoTCoWorkDotNetHostPath)&quot; publish &quot;$(MSBuildProjectDirectory)/../IoTCoWork.Workbench/IoTCoWork.Workbench.csproj&quot; -f net10.0 -c &quot;$(Configuration)&quot; -r &quot;$(IoTCoWorkWasmRuntimeIdentifier)&quot; -o &quot;$(IoTCoWorkWasmPublishCliDir)&quot; &quot;/p:Version=$(Version)&quot; &quot;/p:InformationalVersion=$(InformationalVersion)&quot;" />
 
     <ItemGroup>

@@ -4,10 +4,13 @@ using AntDesign.X.Components;
 using IoTCoWork.Workbench.Extensibility;
 using IoTCoWork.Workbench.Models;
 using IoTCoWork.Workbench.Services;
+using IoTSharp.SaaS.Contracts;
+using IoTSharp.SaaS.Contracts.WorkspaceGeneration;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Web;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.JSInterop;
 using System.Reflection;
 
@@ -161,6 +164,12 @@ public partial class Home
     private AppUpdateCheckResponse? _updateInfo;
     private string? _updateNotice;
     private bool _updateNoticeIsError;
+    private Workspace? _exampleWorkspace;
+    private WorkspaceGenerationTaskDto? _saasGenerationTask;
+    private IReadOnlyList<WorkspaceGenerationArtifactDto> _saasGenerationArtifacts = [];
+    private bool _saasGenerationBusy;
+    private string? _saasGenerationError;
+    private Guid? _lastSaaSGenerationTaskId;
     private PendingPrompt? _pendingPrompt;
     private bool _ratioMenuOpen;
     private bool _resolutionMenuOpen;
@@ -313,6 +322,39 @@ public partial class Home
             : "已记录";
     private string WorkspaceOverviewUpdatedAt => ActiveSession.UpdatedAt.ToLocalTime().ToString("MM-dd HH:mm");
     private string ExternalIoTSharpUrl => "https://iotsharp.example.com/";
+    private int ContextArtifactCount => LatestImages.Count + SaaSGenerationArtifacts.Count;
+    private string ExampleWorkspaceLabel => _exampleWorkspace is null
+        ? "未加载"
+        : SaaSWorkspaceClient.DescribeWorkspace(_exampleWorkspace);
+    private IReadOnlyList<WorkspaceGenerationArtifactDto> SaaSGenerationArtifacts =>
+        _saasGenerationArtifacts.Count > 0
+            ? _saasGenerationArtifacts
+            : _saasGenerationTask?.Artifacts ?? [];
+    private string SaaSGenerationTaskLabel => _saasGenerationTask is null
+        ? "尚未触发"
+        : _saasGenerationTask.TaskId == Guid.Empty
+            ? "失败预览"
+            : _saasGenerationTask.TaskId.ToString("N")[..12];
+    private string SaaSGenerationStatusLabel => _saasGenerationBusy
+        ? "运行中"
+        : _saasGenerationTask is null
+            ? "待触发"
+            : _saasGenerationTask.Status switch
+            {
+                WorkspaceGenerationTaskStatus.Succeeded => "成功",
+                WorkspaceGenerationTaskStatus.Failed => "失败",
+                WorkspaceGenerationTaskStatus.Canceled => "已取消",
+                WorkspaceGenerationTaskStatus.Running => "运行中",
+                WorkspaceGenerationTaskStatus.Created => "已创建",
+                _ => _saasGenerationTask.Status.ToString()
+            };
+    private string SaaSGenerationDetail => _saasGenerationTask is null
+        ? "加载示例工程模型后，可调用 SaaS Workspace 生成任务 API。"
+        : _saasGenerationTask.Status == WorkspaceGenerationTaskStatus.Failed
+            ? _saasGenerationTask.ErrorMessage ?? "任务失败。"
+            : $"{_saasGenerationTask.TargetKind} · {_saasGenerationTask.RuntimeProfile} · {SaaSGenerationArtifacts.Count} artifacts";
+    private string SaaSGenerationResultClass =>
+        $"saas-generation-result is-{(_saasGenerationBusy ? "running" : (_saasGenerationTask?.Status.ToString().ToLowerInvariant() ?? "idle"))}";
     private string WorkspaceChipValue => AppName;
     private string WorkspaceChipTitle => $"Workspace：{AppName} · 当前会话：{ActiveSession.Title}";
     private string EdgeTargetChipTitle => $"边缘目标：{SelectedEdgeTarget.Description}";
@@ -416,6 +458,7 @@ public partial class Home
         _snapshot = await Storage.LoadAsync();
 
         EnsureActiveMode();
+        await LoadExampleWorkspaceAsync();
         StartServerStatusPolling();
         _ = CheckForUpdatesAsync(silent: true);
     }
@@ -1342,6 +1385,28 @@ public partial class Home
         _revealDownloadBusy = false;
     }
 
+    private static string FormatBytes(long value)
+    {
+        if (value < 1024)
+        {
+            return $"{value} B";
+        }
+
+        if (value < 1024 * 1024)
+        {
+            return $"{value / 1024d:0.#} KB";
+        }
+
+        return $"{value / 1024d / 1024d:0.##} MB";
+    }
+
+    private static string ShortHash(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? "--"
+            : value[..Math.Min(12, value.Length)];
+    }
+
     private static string TrimJsError(string message)
     {
         const string errorPrefix = "Error: ";
@@ -1615,6 +1680,198 @@ public partial class Home
         _senderText = prompt;
         TouchActiveSession(prompt);
         await SaveAsync();
+    }
+
+    private async Task LoadExampleWorkspaceAsync()
+    {
+        try
+        {
+            _exampleWorkspace = await WorkspaceClient.LoadExampleWorkspaceAsync();
+            _saasGenerationError = null;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or JsonException or InvalidOperationException)
+        {
+            _saasGenerationError = $"加载示例工程失败：{ex.Message}";
+        }
+    }
+
+    private async Task RunSaaSGenerationAsync()
+    {
+        if (_saasGenerationBusy)
+        {
+            return;
+        }
+
+        _saasGenerationBusy = true;
+        _saasGenerationError = null;
+        _saasGenerationArtifacts = [];
+        _saasGenerationTask = _saasGenerationTask is null
+            ? new WorkspaceGenerationTaskDto
+            {
+                TaskId = Guid.Empty,
+                Status = WorkspaceGenerationTaskStatus.Running,
+                TenantId = "tenant-demo",
+                RequestedByUserId = "iotcowork-local",
+                WorkspaceId = "loading",
+                ProjectId = "loading",
+                TargetId = "loading",
+                TargetKind = "csharpAot",
+                RuntimeProfile = "linux-x64",
+                CreatedAtUtc = DateTimeOffset.UtcNow,
+                UpdatedAtUtc = DateTimeOffset.UtcNow,
+                Artifacts = []
+            }
+            : _saasGenerationTask with
+            {
+                Status = WorkspaceGenerationTaskStatus.Running,
+                ErrorMessage = null,
+                UpdatedAtUtc = DateTimeOffset.UtcNow,
+                Artifacts = []
+            };
+        StateHasChanged();
+
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+
+        try
+        {
+            var workspace = _exampleWorkspace ?? await LoadExampleWorkspaceOrThrowAsync();
+            var projectId = SaaSWorkspaceClient.SelectDefaultProjectId(workspace)
+                ?? throw new InvalidOperationException("示例工程模型缺少项目。");
+            var targetId = SaaSWorkspaceClient.SelectDefaultTargetId(workspace, projectId)
+                ?? throw new InvalidOperationException("示例工程模型缺少生成目标。");
+
+            var task = await WorkspaceClient.CreateTaskAsync(
+                Settings.SaaSWorkspaceBaseUrl,
+                new CreateWorkspaceGenerationTaskRequest
+                {
+                    TenantId = workspace.OwnerTenantId ?? "tenant-demo",
+                    RequestedByUserId = "iotcowork-local",
+                    Workspace = workspace,
+                    ProjectId = projectId,
+                    TargetId = targetId
+                },
+                _cts.Token);
+
+            _saasGenerationTask = task;
+            _lastSaaSGenerationTaskId = task.TaskId;
+            _saasGenerationArtifacts = task.Artifacts;
+            ActiveSession.Messages.Add(new StudioMessage
+            {
+                Role = "system",
+                Content = $"SaaS 生成任务完成：{task.Status}，工件 {task.Artifacts.Count} 个。"
+            });
+            TouchActiveSession("SaaS Workspace 生成任务");
+            await SaveAsync();
+        }
+        catch (OperationCanceledException) when (_cts?.IsCancellationRequested == true)
+        {
+            _saasGenerationTask = _saasGenerationTask with
+            {
+                Status = WorkspaceGenerationTaskStatus.Canceled,
+                UpdatedAtUtc = DateTimeOffset.UtcNow,
+                ErrorMessage = "用户取消了生成请求。"
+            };
+        }
+        catch (Exception ex) when (ex is HttpRequestException or WorkspaceGenerationApiException or TaskCanceledException or InvalidOperationException)
+        {
+            _saasGenerationError = $"生成任务失败：{ex.Message}";
+            _saasGenerationTask = _saasGenerationTask is null
+                ? null
+                : _saasGenerationTask with
+                {
+                    Status = WorkspaceGenerationTaskStatus.Failed,
+                    UpdatedAtUtc = DateTimeOffset.UtcNow,
+                    ErrorMessage = ex.Message,
+                    Artifacts = []
+                };
+        }
+        finally
+        {
+            _saasGenerationBusy = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RefreshSaaSGenerationTaskAsync()
+    {
+        if (!_lastSaaSGenerationTaskId.HasValue || _saasGenerationBusy)
+        {
+            return;
+        }
+
+        _saasGenerationBusy = true;
+        _saasGenerationError = null;
+        StateHasChanged();
+
+        try
+        {
+            var tenantId = _saasGenerationTask?.TenantId ?? _exampleWorkspace?.OwnerTenantId ?? "tenant-demo";
+            var userId = _saasGenerationTask?.RequestedByUserId ?? "iotcowork-local";
+            var task = await WorkspaceClient.GetTaskAsync(
+                Settings.SaaSWorkspaceBaseUrl,
+                _lastSaaSGenerationTaskId.Value,
+                tenantId,
+                userId);
+            if (task is null)
+            {
+                _saasGenerationError = "未找到生成任务，可能是租户头不匹配或服务已重启。";
+                return;
+            }
+
+            _saasGenerationTask = task;
+            _saasGenerationArtifacts = await WorkspaceClient.GetArtifactsAsync(
+                Settings.SaaSWorkspaceBaseUrl,
+                task.TaskId,
+                task.TenantId,
+                task.RequestedByUserId)
+                ?? task.Artifacts;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or WorkspaceGenerationApiException or TaskCanceledException)
+        {
+            _saasGenerationError = $"刷新任务失败：{ex.Message}";
+        }
+        finally
+        {
+            _saasGenerationBusy = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task PreviewSaaSGenerationFailureAsync()
+    {
+        if (_saasGenerationBusy)
+        {
+            return;
+        }
+
+        _saasGenerationBusy = true;
+        _saasGenerationError = null;
+        _saasGenerationArtifacts = [];
+        StateHasChanged();
+
+        try
+        {
+            _saasGenerationTask = await WorkspaceClient.CreateFailurePreviewAsync();
+            _lastSaaSGenerationTaskId = _saasGenerationTask?.TaskId == Guid.Empty ? null : _saasGenerationTask?.TaskId;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or WorkspaceGenerationApiException or TaskCanceledException or InvalidOperationException)
+        {
+            _saasGenerationError = $"失败样例不可用：{ex.Message}";
+        }
+        finally
+        {
+            _saasGenerationBusy = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task<Workspace> LoadExampleWorkspaceOrThrowAsync()
+    {
+        _exampleWorkspace = await WorkspaceClient.LoadExampleWorkspaceAsync();
+        _saasGenerationError = null;
+
+        return _exampleWorkspace;
     }
 
 
@@ -2174,6 +2431,14 @@ public partial class Home
         Settings.AiGatewayBaseUrl = NormalizeAbsoluteUrl(
             args.Value?.ToString(),
             StudioSettings.DefaultAiGatewayBaseUrl);
+        await SaveAsync();
+    }
+
+    private async Task UpdateSaaSWorkspaceBaseUrl(ChangeEventArgs args)
+    {
+        Settings.SaaSWorkspaceBaseUrl = NormalizeAbsoluteUrl(
+            args.Value?.ToString(),
+            StudioSettings.DefaultSaaSWorkspaceBaseUrl);
         await SaveAsync();
     }
 

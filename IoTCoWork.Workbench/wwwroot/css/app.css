@@ -2065,6 +2065,189 @@ html[data-native-web-window-style="vscode"] .window-controls {
     grid-row: span 2;
 }
 
+.saas-generation-panel {
+    align-content: start;
+}
+
+.saas-generation-body {
+    display: grid;
+    gap: 12px;
+}
+
+.saas-generation-facts {
+    display: grid;
+    gap: 7px;
+    margin: 0;
+}
+
+.saas-generation-facts div {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 8px;
+    min-width: 0;
+}
+
+.saas-generation-facts dt,
+.saas-generation-facts dd {
+    min-width: 0;
+    margin: 0;
+}
+
+.saas-generation-facts dt {
+    color: var(--studio-muted);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.saas-generation-facts dd {
+    overflow: hidden;
+    color: var(--studio-ink);
+    font-size: 12px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.saas-generation-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.saas-generation-actions .studio-button {
+    min-height: 32px;
+    padding: 0 10px;
+    font-size: 12px;
+}
+
+.saas-generation-result {
+    display: grid;
+    gap: 3px;
+    padding: 10px 11px;
+    border: 1px solid var(--studio-line);
+    border-radius: 8px;
+    background: var(--studio-control);
+}
+
+.saas-generation-result span,
+.saas-generation-result small {
+    color: var(--studio-muted);
+    font-size: 12px;
+}
+
+.saas-generation-result strong {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--studio-ink);
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.saas-generation-result.is-running,
+.saas-generation-result.is-created {
+    border-color: var(--studio-info-line);
+    background: var(--studio-info-bg);
+}
+
+.saas-generation-result.is-succeeded {
+    border-color: var(--studio-success-line);
+    background: var(--studio-success-bg);
+}
+
+.saas-generation-result.is-failed,
+.saas-generation-result.is-canceled {
+    border-color: var(--studio-danger-line);
+    background: var(--studio-danger-bg);
+}
+
+.saas-generation-error {
+    margin: 0;
+    overflow-wrap: anywhere;
+    color: var(--studio-danger);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.saas-artifact-list {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.saas-artifact-list li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    min-width: 0;
+    gap: 10px;
+    min-height: 48px;
+    padding: 8px 10px;
+    border: 1px solid var(--studio-line);
+    border-radius: 8px;
+    background: var(--studio-control);
+}
+
+.saas-artifact-list .anticon {
+    color: var(--studio-accent);
+    font-size: 15px;
+}
+
+.saas-artifact-list span {
+    display: grid;
+    min-width: 0;
+    gap: 2px;
+}
+
+.saas-artifact-list strong,
+.saas-artifact-list small {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.saas-artifact-list strong {
+    color: var(--studio-ink);
+    font-size: 13px;
+}
+
+.saas-artifact-list small {
+    color: var(--studio-muted);
+    font-size: 12px;
+}
+
+.saas-artifact-list a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-height: 30px;
+    padding: 0 9px;
+    border: 1px solid var(--studio-line);
+    border-radius: 6px;
+    color: var(--studio-accent-ink);
+    background: var(--studio-soft);
+    font-size: 12px;
+    font-weight: 800;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.saas-artifact-list a:hover,
+.saas-artifact-list a:focus-visible {
+    border-color: var(--studio-accent-line);
+    background: var(--studio-accent-soft);
+}
+
+.context-generation-error {
+    border-color: var(--studio-danger-line);
+    color: var(--studio-danger);
+    background: var(--studio-danger-bg);
+}
+
 .workspace-overview-section header,
 .workspace-suggestion-panel header {
     display: flex;
@@ -4671,13 +4854,20 @@ code {
     }
 
     .overview-task-list button,
-    .overview-artifact-list li {
+    .overview-artifact-list li,
+    .saas-artifact-list li {
         grid-template-columns: auto minmax(0, 1fr);
     }
 
-    .overview-artifact-list em {
+    .overview-artifact-list em,
+    .saas-artifact-list a {
         grid-column: 2;
         justify-self: start;
+    }
+
+    .saas-generation-facts div {
+        grid-template-columns: 1fr;
+        gap: 3px;
     }
 
     .task-plan-header,

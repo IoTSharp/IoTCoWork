@@ -3,6 +3,7 @@
 @inject ImageGenerationClient ImageClient
 @inject PromptChatClient ChatClient
 @inject AppUpdateClient UpdateClient
+@inject SaaSWorkspaceClient WorkspaceClient
 @inject IJSRuntime JsRuntime
 @inject HttpClient Http
 @implements IDisposable
@@ -232,6 +233,83 @@
                                             </li>
                                         }
                                     </ol>
+                                </div>
+
+                                <div class="workspace-overview-section workspace-overview-section-wide saas-generation-panel">
+                                    <header>
+                                        <div>
+                                            <span class="workspace-eyebrow">SaaS Workspace</span>
+                                            <h4>生成任务</h4>
+                                        </div>
+                                        <small>@SaaSGenerationStatusLabel</small>
+                                    </header>
+                                    <div class="saas-generation-body">
+                                        <dl class="saas-generation-facts">
+                                            <div>
+                                                <dt>示例模型</dt>
+                                                <dd>@ExampleWorkspaceLabel</dd>
+                                            </div>
+                                            <div>
+                                                <dt>API</dt>
+                                                <dd>@Settings.SaaSWorkspaceBaseUrl</dd>
+                                            </div>
+                                            <div>
+                                                <dt>任务</dt>
+                                                <dd>@SaaSGenerationTaskLabel</dd>
+                                            </div>
+                                        </dl>
+                                        <div class="saas-generation-actions">
+                                            <button type="button" class="studio-button studio-button-primary" title="调用 SaaS Workspace 生成任务 API" disabled="@_saasGenerationBusy" @onclick="RunSaaSGenerationAsync">
+                                                <Icon Type="@(_saasGenerationBusy ? "loading" : "cloud-upload")" Theme="IconThemeType.Outline" />
+                                                <span>@(_saasGenerationBusy ? "提交中" : "触发生成")</span>
+                                            </button>
+                                            <button type="button" class="studio-button studio-button-light" title="刷新生成任务状态" disabled="@(!_lastSaaSGenerationTaskId.HasValue || _saasGenerationBusy)" @onclick="RefreshSaaSGenerationTaskAsync">
+                                                <Icon Type="sync" Theme="IconThemeType.Outline" />
+                                                <span>刷新状态</span>
+                                            </button>
+                                            <button type="button" class="studio-button studio-button-ghost" title="展示失败态样例" disabled="@_saasGenerationBusy" @onclick="PreviewSaaSGenerationFailureAsync">
+                                                <Icon Type="warning" Theme="IconThemeType.Outline" />
+                                                <span>失败样例</span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    @if (_saasGenerationTask is not null)
+                                    {
+                                        <div class="@SaaSGenerationResultClass">
+                                            <span>@SaaSGenerationStatusLabel</span>
+                                            <strong>@SaaSGenerationTaskLabel</strong>
+                                            <small>@SaaSGenerationDetail</small>
+                                        </div>
+                                    }
+
+                                    @if (!string.IsNullOrWhiteSpace(_saasGenerationError))
+                                    {
+                                        <p class="saas-generation-error">@_saasGenerationError</p>
+                                    }
+
+                                    @if (SaaSGenerationArtifacts.Count > 0)
+                                    {
+                                        <ol class="saas-artifact-list">
+                                            @foreach (var artifact in SaaSGenerationArtifacts)
+                                            {
+                                                <li>
+                                                    <Icon Type="file-zip" Theme="IconThemeType.Outline" />
+                                                    <span>
+                                                        <strong>@artifact.FileName</strong>
+                                                        <small>@FormatBytes(artifact.SizeBytes) · @ShortHash(artifact.Sha256)</small>
+                                                    </span>
+                                                    <a href="@WorkspaceClient.BuildArtifactDownloadUrl(Settings.SaaSWorkspaceBaseUrl, artifact)"
+                                                       target="_blank"
+                                                       rel="noopener noreferrer"
+                                                       title="下载生成工件">
+                                                        <Icon Type="download" Theme="IconThemeType.Outline" />
+                                                        <span>下载</span>
+                                                    </a>
+                                                </li>
+                                            }
+                                        </ol>
+                                    }
                                 </div>
 
                                 <div class="workspace-overview-section">
@@ -670,11 +748,16 @@
                                    WorkspaceStatus="@WorkspaceStatus"
                                    Model="@Settings.Model"
                                    TargetSize="@EffectiveImageSize"
-                                   IsHostLoading="@_loading"
-                                   ArtifactCount="@LatestImages.Count"
+                                   IsHostLoading="@(_loading || _saasGenerationBusy)"
+                                   ArtifactCount="@ContextArtifactCount"
                                    Tabs="@ContextTabContributions"
                                    ServerStatusClass="@ContextServerStatusClass"
-                                   ServerStatusText="@ServerStatusText" />
+                                   ServerStatusText="@ServerStatusText"
+                                   SaaSGenerationTask="@_saasGenerationTask"
+                                   SaaSGenerationArtifacts="@SaaSGenerationArtifacts"
+                                   SaaSWorkspaceBaseUrl="@Settings.SaaSWorkspaceBaseUrl"
+                                   IsSaaSGenerationBusy="@_saasGenerationBusy"
+                                   SaaSGenerationError="@_saasGenerationError" />
         </div>
     </div>
 
@@ -909,6 +992,13 @@
                                         <div class="studio-field">
                                             <label class="studio-label">AI Gateway Token</label>
                                             <input class="studio-input" type="password" autocomplete="off" placeholder="由商业宿主或本地配置注入" value="@Settings.AiGatewayAccessToken" @onchange="UpdateAiGatewayAccessToken" />
+                                        </div>
+
+                                        <div class="settings-divider"></div>
+
+                                        <div class="studio-field">
+                                            <label class="studio-label">SaaS Workspace API</label>
+                                            <input class="studio-input" autocomplete="off" placeholder="http://localhost:5091/" value="@Settings.SaaSWorkspaceBaseUrl" @onchange="UpdateSaaSWorkspaceBaseUrl" />
                                         </div>
 
                                         <div class="settings-status-panel">

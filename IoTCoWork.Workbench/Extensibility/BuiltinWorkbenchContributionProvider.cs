@@ -50,16 +50,21 @@ public sealed class BuiltinWorkbenchContributionProvider : IWorkbenchContributio
             Badge = context.ArtifactCount > 0 ? context.ArtifactCount.ToString() : null,
             Kind = "builtin",
         };
-        yield return new("tools", "工具运行", "本地任务计划与工具运行。", "tool", 30)
+        yield return new("generation", "生成任务", "SaaS Workspace 生成任务状态。", "cloud-sync", 30)
         {
             Badge = context.IsRunning ? "运行" : null,
             Kind = "builtin",
         };
-        yield return new("logs", "日志", "本地工作台日志。", "profile", 40)
+        yield return new("tools", "工具运行", "本地任务计划与工具运行。", "tool", 40)
+        {
+            Badge = context.IsRunning ? "运行" : null,
+            Kind = "builtin",
+        };
+        yield return new("logs", "日志", "本地工作台日志。", "profile", 50)
         {
             Kind = "builtin",
         };
-        yield return new("risk", "风险", "边界与安全风险。", "safety", 50)
+        yield return new("risk", "风险", "边界与安全风险。", "safety", 60)
         {
             Badge = "2",
             Kind = "builtin",

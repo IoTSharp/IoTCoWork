@@ -22,6 +22,14 @@
 
   <ItemGroup>
     <ProjectReference Include="..\external\AntDesignXBlazor\src\AntDesign.X.Blazor\AntDesign.X.Blazor.csproj" />
+    <ProjectReference Include="..\..\..\src\IoTSharp.SaaS.Contracts\IoTSharp.SaaS.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\..\src\IoTSharp.SaaS\Contracts\examples\modbus-tcp-csharp-aot.workspace.json"
+             Link="wwwroot\data\modbus-tcp-csharp-aot.workspace.json"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

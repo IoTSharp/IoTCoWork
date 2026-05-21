@@ -1,3 +1,5 @@
+@using IoTSharp.SaaS.Contracts.WorkspaceGeneration
+
 <aside class="workspace-context-panel" aria-label="工程上下文">
     <header class="context-panel-header">
         <div>
@@ -64,6 +66,61 @@
                                        Model="@Model"
                                        IsHostLoading="@IsHostLoading"
                                        ArtifactCount="@ArtifactCount" />
+                break;
+
+            case "generation":
+                <section class="context-section context-section-open" aria-labelledby="context-generation-title">
+                    <div class="context-section-title">
+                        <Icon Type="cloud-sync" Theme="IconThemeType.Outline" />
+                        <strong id="context-generation-title">SaaS 生成任务</strong>
+                    </div>
+
+                    <dl class="context-facts">
+                        <div>
+                            <dt>API</dt>
+                            <dd>@SaaSWorkspaceBaseUrl</dd>
+                        </div>
+                        <div>
+                            <dt>状态</dt>
+                            <dd>@SaaSGenerationStatusLabel</dd>
+                        </div>
+                        <div>
+                            <dt>任务</dt>
+                            <dd>@SaaSGenerationTaskLabel</dd>
+                        </div>
+                    </dl>
+
+                    @if (!string.IsNullOrWhiteSpace(SaaSGenerationError))
+                    {
+                        <div class="context-plugin-placeholder context-generation-error">
+                            <strong>调用失败</strong>
+                            <span>@SaaSGenerationError</span>
+                        </div>
+                    }
+
+                    @if (SaaSGenerationArtifacts.Count > 0)
+                    {
+                        <ol class="context-artifact-list">
+                            @foreach (var artifact in SaaSGenerationArtifacts)
+                            {
+                                <li>
+                                    <div>
+                                        <span>@artifact.FileName</span>
+                                        <small>@FormatBytes(artifact.SizeBytes) · @ShortHash(artifact.Sha256)</small>
+                                    </div>
+                                    <em>@artifact.Kind</em>
+                                </li>
+                            }
+                        </ol>
+                    }
+                    else
+                    {
+                        <div class="context-plugin-placeholder">
+                            <strong>等待生成任务</strong>
+                            <span>在主工作区调用 SaaS Workspace API 后，这里会同步展示运行中、失败或成功状态。</span>
+                        </div>
+                    }
+                </section>
                 break;
 
             case "logs":
@@ -174,6 +231,11 @@
     [Parameter] public IReadOnlyList<ContextTabContribution> Tabs { get; set; } = [];
     [Parameter] public string ServerStatusClass { get; set; } = "server-status checking compact";
     [Parameter] public string ServerStatusText { get; set; } = "正在检查服务";
+    [Parameter] public WorkspaceGenerationTaskDto? SaaSGenerationTask { get; set; }
+    [Parameter] public IReadOnlyList<WorkspaceGenerationArtifactDto> SaaSGenerationArtifacts { get; set; } = [];
+    [Parameter] public string SaaSWorkspaceBaseUrl { get; set; } = "http://localhost:5091/";
+    [Parameter] public bool IsSaaSGenerationBusy { get; set; }
+    [Parameter] public string? SaaSGenerationError { get; set; }
 
     private string _activeTab = "tree";
 
@@ -192,12 +254,16 @@
         {
             Badge = ArtifactCount > 0 ? ArtifactCount.ToString() : null,
         },
-        new("tools", "工具运行", "本地任务计划与工具运行。", "tool", 30)
+        new("generation", "生成任务", "SaaS Workspace 生成任务状态。", "cloud-sync", 30)
+        {
+            Badge = IsSaaSGenerationBusy ? "运行" : null,
+        },
+        new("tools", "工具运行", "本地任务计划与工具运行。", "tool", 40)
         {
             Badge = IsHostLoading ? "运行" : null,
         },
-        new("logs", "日志", "本地工作台日志。", "profile", 40),
-        new("risk", "风险", "边界与安全风险。", "safety", 50)
+        new("logs", "日志", "本地工作台日志。", "profile", 50),
+        new("risk", "风险", "边界与安全风险。", "safety", 60)
         {
             Badge = HighRiskCount.ToString(),
         },
@@ -208,7 +274,8 @@
         new(0, WorkspaceName, "本地 workspace", "project"),
         new(1, "sessions", $"{ActiveSessionTitle} · {ModeLabel}", "message"),
         new(1, "targets", "C# AOT / Linux C / STM32 BASIC", "branches"),
-        new(1, "artifacts", ArtifactCount > 0 ? $"{ArtifactCount} 个会话产物" : "等待生成", "file-done"),
+        new(1, "artifacts", ArtifactCount > 0 ? $"{ArtifactCount} 个会话产物/云端工件" : "等待生成", "file-done"),
+        new(1, "saas-generation", SaaSGenerationTask is null ? "SaaS 生成任务待触发" : SaaSGenerationStatusLabel, "cloud-sync"),
         new(1, "policies", "本地审批与风险占位", "safety"),
         new(1, "public-model", $"{Model} · {TargetSize}", "experiment"),
     ];
@@ -226,7 +293,7 @@
     [
         new("09:20", "info", "加载 workspace", $"已读取 {WorkspaceName} 本地上下文。"),
         new("09:21", "info", "同步会话状态", WorkspaceStatus),
-        new("09:22", IsHostLoading ? "running" : "info", "工具运行视图", IsHostLoading ? "本地预览运行中。" : "暂无活跃运行。"),
+        new("09:22", IsHostLoading ? "running" : "info", "工具运行视图", IsHostLoading ? "本地或云端任务运行中。" : "暂无活跃运行。"),
         new("09:23", "warning", "边界检查", "未启用设备管理 API，未接收业务遥测数据。"),
     ];
 
@@ -239,6 +306,24 @@
     ];
 
     private int HighRiskCount => RiskItems.Count(item => item.Level == "高");
+    private string SaaSGenerationStatusLabel => IsSaaSGenerationBusy
+        ? "运行中"
+        : SaaSGenerationTask is null
+            ? "待触发"
+            : SaaSGenerationTask.Status switch
+            {
+                WorkspaceGenerationTaskStatus.Succeeded => "成功",
+                WorkspaceGenerationTaskStatus.Failed => "失败",
+                WorkspaceGenerationTaskStatus.Canceled => "已取消",
+                WorkspaceGenerationTaskStatus.Running => "运行中",
+                WorkspaceGenerationTaskStatus.Created => "已创建",
+                _ => SaaSGenerationTask.Status.ToString()
+            };
+    private string SaaSGenerationTaskLabel => SaaSGenerationTask is null
+        ? "无"
+        : SaaSGenerationTask.TaskId == Guid.Empty
+            ? "失败预览"
+            : SaaSGenerationTask.TaskId.ToString("N")[..12];
 
     protected override void OnParametersSet()
     {
@@ -258,6 +343,27 @@
     private static string TreeNodeStyle(int level) => $"padding-left: {9 + Math.Max(0, level) * 16}px;";
     private static string LogItemClass(string level) => $"context-log-item is-{level}";
     private static string RiskItemClass(string level) => level == "高" ? "is-high" : level == "中" ? "is-medium" : "is-low";
+    private static string FormatBytes(long value)
+    {
+        if (value < 1024)
+        {
+            return $"{value} B";
+        }
+
+        if (value < 1024 * 1024)
+        {
+            return $"{value / 1024d:0.#} KB";
+        }
+
+        return $"{value / 1024d / 1024d:0.##} MB";
+    }
+
+    private static string ShortHash(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? "--"
+            : value[..Math.Min(12, value.Length)];
+    }
 
     private IReadOnlyList<ArtifactItem> BuildGeneratedArtifacts()
     {

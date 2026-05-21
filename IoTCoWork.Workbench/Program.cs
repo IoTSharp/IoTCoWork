@@ -19,6 +19,7 @@ builder.Services.AddScoped<ImageStudioStorage>();
 builder.Services.AddScoped<ImageGenerationClient>();
 builder.Services.AddScoped<PromptChatClient>();
 builder.Services.AddScoped<AppUpdateClient>();
+builder.Services.AddScoped<SaaSWorkspaceClient>();
 builder.Services.AddSingleton<IWorkbenchContributionProvider, BuiltinWorkbenchContributionProvider>();
 builder.Services.AddSingleton<WorkbenchContributionCatalog>();
 builder.Services.AddAntDesign();
