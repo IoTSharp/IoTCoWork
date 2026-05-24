@@ -104,7 +104,7 @@ public partial class Home
     [
         new("csharp-aot", "C# AOT", "生成面向 IoTEdge 的 C# AOT 草稿。"),
         new("linux-c", "Linux C", "生成面向 IoTEdge.Linux 的 C 源码草稿。"),
-        new("stm32-basic", "STM32 BASIC", "生成面向 IoTEdge.Stm32 的 BASIC 草稿。"),
+        new("stm32-basic", "STM32 BASIC", "生成面向 IoTEmbedded 的 STM32 BASIC 草稿。"),
     ];
     private readonly IReadOnlyList<SenderContextOption> _approvalModeOptions =
     [

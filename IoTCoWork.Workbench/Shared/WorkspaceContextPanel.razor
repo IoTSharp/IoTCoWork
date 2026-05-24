@@ -294,13 +294,13 @@
         new("09:20", "info", "加载 workspace", $"已读取 {WorkspaceName} 本地上下文。"),
         new("09:21", "info", "同步会话状态", WorkspaceStatus),
         new("09:22", IsHostLoading ? "running" : "info", "工具运行视图", IsHostLoading ? "本地或云端任务运行中。" : "暂无活跃运行。"),
-        new("09:23", "warning", "边界检查", "未启用设备管理 API，未接收业务遥测数据。"),
+        new("09:23", "warning", "边界检查", "设备生命周期由用户自有 IoTSharp 承担，未接收业务遥测数据。"),
     ];
 
     private IReadOnlyList<RiskItem> RiskItems =>
     [
         new("高", "禁止接收业务遥测", "右侧面板只能展示本地占位或公开工程模型，不展示真实上行业务数据。"),
-        new("高", "禁止设备管理 API", "设备注册、心跳、配置、命令与固件入口必须由用户自有 IoTSharp 实例承载。"),
+        new("高", "禁止 SaaS 设备生命周期管理", "设备注册、心跳、配置、命令与固件入口必须由用户自有 IoTSharp 实例承载。"),
         new("中", "产物仅为本地草稿", "生成摘要保存在当前会话，不在工作台外壳实现租户、计费或 License。"),
         new("低", "工具运行是本地预览", "工具状态来自本组件占位与会话参数，不代表云端编排结果。"),
     ];
