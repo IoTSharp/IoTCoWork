@@ -103,7 +103,7 @@ public partial class Home
     private readonly IReadOnlyList<SenderContextOption> _edgeTargetOptions =
     [
         new("csharp-aot", "C# AOT", "生成面向 IoTEdge 的 C# AOT 草稿。"),
-        new("linux-c", "Linux C", "生成面向 IoTEdge.Linux 的 C 源码草稿。"),
+        new("embedded-linux", "Embedded Linux", "生成面向 IoTEmbedded 低资源 Linux 的 C/BASIC 草稿。"),
         new("stm32-basic", "STM32 BASIC", "生成面向 IoTEmbedded 的 STM32 BASIC 草稿。"),
     ];
     private readonly IReadOnlyList<SenderContextOption> _approvalModeOptions =

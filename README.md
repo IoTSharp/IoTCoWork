@@ -50,7 +50,7 @@ VS Code 调试可直接使用 `IoTCoWork: 一键运行桌面版`。该配置会�
 └──────────────────────────────────────────────┘
        │           │              │
        ▼           ▼              ▼
-   IoTSharp    IoTEdge   IoTEdge.Linux/Stm32
+   IoTSharp    IoTEdge   IoTEmbedded
    开源平台     C# AOT 基座     C / MCU 基座
 ```
 
