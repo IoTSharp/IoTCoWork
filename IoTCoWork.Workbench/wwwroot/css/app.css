@@ -1413,10 +1413,9 @@ html[data-native-web-window-style="vscode"] .window-controls {
     font-size: 12px;
 }
 
+.semantic-import-panel input[type="text"],
 .semantic-import-panel textarea {
     width: 100%;
-    min-height: 172px;
-    resize: vertical;
     padding: 10px;
     border: 1px solid var(--studio-line);
     border-radius: 7px;
@@ -1425,6 +1424,15 @@ html[data-native-web-window-style="vscode"] .window-controls {
     font-family: Consolas, "SFMono-Regular", monospace;
     font-size: 12px;
     line-height: 1.5;
+}
+
+.semantic-import-panel input[type="text"] {
+    min-height: 40px;
+}
+
+.semantic-import-panel textarea {
+    min-height: 172px;
+    resize: vertical;
 }
 
 .semantic-import-panel small {
@@ -1456,6 +1464,65 @@ html[data-native-web-window-style="vscode"] .window-controls {
     border-color: var(--studio-danger-line);
     color: var(--studio-danger);
     background: var(--studio-danger-bg);
+}
+
+.semantic-candidate-grid {
+    display: grid;
+    grid-template-columns: minmax(240px, 0.42fr) minmax(0, 1fr);
+    gap: 12px;
+}
+
+.semantic-candidate-panel {
+    display: grid;
+    align-content: start;
+    gap: 8px;
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid var(--studio-line);
+    border-radius: 8px;
+    background: var(--studio-panel-alt);
+}
+
+.semantic-candidate-panel strong,
+.semantic-candidate-panel small {
+    overflow-wrap: anywhere;
+}
+
+.semantic-candidate-panel small {
+    color: var(--studio-muted);
+    font-size: 12px;
+}
+
+.semantic-field-candidates {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+}
+
+.semantic-field-candidates div {
+    display: grid;
+    grid-template-columns: minmax(96px, 0.26fr) minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.semantic-field-candidates dt {
+    color: var(--studio-muted);
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.semantic-field-candidates dd {
+    min-width: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.semantic-field-candidates code {
+    color: var(--studio-accent-ink);
+    font-family: Consolas, "SFMono-Regular", monospace;
+    font-size: 12px;
 }
 
 .semantic-band {

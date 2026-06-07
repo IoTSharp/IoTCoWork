@@ -2,6 +2,7 @@
 @using IoTCoWork.Workbench.Models
 @using IoTCoWork.Workbench.Services
 @inject ModbusPointTableImporter ModbusImporter
+@inject MqttTopicPayloadImporter MqttImporter
 
 <PageTitle>语义建模 - IoTCoWork</PageTitle>
 
@@ -59,8 +60,8 @@
                 <section class="semantic-summary" aria-labelledby="semantic-title">
                     <div class="semantic-summary-copy">
                         <span class="workspace-eyebrow">Semantic Core v1</span>
-                        <h2 id="semantic-title">Modbus 点表导入与语义草稿</h2>
-                        <p>导入 CSV、Excel 或手工点表后生成 SemanticPoint 与 Modbus Binding 草稿；单位、量纲、资产归属缺失时保留待补全标记。</p>
+                        <h2 id="semantic-title">协议导入与语义草稿</h2>
+                        <p>导入 Modbus 点表或 MQTT Topic / JSON Payload 后生成 SemanticPoint 与 Protocol Binding 草稿；缺失语义字段保留待补全标记。</p>
                     </div>
 
                     <dl class="semantic-metrics" aria-label="语义模型摘要">
@@ -133,6 +134,107 @@
                                         <tr>
                                             <td>@(issue.RowNumber == 0 ? "-" : issue.RowNumber)</td>
                                             <td><span class="@IssueClass(issue.Severity)">@IssueLabel(issue.Severity)</span></td>
+                                            <td><code>@issue.Field</code></td>
+                                            <td>@issue.Message</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </section>
+
+                <section id="mqtt-import" class="semantic-band semantic-import" aria-labelledby="mqtt-import-title">
+                    <header class="semantic-section-header">
+                        <div>
+                            <span class="workspace-eyebrow">D3 MQTT Import</span>
+                            <h3 id="mqtt-import-title">Topic / Payload 导入</h3>
+                        </div>
+                        <button type="button" class="studio-button studio-button-light" title="填入 MQTT 示例" @onclick="LoadSampleMqttPayload">
+                            <Icon Type="file-text" Theme="IconThemeType.Outline" />
+                            <span>示例</span>
+                        </button>
+                    </header>
+
+                    <div class="semantic-import-grid">
+                        <section class="semantic-import-panel" aria-label="MQTT Topic 样例">
+                            <span class="workspace-eyebrow">Topic Sample</span>
+                            <input type="text" @bind="_mqttTopic" spellcheck="false" aria-label="MQTT Topic 样例" />
+                            <small>只从 Topic 文本推导命名空间与 assetPath 候选，不连接生产 Broker。</small>
+                        </section>
+
+                        <section class="semantic-import-panel" aria-label="JSON Payload 样例">
+                            <span class="workspace-eyebrow">JSON Payload</span>
+                            <textarea @bind="_mqttPayload" rows="8" spellcheck="false" aria-label="JSON Payload 样例"></textarea>
+                            <button type="button" class="studio-button" title="导入 MQTT 草稿" @onclick="ImportMqttTopicPayload">
+                                <Icon Type="import" Theme="IconThemeType.Outline" />
+                                <span>导入草稿</span>
+                            </button>
+                        </section>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(_mqttImportMessage))
+                    {
+                        <div class="@MqttImportMessageClass" role="status">
+                            <Icon Type="@(_mqttImportResult?.HasErrors == true ? "close-circle" : "check-circle")" Theme="IconThemeType.Outline" />
+                            <span>@_mqttImportMessage</span>
+                        </div>
+                    }
+
+                    @if (_mqttImportResult is not null && (_mqttImportResult.AssetPathCandidates.Count > 0 || _mqttImportResult.FieldCandidates.Count > 0))
+                    {
+                        <div class="semantic-candidate-grid">
+                            <section class="semantic-candidate-panel" aria-label="assetPath 候选">
+                                <span class="workspace-eyebrow">assetPath Candidate</span>
+                                @if (_mqttImportResult.AssetPathCandidates.Count == 0)
+                                {
+                                    <strong>待补全</strong>
+                                    <small>Topic 不能可靠推导资产归属。</small>
+                                }
+                                else
+                                {
+                                    @foreach (var candidate in _mqttImportResult.AssetPathCandidates)
+                                    {
+                                        <strong>@candidate.DisplayPath</strong>
+                                        <small>@candidate.Source · @candidate.Confidence%</small>
+                                    }
+                                }
+                            </section>
+
+                            <section class="semantic-candidate-panel" aria-label="Payload 字段候选">
+                                <span class="workspace-eyebrow">Payload Field Candidates</span>
+                                <dl class="semantic-field-candidates">
+                                    @foreach (var candidate in _mqttImportResult.FieldCandidates)
+                                    {
+                                        <div>
+                                            <dt>@candidate.Role</dt>
+                                            <dd><code>@candidate.FieldPath</code></dd>
+                                            <small>@candidate.DataType · @candidate.Confidence%</small>
+                                        </div>
+                                    }
+                                </dl>
+                            </section>
+                        </div>
+                    }
+
+                    @if (_mqttImportResult is not null && _mqttImportResult.Issues.Count > 0)
+                    {
+                        <div class="semantic-table-wrap">
+                            <table class="semantic-table semantic-diagnostic-table">
+                                <thead>
+                                    <tr>
+                                        <th>行</th>
+                                        <th>级别</th>
+                                        <th>字段</th>
+                                        <th>诊断</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var issue in _mqttImportResult.Issues)
+                                    {
+                                        <tr>
+                                            <td>@(issue.RowNumber == 0 ? "-" : issue.RowNumber)</td>
+                                            <td><span class="@MqttIssueClass(issue.Severity)">@MqttIssueLabel(issue.Severity)</span></td>
                                             <td><code>@issue.Field</code></td>
                                             <td>@issue.Message</td>
                                         </tr>
@@ -332,6 +434,7 @@
     private readonly IReadOnlyList<SemanticModelingArea> _areas =
     [
         new("modbus-import", "导入", "CSV / Excel / 手工 Modbus 点表。", "import"),
+        new("mqtt-import", "MQTT", "Topic / JSON Payload 推导绑定。", "deployment-unit"),
         new("assets", "资产", "L2 资产层级与归属。", "apartment"),
         new("points", "点位", "L1 点位语义字段。", "dot-chart"),
         new("bindings", "绑定", "协议来源与 semanticId 映射。", "api"),
@@ -340,8 +443,8 @@
 
     private IReadOnlyList<SemanticModelingMetric> _metrics => BuildMetrics();
 
-    private IReadOnlyList<SemanticAssetNode> _assets => _importResult?.AssetDrafts.Count > 0
-        ? _importResult.AssetDrafts
+    private IReadOnlyList<SemanticAssetNode> _assets => ActiveAssetDrafts.Count > 0
+        ? ActiveAssetDrafts
         : StaticAssets;
 
     private static readonly IReadOnlyList<SemanticAssetNode> StaticAssets =
@@ -353,8 +456,8 @@
         new(4, "asset.plant-a.energy.air.unit-01.outlet", "出口管段", "component", "/plant-a/energy/compressor-station-01/unit-01/outlet", "出口温度和压力归属。"),
     ];
 
-    private IReadOnlyList<SemanticPointDraft> _points => _importResult?.PointDrafts.Count > 0
-        ? _importResult.PointDrafts
+    private IReadOnlyList<SemanticPointDraft> _points => ActivePointDrafts.Count > 0
+        ? ActivePointDrafts
         : StaticPoints;
 
     private static readonly IReadOnlyList<SemanticPointDraft> StaticPoints =
@@ -365,8 +468,8 @@
         new("compressor.unit01.start.command", "启动命令", "command", "1", "bool", "command", "/plant-a/energy/compressor-station-01/unit-01", "controlled", "opcua.unit01.start"),
     ];
 
-    private IReadOnlyList<ProtocolBindingDraft> _bindings => _importResult?.BindingDrafts.Count > 0
-        ? _importResult.BindingDrafts
+    private IReadOnlyList<ProtocolBindingDraft> _bindings => ActiveBindingDrafts.Count > 0
+        ? ActiveBindingDrafts
         : StaticBindings;
 
     private static readonly IReadOnlyList<ProtocolBindingDraft> StaticBindings =
@@ -394,10 +497,31 @@
     private string _manualPointTable = ModbusPointTableImporter.SampleCsv;
     private ModbusPointTableImportResult? _importResult;
     private string? _importMessage = "已载入示例点表，点击导入草稿可生成本地语义草稿。";
+    private string _mqttTopic = MqttTopicPayloadImporter.SampleTopic;
+    private string _mqttPayload = MqttTopicPayloadImporter.SamplePayload;
+    private MqttTopicPayloadImportResult? _mqttImportResult;
+    private string? _mqttImportMessage = "已载入 MQTT 示例，点击导入草稿可推导本地 MQTT Binding。";
+    private string _activeImportKind = "static";
+
+    private IReadOnlyList<SemanticAssetNode> ActiveAssetDrafts => _activeImportKind == "mqtt"
+        ? _mqttImportResult?.AssetDrafts ?? []
+        : _importResult?.AssetDrafts ?? [];
+
+    private IReadOnlyList<SemanticPointDraft> ActivePointDrafts => _activeImportKind == "mqtt"
+        ? _mqttImportResult?.PointDrafts ?? []
+        : _importResult?.PointDrafts ?? [];
+
+    private IReadOnlyList<ProtocolBindingDraft> ActiveBindingDrafts => _activeImportKind == "mqtt"
+        ? _mqttImportResult?.BindingDrafts ?? []
+        : _importResult?.BindingDrafts ?? [];
 
     private SemanticAssetNode SelectedAsset => _assets.FirstOrDefault(asset => asset.IsSelected) ?? _assets.FirstOrDefault() ?? new(0, "pending", "待补全", "custom", "待补全", "尚未导入资产。");
 
     private string ImportMessageClass => _importResult?.HasErrors == true
+        ? "semantic-import-message is-error"
+        : "semantic-import-message";
+
+    private string MqttImportMessageClass => _mqttImportResult?.HasErrors == true
         ? "semantic-import-message is-error"
         : "semantic-import-message";
 
@@ -439,14 +563,45 @@
     private void ApplyImportResult(ModbusPointTableImportResult result)
     {
         _importResult = result;
+        _activeImportKind = "modbus";
         _importMessage = result.HasErrors
             ? $"已读取 {result.Rows.Count} 行，存在 {result.Issues.Count(issue => issue.Severity == ModbusPointTableImportIssueSeverity.Error)} 个错误。"
             : $"已生成 {result.PointDrafts.Count} 个 SemanticPoint 草稿和 {result.BindingDrafts.Count} 个 Modbus Binding 草稿，待补全 {result.PendingCompletionCount} 项。";
     }
 
+    private void ImportMqttTopicPayload()
+        => ApplyMqttImportResult(MqttImporter.Import(_mqttTopic, _mqttPayload));
+
+    private void LoadSampleMqttPayload()
+    {
+        _mqttTopic = MqttTopicPayloadImporter.SampleTopic;
+        _mqttPayload = MqttTopicPayloadImporter.SamplePayload;
+        ImportMqttTopicPayload();
+    }
+
+    private void ApplyMqttImportResult(MqttTopicPayloadImportResult result)
+    {
+        _mqttImportResult = result;
+        _activeImportKind = "mqtt";
+        _mqttImportMessage = result.HasErrors
+            ? $"MQTT 草稿生成失败，存在 {result.Issues.Count(issue => issue.Severity == MqttTopicPayloadImportIssueSeverity.Error)} 个错误。"
+            : $"已生成 {result.PointDrafts.Count} 个 SemanticPoint 草稿和 {result.BindingDrafts.Count} 个 MQTT Binding 草稿，候选字段 {result.FieldCandidates.Count} 个，待补全 {result.PendingCompletionCount} 项。";
+    }
+
     private IReadOnlyList<SemanticModelingMetric> BuildMetrics()
     {
-        if (_importResult is null)
+        if (_activeImportKind == "mqtt" && _mqttImportResult is not null)
+        {
+            return
+            [
+                new("资产", _mqttImportResult.AssetDrafts.Count.ToString(), "从 Topic 推导 assetPath 候选", "apartment"),
+                new("点位", _mqttImportResult.PointDrafts.Count.ToString(), "SemanticPoint draft", "dot-chart"),
+                new("绑定", _mqttImportResult.BindingDrafts.Count.ToString(), "MQTT source binding draft", "api"),
+                new("待补全", _mqttImportResult.PendingCompletionCount.ToString(), "单位、量纲、资产归属不静默猜测", "warning"),
+            ];
+        }
+
+        if (_activeImportKind != "modbus" || _importResult is null)
         {
             return
             [
@@ -483,6 +638,16 @@
     {
         ModbusPointTableImportIssueSeverity.Error => "错误",
         ModbusPointTableImportIssueSeverity.Warning => "待补全",
+        _ => "信息"
+    };
+
+    private static string MqttIssueClass(MqttTopicPayloadImportIssueSeverity severity)
+        => $"semantic-issue is-{severity.ToString().ToLowerInvariant()}";
+
+    private static string MqttIssueLabel(MqttTopicPayloadImportIssueSeverity severity) => severity switch
+    {
+        MqttTopicPayloadImportIssueSeverity.Error => "错误",
+        MqttTopicPayloadImportIssueSeverity.Warning => "待补全",
         _ => "信息"
     };
 

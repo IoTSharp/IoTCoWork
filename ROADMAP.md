@@ -154,6 +154,13 @@
 - 验收：合法点表可生成点位与绑定；缺字段点表显式标记单位、量纲、资产归属待补全；非法寄存器和重复点位给出结构化错误；覆盖对应测试。
 - 闭环记录：新增 `IoTCoWork.Workbench.Core` 导入器和测试项目，`/semantic-modeling` 页面支持 CSV/TSV/TXT、XLSX 第一张工作表和手工文本导入。
 
+### UI-013 ✅ D3 MQTT Topic / Payload 导入
+
+- 目标：支持从 MQTT Topic 样例和 JSON Payload 样例推导本地 SemanticPoint 与 MQTT Binding 草稿。
+- 边界：只做本地文本与 JSON 结构推导；不连接生产 Broker，不接收或保存业务数据样本到 SaaS，不加入租户、计费、License 或付费模板逻辑。
+- 验收：UNS Topic、非标准 Topic、缺 timestamp、嵌套 payload 均有测试覆盖；导入结果生成 assetPath、valueField、timestampField、qualityField 候选；缺失单位、量纲、资产归属时显式标记待补全。
+- 闭环记录：新增 `MqttTopicPayloadImporter`，`/semantic-modeling` 页面新增 D3 导入区；Payload 样本只在本地输入框参与推导，模型元数据仅记录 `payloadSampleStored=false`。
+
 ## 4. 当前执行顺序
 
 1. ✅ UI-001：三栏骨架已固定。
@@ -163,6 +170,7 @@
 5. ✅ UI-009 与 UI-010：插件贡献点和 UI 质量验收已闭环。
 6. ✅ UI-011 / D1：语义建模 UI 信息架构已落地。
 7. ✅ UI-012 / D2：Modbus 点表导入已落地。
+8. ✅ UI-013 / D3：MQTT Topic / Payload 导入已落地。
 
 ## 5. 商业能力迁出记录
 
