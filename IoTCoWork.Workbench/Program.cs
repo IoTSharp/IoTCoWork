@@ -22,6 +22,7 @@ builder.Services.AddScoped<AppUpdateClient>();
 builder.Services.AddScoped<SaaSWorkspaceClient>();
 builder.Services.AddSingleton<ModbusPointTableImporter>();
 builder.Services.AddSingleton<MqttTopicPayloadImporter>();
+builder.Services.AddSingleton<OpcUaNodeSetImporter>();
 builder.Services.AddSingleton<IWorkbenchContributionProvider, BuiltinWorkbenchContributionProvider>();
 builder.Services.AddSingleton<WorkbenchContributionCatalog>();
 builder.Services.AddAntDesign();

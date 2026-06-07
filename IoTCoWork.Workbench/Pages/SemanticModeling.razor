@@ -3,6 +3,7 @@
 @using IoTCoWork.Workbench.Services
 @inject ModbusPointTableImporter ModbusImporter
 @inject MqttTopicPayloadImporter MqttImporter
+@inject OpcUaNodeSetImporter OpcUaImporter
 
 <PageTitle>语义建模 - IoTCoWork</PageTitle>
 
@@ -61,7 +62,7 @@
                     <div class="semantic-summary-copy">
                         <span class="workspace-eyebrow">Semantic Core v1</span>
                         <h2 id="semantic-title">协议导入与语义草稿</h2>
-                        <p>导入 Modbus 点表或 MQTT Topic / JSON Payload 后生成 SemanticPoint 与 Protocol Binding 草稿；缺失语义字段保留待补全标记。</p>
+                        <p>导入 Modbus 点表、MQTT Topic / JSON Payload 或 OPC UA NodeSet 后生成 SemanticPoint 与 Protocol Binding 草稿；缺失语义字段保留待补全标记。</p>
                     </div>
 
                     <dl class="semantic-metrics" aria-label="语义模型摘要">
@@ -235,6 +236,104 @@
                                         <tr>
                                             <td>@(issue.RowNumber == 0 ? "-" : issue.RowNumber)</td>
                                             <td><span class="@MqttIssueClass(issue.Severity)">@MqttIssueLabel(issue.Severity)</span></td>
+                                            <td><code>@issue.Field</code></td>
+                                            <td>@issue.Message</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </section>
+
+                <section id="opcua-import" class="semantic-band semantic-import" aria-labelledby="opcua-import-title">
+                    <header class="semantic-section-header">
+                        <div>
+                            <span class="workspace-eyebrow">D4 OPC UA Import</span>
+                            <h3 id="opcua-import-title">Browse / NodeSet 导入</h3>
+                        </div>
+                        <button type="button" class="studio-button studio-button-light" title="填入 OPC UA NodeSet 示例" @onclick="LoadSampleOpcUaNodeSet">
+                            <Icon Type="file-text" Theme="IconThemeType.Outline" />
+                            <span>示例</span>
+                        </button>
+                    </header>
+
+                    <div class="semantic-import-grid">
+                        <section class="semantic-import-panel" aria-label="OPC UA NodeSet 文件导入">
+                            <span class="workspace-eyebrow">NodeSet XML</span>
+                            <InputFile OnChange="ImportOpcUaNodeSetFileAsync" accept=".xml,.nodeset,.nodeset2,.txt" />
+                            <small>离线解析 UAObject / UAVariable / References，不连接现场 Server，不保存端点凭据。</small>
+                        </section>
+
+                        <section class="semantic-import-panel" aria-label="手工 OPC UA NodeSet">
+                            <span class="workspace-eyebrow">离线样例</span>
+                            <textarea @bind="_opcUaNodeSet" rows="8" spellcheck="false" aria-label="OPC UA NodeSet XML"></textarea>
+                            <button type="button" class="studio-button" title="导入 OPC UA 草稿" @onclick="ImportOpcUaNodeSet">
+                                <Icon Type="import" Theme="IconThemeType.Outline" />
+                                <span>导入草稿</span>
+                            </button>
+                        </section>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(_opcUaImportMessage))
+                    {
+                        <div class="@OpcUaImportMessageClass" role="status">
+                            <Icon Type="@(_opcUaImportResult?.HasErrors == true ? "close-circle" : "check-circle")" Theme="IconThemeType.Outline" />
+                            <span>@_opcUaImportMessage</span>
+                        </div>
+                    }
+
+                    @if (_opcUaImportResult is not null && _opcUaImportResult.ImportedNodes.Count > 0)
+                    {
+                        <div class="semantic-table-wrap">
+                            <table class="semantic-table semantic-diagnostic-table">
+                                <thead>
+                                    <tr>
+                                        <th>NodeId</th>
+                                        <th>BrowseName</th>
+                                        <th>DataType</th>
+                                        <th>EngineeringUnits</th>
+                                        <th>References</th>
+                                        <th>资产路径</th>
+                                        <th>状态</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var node in _opcUaImportResult.ImportedNodes)
+                                    {
+                                        <tr>
+                                            <td><code>@node.NodeId</code></td>
+                                            <td>@node.BrowseName</td>
+                                            <td>@node.DataType</td>
+                                            <td>@(string.IsNullOrWhiteSpace(node.EngineeringUnits) ? "待补全" : node.EngineeringUnits)</td>
+                                            <td>@node.ReferenceCount</td>
+                                            <td>@node.AssetPath</td>
+                                            <td><span class="@DraftStatusClass(node.Status)">@DraftStatusLabel(node.Status)</span></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+
+                    @if (_opcUaImportResult is not null && _opcUaImportResult.Issues.Count > 0)
+                    {
+                        <div class="semantic-table-wrap">
+                            <table class="semantic-table semantic-diagnostic-table">
+                                <thead>
+                                    <tr>
+                                        <th>行</th>
+                                        <th>级别</th>
+                                        <th>字段</th>
+                                        <th>诊断</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var issue in _opcUaImportResult.Issues)
+                                    {
+                                        <tr>
+                                            <td>@(issue.RowNumber == 0 ? "-" : issue.RowNumber)</td>
+                                            <td><span class="@OpcUaIssueClass(issue.Severity)">@OpcUaIssueLabel(issue.Severity)</span></td>
                                             <td><code>@issue.Field</code></td>
                                             <td>@issue.Message</td>
                                         </tr>
@@ -435,6 +534,7 @@
     [
         new("modbus-import", "导入", "CSV / Excel / 手工 Modbus 点表。", "import"),
         new("mqtt-import", "MQTT", "Topic / JSON Payload 推导绑定。", "deployment-unit"),
+        new("opcua-import", "OPC UA", "Browse 树或 NodeSet 离线导入。", "nodes-collapse"),
         new("assets", "资产", "L2 资产层级与归属。", "apartment"),
         new("points", "点位", "L1 点位语义字段。", "dot-chart"),
         new("bindings", "绑定", "协议来源与 semanticId 映射。", "api"),
@@ -501,18 +601,27 @@
     private string _mqttPayload = MqttTopicPayloadImporter.SamplePayload;
     private MqttTopicPayloadImportResult? _mqttImportResult;
     private string? _mqttImportMessage = "已载入 MQTT 示例，点击导入草稿可推导本地 MQTT Binding。";
+    private string _opcUaNodeSet = OpcUaNodeSetImporter.SampleNodeSet;
+    private OpcUaNodeSetImportResult? _opcUaImportResult;
+    private string? _opcUaImportMessage = "已载入 OPC UA NodeSet 示例，点击导入草稿可生成本地 OPC UA Binding。";
     private string _activeImportKind = "static";
 
     private IReadOnlyList<SemanticAssetNode> ActiveAssetDrafts => _activeImportKind == "mqtt"
         ? _mqttImportResult?.AssetDrafts ?? []
+        : _activeImportKind == "opcua"
+            ? _opcUaImportResult?.AssetDrafts ?? []
         : _importResult?.AssetDrafts ?? [];
 
     private IReadOnlyList<SemanticPointDraft> ActivePointDrafts => _activeImportKind == "mqtt"
         ? _mqttImportResult?.PointDrafts ?? []
+        : _activeImportKind == "opcua"
+            ? _opcUaImportResult?.PointDrafts ?? []
         : _importResult?.PointDrafts ?? [];
 
     private IReadOnlyList<ProtocolBindingDraft> ActiveBindingDrafts => _activeImportKind == "mqtt"
         ? _mqttImportResult?.BindingDrafts ?? []
+        : _activeImportKind == "opcua"
+            ? _opcUaImportResult?.BindingDrafts ?? []
         : _importResult?.BindingDrafts ?? [];
 
     private SemanticAssetNode SelectedAsset => _assets.FirstOrDefault(asset => asset.IsSelected) ?? _assets.FirstOrDefault() ?? new(0, "pending", "待补全", "custom", "待补全", "尚未导入资产。");
@@ -522,6 +631,10 @@
         : "semantic-import-message";
 
     private string MqttImportMessageClass => _mqttImportResult?.HasErrors == true
+        ? "semantic-import-message is-error"
+        : "semantic-import-message";
+
+    private string OpcUaImportMessageClass => _opcUaImportResult?.HasErrors == true
         ? "semantic-import-message is-error"
         : "semantic-import-message";
 
@@ -588,6 +701,40 @@
             : $"已生成 {result.PointDrafts.Count} 个 SemanticPoint 草稿和 {result.BindingDrafts.Count} 个 MQTT Binding 草稿，候选字段 {result.FieldCandidates.Count} 个，待补全 {result.PendingCompletionCount} 项。";
     }
 
+    private async Task ImportOpcUaNodeSetFileAsync(InputFileChangeEventArgs args)
+    {
+        var file = args.File;
+        try
+        {
+            await using var textStream = file.OpenReadStream(OpcUaNodeSetImporter.DefaultMaxFileSize);
+            using var reader = new StreamReader(textStream);
+            _opcUaNodeSet = await reader.ReadToEndAsync();
+            ApplyOpcUaImportResult(OpcUaImporter.ImportText(_opcUaNodeSet));
+        }
+        catch (Exception exception) when (exception is IOException or InvalidDataException or NotSupportedException)
+        {
+            _opcUaImportMessage = $"OPC UA 导入失败：{exception.Message}";
+        }
+    }
+
+    private void ImportOpcUaNodeSet()
+        => ApplyOpcUaImportResult(OpcUaImporter.ImportText(_opcUaNodeSet));
+
+    private void LoadSampleOpcUaNodeSet()
+    {
+        _opcUaNodeSet = OpcUaNodeSetImporter.SampleNodeSet;
+        ImportOpcUaNodeSet();
+    }
+
+    private void ApplyOpcUaImportResult(OpcUaNodeSetImportResult result)
+    {
+        _opcUaImportResult = result;
+        _activeImportKind = "opcua";
+        _opcUaImportMessage = result.HasErrors
+            ? $"OPC UA 草稿生成失败，存在 {result.Issues.Count(issue => issue.Severity == OpcUaNodeSetImportIssueSeverity.Error)} 个错误。"
+            : $"已生成 {result.PointDrafts.Count} 个 SemanticPoint 草稿和 {result.BindingDrafts.Count} 个 OPC UA Binding 草稿，保留 {result.ImportedNodes.Sum(node => node.ReferenceCount)} 条引用，待补全 {result.PendingCompletionCount} 项。";
+    }
+
     private IReadOnlyList<SemanticModelingMetric> BuildMetrics()
     {
         if (_activeImportKind == "mqtt" && _mqttImportResult is not null)
@@ -598,6 +745,17 @@
                 new("点位", _mqttImportResult.PointDrafts.Count.ToString(), "SemanticPoint draft", "dot-chart"),
                 new("绑定", _mqttImportResult.BindingDrafts.Count.ToString(), "MQTT source binding draft", "api"),
                 new("待补全", _mqttImportResult.PendingCompletionCount.ToString(), "单位、量纲、资产归属不静默猜测", "warning"),
+            ];
+        }
+
+        if (_activeImportKind == "opcua" && _opcUaImportResult is not null)
+        {
+            return
+            [
+                new("资产", _opcUaImportResult.AssetDrafts.Count.ToString(), "从 UAObject 层级推导 assetPath", "apartment"),
+                new("点位", _opcUaImportResult.PointDrafts.Count.ToString(), "UAVariable -> SemanticPoint draft", "dot-chart"),
+                new("绑定", _opcUaImportResult.BindingDrafts.Count.ToString(), "OPC UA NodeId source binding draft", "nodes-collapse"),
+                new("待补全", _opcUaImportResult.PendingCompletionCount.ToString(), "单位、量纲、资产归属不静默猜测", "warning"),
             ];
         }
 
@@ -648,6 +806,16 @@
     {
         MqttTopicPayloadImportIssueSeverity.Error => "错误",
         MqttTopicPayloadImportIssueSeverity.Warning => "待补全",
+        _ => "信息"
+    };
+
+    private static string OpcUaIssueClass(OpcUaNodeSetImportIssueSeverity severity)
+        => $"semantic-issue is-{severity.ToString().ToLowerInvariant()}";
+
+    private static string OpcUaIssueLabel(OpcUaNodeSetImportIssueSeverity severity) => severity switch
+    {
+        OpcUaNodeSetImportIssueSeverity.Error => "错误",
+        OpcUaNodeSetImportIssueSeverity.Warning => "待补全",
         _ => "信息"
     };
 
