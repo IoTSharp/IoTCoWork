@@ -1,6 +1,10 @@
 @page "/semantic-modeling"
+@using IoTSharp.Contracts.Semantic
+@using IoTSharp.SaaS.Contracts
+@using IoTSharp.SaaS.Contracts.WorkspaceGeneration
 @using IoTCoWork.Workbench.Models
 @using IoTCoWork.Workbench.Services
+@inject SaaSWorkspaceClient WorkspaceClient
 @inject ModbusPointTableImporter ModbusImporter
 @inject MqttTopicPayloadImporter MqttImporter
 @inject OpcUaNodeSetImporter OpcUaImporter
@@ -495,6 +499,145 @@
                     </div>
                 </section>
 
+                <section id="generation" class="semantic-band semantic-generation" aria-labelledby="generation-title">
+                    <header class="semantic-section-header">
+                        <div>
+                            <span class="workspace-eyebrow">D5 Semantic Generation</span>
+                            <h3 id="generation-title">语义生成任务</h3>
+                        </div>
+                        <div class="semantic-generation-header-actions">
+                            <button type="button" class="studio-button studio-button-light" title="重新运行本地语义校验" disabled="@GenerationBusy" @onclick="ValidateGenerationWorkspace">
+                                <Icon Type="check-circle" Theme="IconThemeType.Outline" />
+                                <span>校验</span>
+                            </button>
+                            <button type="button" class="studio-button studio-button-primary" title="提交 Semantic Workspace 到 SaaS Workspace API" disabled="@(!CanSubmitGeneration)" @onclick="SubmitGenerationTaskAsync">
+                                <Icon Type="cloud-upload" Theme="IconThemeType.Outline" />
+                                <span>@(GenerationBusy ? "提交中" : "提交生成")</span>
+                            </button>
+                        </div>
+                    </header>
+
+                    <div class="semantic-generation-grid">
+                        <section class="semantic-generation-control" aria-label="SaaS Workspace API">
+                            <span class="workspace-eyebrow">Workspace API</span>
+                            <label>
+                                <span>SaaS API</span>
+                                <input type="url" @bind="_generationBaseAddress" spellcheck="false" aria-label="SaaS Workspace API 地址" />
+                            </label>
+                            <dl>
+                                <div>
+                                    <dt>Workspace</dt>
+                                    <dd><code>@GenerationWorkspaceId</code></dd>
+                                </div>
+                                <div>
+                                    <dt>Project</dt>
+                                    <dd><code>@GenerationProjectId</code></dd>
+                                </div>
+                                <div>
+                                    <dt>Target</dt>
+                                    <dd><code>@GenerationTargetId</code></dd>
+                                </div>
+                            </dl>
+                            <button type="button" class="studio-button studio-button-ghost" title="提交一个不支持目标，用于验证失败态" disabled="@GenerationBusy" @onclick="SubmitGenerationFailurePreviewAsync">
+                                <Icon Type="warning" Theme="IconThemeType.Outline" />
+                                <span>失败态验证</span>
+                            </button>
+                        </section>
+
+                        <section class="semantic-generation-status" aria-label="生成任务状态">
+                            <div class="@GenerationStatusClass">
+                                <Icon Type="@GenerationStatusIcon" Theme="IconThemeType.Outline" />
+                                <span>
+                                    <strong>@GenerationStatusLabel</strong>
+                                    <small>@GenerationMessage</small>
+                                </span>
+                            </div>
+
+                            <dl class="semantic-generation-facts">
+                                <div>
+                                    <dt>校验</dt>
+                                    <dd>@ValidationSummary</dd>
+                                </div>
+                                <div>
+                                    <dt>任务</dt>
+                                    <dd>@GenerationTaskLabel</dd>
+                                </div>
+                                <div>
+                                    <dt>工件</dt>
+                                    <dd>@GenerationArtifactCount</dd>
+                                </div>
+                            </dl>
+
+                            <div class="semantic-generation-actions">
+                                <button type="button" class="studio-button studio-button-light" title="刷新生成任务状态" disabled="@(!CanRefreshGeneration)" @onclick="RefreshGenerationTaskAsync">
+                                    <Icon Type="sync" Theme="IconThemeType.Outline" />
+                                    <span>刷新状态</span>
+                                </button>
+                                <a class="studio-button studio-button-light"
+                                   href="@ExternalIoTSharpJumpUrl"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   title="跳转到用户自有 IoTSharp 实例">
+                                    <Icon Type="export" Theme="IconThemeType.Outline" />
+                                    <span>IoTSharp 实例</span>
+                                </a>
+                            </div>
+                        </section>
+                    </div>
+
+                    @if (GenerationDiagnostics.Count > 0)
+                    {
+                        <div class="semantic-table-wrap">
+                            <table class="semantic-table semantic-diagnostic-table">
+                                <thead>
+                                    <tr>
+                                        <th>级别</th>
+                                        <th>类别</th>
+                                        <th>路径</th>
+                                        <th>诊断</th>
+                                        <th>建议</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var diagnostic in GenerationDiagnostics)
+                                    {
+                                        <tr>
+                                            <td><span class="@WorkspaceIssueClass(diagnostic.Severity)">@WorkspaceIssueLabel(diagnostic.Severity)</span></td>
+                                            <td>@(diagnostic.Category ?? "-")</td>
+                                            <td><code>@diagnostic.Path</code></td>
+                                            <td>@diagnostic.Message</td>
+                                            <td>@(string.IsNullOrWhiteSpace(diagnostic.SuggestedFix) ? "-" : diagnostic.SuggestedFix)</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+
+                    @if (GenerationArtifacts.Count > 0)
+                    {
+                        <ol class="semantic-artifact-list" aria-label="生成工件">
+                            @foreach (var artifact in GenerationArtifacts)
+                            {
+                                <li>
+                                    <Icon Type="file-zip" Theme="IconThemeType.Outline" />
+                                    <span>
+                                        <strong>@artifact.FileName</strong>
+                                        <small>@SemanticWorkspaceGenerationCoordinator.FormatBytes(artifact.SizeBytes) · @SemanticWorkspaceGenerationCoordinator.ShortHash(artifact.Sha256)</small>
+                                    </span>
+                                    <a href="@WorkspaceClient.BuildArtifactDownloadUrl(_generationBaseAddress, artifact)"
+                                       target="_blank"
+                                       rel="noopener noreferrer"
+                                       title="下载生成工件">
+                                        <Icon Type="download" Theme="IconThemeType.Outline" />
+                                        <span>下载</span>
+                                    </a>
+                                </li>
+                            }
+                        </ol>
+                    }
+                </section>
+
                 <section id="workflow" class="semantic-band semantic-workflow" aria-labelledby="workflow-title">
                     <header class="semantic-section-header">
                         <div>
@@ -539,6 +682,7 @@
         new("points", "点位", "L1 点位语义字段。", "dot-chart"),
         new("bindings", "绑定", "协议来源与 semanticId 映射。", "api"),
         new("process", "工艺", "工艺节点、依赖与控制关系。", "share-alt"),
+        new("generation", "生成", "提交 Semantic Workspace 并下载工件。", "cloud-upload"),
     ];
 
     private IReadOnlyList<SemanticModelingMetric> _metrics => BuildMetrics();
@@ -605,6 +749,9 @@
     private OpcUaNodeSetImportResult? _opcUaImportResult;
     private string? _opcUaImportMessage = "已载入 OPC UA NodeSet 示例，点击导入草稿可生成本地 OPC UA Binding。";
     private string _activeImportKind = "static";
+    private string _generationBaseAddress = WorkspaceGenerationClientDefaults.BaseAddress;
+    private SemanticWorkspaceGenerationCoordinator? _generationCoordinator;
+    private SemanticWorkspaceGenerationState? _generationState;
 
     private IReadOnlyList<SemanticAssetNode> ActiveAssetDrafts => _activeImportKind == "mqtt"
         ? _mqttImportResult?.AssetDrafts ?? []
@@ -637,6 +784,86 @@
     private string OpcUaImportMessageClass => _opcUaImportResult?.HasErrors == true
         ? "semantic-import-message is-error"
         : "semantic-import-message";
+
+    private SemanticWorkspaceGenerationCoordinator GenerationCoordinator
+        => _generationCoordinator ??= new SemanticWorkspaceGenerationCoordinator(WorkspaceClient);
+
+    private SemanticWorkspaceGenerationState GenerationState
+        => _generationState ??= GenerationCoordinator.CreateInitialState(ActiveSemanticModel);
+
+    private WorkspaceValidationReport GenerationValidationReport => GenerationState.ValidationReport;
+
+    private IReadOnlyList<WorkspaceValidationDiagnostic> GenerationDiagnostics => GenerationValidationReport.Diagnostics;
+
+    private IReadOnlyList<WorkspaceGenerationArtifactDto> GenerationArtifacts => GenerationState.Artifacts;
+
+    private bool GenerationBusy => GenerationState.IsBusy;
+
+    private bool CanSubmitGeneration => GenerationState.CanSubmit;
+
+    private bool CanRefreshGeneration => GenerationState.Task is not null
+        && GenerationState.Task.TaskId != Guid.Empty
+        && !GenerationBusy;
+
+    private string GenerationWorkspaceId => GenerationState.Workspace.WorkspaceId;
+
+    private string GenerationProjectId => GenerationState.Workspace.Projects.FirstOrDefault()?.ProjectId ?? "-";
+
+    private string GenerationTargetId => GenerationState.Workspace.Projects.FirstOrDefault()?.GenerationTargets.FirstOrDefault()?.TargetId ?? "-";
+
+    private string GenerationMessage => GenerationState.Message;
+
+    private string GenerationStatusLabel => GenerationState.StatusLabel;
+
+    private string GenerationTaskLabel => GenerationState.Task is null
+        ? "无"
+        : GenerationState.Task.TaskId == Guid.Empty
+            ? "本地预览"
+            : GenerationState.Task.TaskId.ToString("N")[..12];
+
+    private string GenerationArtifactCount => GenerationArtifacts.Count.ToString();
+
+    private string ValidationSummary => GenerationValidationReport.IsValid
+        ? $"通过，警告 {GenerationValidationReport.WarningCount} 项"
+        : $"失败，错误 {GenerationValidationReport.ErrorCount} 项";
+
+    private string GenerationStatusIcon => GenerationState.Phase switch
+    {
+        SemanticWorkspaceGenerationPhase.Succeeded => "check-circle",
+        SemanticWorkspaceGenerationPhase.Failed or SemanticWorkspaceGenerationPhase.ValidationFailed => "close-circle",
+        SemanticWorkspaceGenerationPhase.Running or SemanticWorkspaceGenerationPhase.Created => "loading",
+        SemanticWorkspaceGenerationPhase.Canceled => "stop",
+        _ => "clock-circle"
+    };
+
+    private string GenerationStatusClass => GenerationState.Phase switch
+    {
+        SemanticWorkspaceGenerationPhase.Succeeded => "semantic-generation-state is-success",
+        SemanticWorkspaceGenerationPhase.Failed or SemanticWorkspaceGenerationPhase.ValidationFailed => "semantic-generation-state is-error",
+        SemanticWorkspaceGenerationPhase.Running or SemanticWorkspaceGenerationPhase.Created => "semantic-generation-state is-running",
+        _ => "semantic-generation-state"
+    };
+
+    private string ExternalIoTSharpJumpUrl
+    {
+        get
+        {
+            var project = GenerationState.Workspace.Projects.FirstOrDefault();
+            var reference = project?.ExternalIoTSharpReferences.FirstOrDefault(item => !string.IsNullOrWhiteSpace(item.JumpUrl));
+
+            return reference?.JumpUrl
+                ?? project?.ExternalIoTSharpInstanceUrl
+                ?? "https://iotsharp.example.com";
+        }
+    }
+
+    private SemanticModel? ActiveSemanticModel => _activeImportKind switch
+    {
+        "mqtt" => _mqttImportResult?.SemanticModel,
+        "opcua" => _opcUaImportResult?.SemanticModel,
+        "modbus" => _importResult?.SemanticModel,
+        _ => null
+    };
 
     private static string Indent(int level) => $"--semantic-indent: {Math.Max(0, level) * 18}px;";
     private static string AccessClass(string access) => $"semantic-access is-{access.Replace(" ", string.Empty, StringComparison.Ordinal).ToLowerInvariant()}";
@@ -680,6 +907,7 @@
         _importMessage = result.HasErrors
             ? $"已读取 {result.Rows.Count} 行，存在 {result.Issues.Count(issue => issue.Severity == ModbusPointTableImportIssueSeverity.Error)} 个错误。"
             : $"已生成 {result.PointDrafts.Count} 个 SemanticPoint 草稿和 {result.BindingDrafts.Count} 个 Modbus Binding 草稿，待补全 {result.PendingCompletionCount} 项。";
+        ValidateGenerationWorkspace();
     }
 
     private void ImportMqttTopicPayload()
@@ -699,6 +927,7 @@
         _mqttImportMessage = result.HasErrors
             ? $"MQTT 草稿生成失败，存在 {result.Issues.Count(issue => issue.Severity == MqttTopicPayloadImportIssueSeverity.Error)} 个错误。"
             : $"已生成 {result.PointDrafts.Count} 个 SemanticPoint 草稿和 {result.BindingDrafts.Count} 个 MQTT Binding 草稿，候选字段 {result.FieldCandidates.Count} 个，待补全 {result.PendingCompletionCount} 项。";
+        ValidateGenerationWorkspace();
     }
 
     private async Task ImportOpcUaNodeSetFileAsync(InputFileChangeEventArgs args)
@@ -733,6 +962,66 @@
         _opcUaImportMessage = result.HasErrors
             ? $"OPC UA 草稿生成失败，存在 {result.Issues.Count(issue => issue.Severity == OpcUaNodeSetImportIssueSeverity.Error)} 个错误。"
             : $"已生成 {result.PointDrafts.Count} 个 SemanticPoint 草稿和 {result.BindingDrafts.Count} 个 OPC UA Binding 草稿，保留 {result.ImportedNodes.Sum(node => node.ReferenceCount)} 条引用，待补全 {result.PendingCompletionCount} 项。";
+        ValidateGenerationWorkspace();
+    }
+
+    private void ValidateGenerationWorkspace()
+    {
+        _generationState = GenerationCoordinator.Validate(ActiveSemanticModel);
+    }
+
+    private async Task SubmitGenerationTaskAsync()
+    {
+        if (GenerationBusy)
+        {
+            return;
+        }
+
+        _generationState = GenerationState with
+        {
+            Phase = SemanticWorkspaceGenerationPhase.Running,
+            Message = "生成任务正在提交。"
+        };
+        StateHasChanged();
+
+        _generationState = await GenerationCoordinator.SubmitAsync(_generationBaseAddress, ActiveSemanticModel);
+    }
+
+    private async Task SubmitGenerationFailurePreviewAsync()
+    {
+        if (GenerationBusy)
+        {
+            return;
+        }
+
+        _generationState = GenerationState with
+        {
+            Phase = SemanticWorkspaceGenerationPhase.Running,
+            Message = "正在提交失败态验证任务。"
+        };
+        StateHasChanged();
+
+        _generationState = await GenerationCoordinator.SubmitAsync(
+            _generationBaseAddress,
+            ActiveSemanticModel,
+            unsupportedTargetPreview: true);
+    }
+
+    private async Task RefreshGenerationTaskAsync()
+    {
+        if (!CanRefreshGeneration)
+        {
+            return;
+        }
+
+        _generationState = GenerationState with
+        {
+            Phase = SemanticWorkspaceGenerationPhase.Running,
+            Message = "正在刷新生成任务状态。"
+        };
+        StateHasChanged();
+
+        _generationState = await GenerationCoordinator.RefreshAsync(_generationBaseAddress, GenerationState);
     }
 
     private IReadOnlyList<SemanticModelingMetric> BuildMetrics()
@@ -816,6 +1105,16 @@
     {
         OpcUaNodeSetImportIssueSeverity.Error => "错误",
         OpcUaNodeSetImportIssueSeverity.Warning => "待补全",
+        _ => "信息"
+    };
+
+    private static string WorkspaceIssueClass(WorkspaceValidationSeverity severity)
+        => $"semantic-issue is-{severity.ToString().ToLowerInvariant()}";
+
+    private static string WorkspaceIssueLabel(WorkspaceValidationSeverity severity) => severity switch
+    {
+        WorkspaceValidationSeverity.Error => "错误",
+        WorkspaceValidationSeverity.Warning => "警告",
         _ => "信息"
     };
 

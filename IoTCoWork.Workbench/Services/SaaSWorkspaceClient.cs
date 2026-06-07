@@ -4,7 +4,7 @@ using IoTSharp.SaaS.Contracts.WorkspaceGeneration;
 
 namespace IoTCoWork.Workbench.Services;
 
-public sealed class SaaSWorkspaceClient
+public sealed class SaaSWorkspaceClient : ISemanticWorkspaceGenerationClient
 {
     private const string ExampleWorkspacePath = "data/modbus-tcp-csharp-aot.workspace.json";
     private readonly HttpClient _httpClient;

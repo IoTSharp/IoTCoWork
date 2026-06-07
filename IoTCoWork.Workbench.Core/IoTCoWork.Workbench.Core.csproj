@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\IoTSharp\IoTSharp.Contracts\IoTSharp.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\src\IoTSharp.SaaS.Contracts\IoTSharp.SaaS.Contracts.csproj" />
   </ItemGroup>
 
 </Project>
