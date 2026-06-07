@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\IoTCoWork.Workbench.Core\IoTCoWork.Workbench.Core.csproj" />
     <ProjectReference Include="..\external\AntDesignXBlazor\src\AntDesign.X.Blazor\AntDesign.X.Blazor.csproj" />
     <ProjectReference Include="..\..\..\src\IoTSharp.SaaS.Contracts\IoTSharp.SaaS.Contracts.csproj" />
   </ItemGroup>

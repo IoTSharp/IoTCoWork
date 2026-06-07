@@ -147,6 +147,13 @@
 - 验收：左侧出现“语义模型”入口；`/semantic-modeling` 页面展示资产树、点位语义表、协议绑定、工艺关系；右侧上下文默认展示资产、点位、绑定、工艺四类 Tab。
 - 闭环记录：新增 `SemanticModeling` 页面与本地草稿模型，补充 [语义建模信息架构](docs/semantic-modeling-information-architecture.md)，并将工作区上下文切换到 Semantic Workspace 口径。
 
+### UI-012 ✅ D2 Modbus 点表导入
+
+- 目标：支持 CSV、Excel 和手工 Modbus 点表导入，生成本地 SemanticPoint 与 Modbus Binding 草稿。
+- 边界：只做开源工作台本地导入与校验；不连接边缘设备，不接收业务遥测，不加入租户、计费、License 或付费模板逻辑。
+- 验收：合法点表可生成点位与绑定；缺字段点表显式标记单位、量纲、资产归属待补全；非法寄存器和重复点位给出结构化错误；覆盖对应测试。
+- 闭环记录：新增 `IoTCoWork.Workbench.Core` 导入器和测试项目，`/semantic-modeling` 页面支持 CSV/TSV/TXT、XLSX 第一张工作表和手工文本导入。
+
 ## 4. 当前执行顺序
 
 1. ✅ UI-001：三栏骨架已固定。
@@ -155,6 +162,7 @@
 4. ✅ UI-005 到 UI-008：输入器上下文、任务计划、右侧 Tabs、工作区总览已补齐。
 5. ✅ UI-009 与 UI-010：插件贡献点和 UI 质量验收已闭环。
 6. ✅ UI-011 / D1：语义建模 UI 信息架构已落地。
+7. ✅ UI-012 / D2：Modbus 点表导入已落地。
 
 ## 5. 商业能力迁出记录
 

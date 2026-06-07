@@ -20,7 +20,9 @@ public sealed record SemanticPointDraft(
     string Access,
     string AssetPath,
     string Quality,
-    string BindingId);
+    string BindingId,
+    string Status = "ready",
+    IReadOnlyList<string>? CompletionIssues = null);
 
 public sealed record ProtocolBindingDraft(
     string BindingId,

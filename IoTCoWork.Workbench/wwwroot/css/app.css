@@ -1385,6 +1385,79 @@ html[data-native-web-window-style="vscode"] .window-controls {
     font-size: 12px;
 }
 
+.semantic-import {
+    gap: 12px;
+}
+
+.semantic-import-grid {
+    display: grid;
+    grid-template-columns: minmax(260px, 0.42fr) minmax(0, 1fr);
+    gap: 12px;
+}
+
+.semantic-import-panel {
+    display: grid;
+    align-content: start;
+    gap: 10px;
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid var(--studio-line);
+    border-radius: 8px;
+    background: var(--studio-control);
+}
+
+.semantic-import-panel input[type="file"] {
+    width: 100%;
+    min-width: 0;
+    color: var(--studio-muted-strong);
+    font-size: 12px;
+}
+
+.semantic-import-panel textarea {
+    width: 100%;
+    min-height: 172px;
+    resize: vertical;
+    padding: 10px;
+    border: 1px solid var(--studio-line);
+    border-radius: 7px;
+    color: var(--studio-ink);
+    background: var(--studio-panel);
+    font-family: Consolas, "SFMono-Regular", monospace;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.semantic-import-panel small {
+    color: var(--studio-muted);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.semantic-import-message {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    padding: 10px 12px;
+    border: 1px solid var(--studio-accent-line);
+    border-radius: 8px;
+    color: var(--studio-accent-ink);
+    background: var(--studio-accent-soft);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.semantic-import-message span {
+    overflow-wrap: anywhere;
+}
+
+.semantic-import-message.is-error {
+    border-color: var(--studio-danger-line);
+    color: var(--studio-danger);
+    background: var(--studio-danger-bg);
+}
+
 .semantic-band {
     display: grid;
     gap: 14px;
@@ -1596,6 +1669,47 @@ html[data-native-web-window-style="vscode"] .window-controls {
 .semantic-access.is-command {
     color: var(--studio-warning-ink);
     background: var(--studio-warning-bg);
+}
+
+.semantic-access.is-write,
+.semantic-access.is-readwrite,
+.semantic-access.is-config {
+    color: var(--studio-warning-ink);
+    background: var(--studio-warning-bg);
+}
+
+.semantic-draft-status,
+.semantic-issue {
+    display: inline-flex;
+    align-items: center;
+    min-height: 22px;
+    padding: 0 7px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.semantic-draft-status.is-ready,
+.semantic-issue.is-info {
+    color: var(--studio-accent-ink);
+    background: var(--studio-accent-soft);
+}
+
+.semantic-draft-status.is-pending,
+.semantic-issue.is-warning {
+    color: var(--studio-warning-ink);
+    background: var(--studio-warning-bg);
+}
+
+.semantic-draft-status.is-error,
+.semantic-issue.is-error {
+    color: var(--studio-danger);
+    background: var(--studio-danger-bg);
+}
+
+.semantic-diagnostic-table {
+    min-width: 760px;
 }
 
 .semantic-binding-list li,

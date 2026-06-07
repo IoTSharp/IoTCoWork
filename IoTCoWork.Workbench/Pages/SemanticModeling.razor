@@ -1,5 +1,7 @@
 @page "/semantic-modeling"
 @using IoTCoWork.Workbench.Models
+@using IoTCoWork.Workbench.Services
+@inject ModbusPointTableImporter ModbusImporter
 
 <PageTitle>语义建模 - IoTCoWork</PageTitle>
 
@@ -57,8 +59,8 @@
                 <section class="semantic-summary" aria-labelledby="semantic-title">
                     <div class="semantic-summary-copy">
                         <span class="workspace-eyebrow">Semantic Core v1</span>
-                        <h2 id="semantic-title">资产、点位、绑定、工艺关系</h2>
-                        <p>从协议来源录入升级为语义模型编排：先定位资产归属，再定义点位含义，最后维护协议来源和工艺依赖。</p>
+                        <h2 id="semantic-title">Modbus 点表导入与语义草稿</h2>
+                        <p>导入 CSV、Excel 或手工点表后生成 SemanticPoint 与 Modbus Binding 草稿；单位、量纲、资产归属缺失时保留待补全标记。</p>
                     </div>
 
                     <dl class="semantic-metrics" aria-label="语义模型摘要">
@@ -74,6 +76,71 @@
                             </div>
                         }
                     </dl>
+                </section>
+
+                <section id="modbus-import" class="semantic-band semantic-import" aria-labelledby="modbus-import-title">
+                    <header class="semantic-section-header">
+                        <div>
+                            <span class="workspace-eyebrow">D2 Modbus Import</span>
+                            <h3 id="modbus-import-title">点表导入</h3>
+                        </div>
+                        <button type="button" class="studio-button studio-button-light" title="填入示例点表" @onclick="LoadSamplePointTable">
+                            <Icon Type="file-text" Theme="IconThemeType.Outline" />
+                            <span>示例</span>
+                        </button>
+                    </header>
+
+                    <div class="semantic-import-grid">
+                        <section class="semantic-import-panel" aria-label="文件导入">
+                            <span class="workspace-eyebrow">CSV / Excel</span>
+                            <InputFile OnChange="ImportPointTableFileAsync" accept=".csv,.tsv,.txt,.xlsx" />
+                            <small>支持第一张 Excel 工作表，表头字段包括 semanticId、quantityKind、dimension、unit、assetPath、registerType、address。</small>
+                        </section>
+
+                        <section class="semantic-import-panel" aria-label="手工点表">
+                            <span class="workspace-eyebrow">手工点表</span>
+                            <textarea @bind="_manualPointTable" rows="8" spellcheck="false" aria-label="手工 Modbus 点表"></textarea>
+                            <button type="button" class="studio-button" title="导入手工点表" @onclick="ImportManualPointTable">
+                                <Icon Type="import" Theme="IconThemeType.Outline" />
+                                <span>导入草稿</span>
+                            </button>
+                        </section>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(_importMessage))
+                    {
+                        <div class="@ImportMessageClass" role="status">
+                            <Icon Type="@(_importResult?.HasErrors == true ? "close-circle" : "check-circle")" Theme="IconThemeType.Outline" />
+                            <span>@_importMessage</span>
+                        </div>
+                    }
+
+                    @if (_importResult is not null && _importResult.Issues.Count > 0)
+                    {
+                        <div class="semantic-table-wrap">
+                            <table class="semantic-table semantic-diagnostic-table">
+                                <thead>
+                                    <tr>
+                                        <th>行</th>
+                                        <th>级别</th>
+                                        <th>字段</th>
+                                        <th>诊断</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var issue in _importResult.Issues)
+                                    {
+                                        <tr>
+                                            <td>@(issue.RowNumber == 0 ? "-" : issue.RowNumber)</td>
+                                            <td><span class="@IssueClass(issue.Severity)">@IssueLabel(issue.Severity)</span></td>
+                                            <td><code>@issue.Field</code></td>
+                                            <td>@issue.Message</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
                 </section>
 
                 <section id="assets" class="semantic-band" aria-labelledby="assets-title">
@@ -107,19 +174,19 @@
 
                         <section class="semantic-inspector" aria-label="资产详情">
                             <span class="workspace-eyebrow">Selected Asset</span>
-                            <h4>空压站 1 号机</h4>
+                            <h4>@SelectedAsset.DisplayName</h4>
                             <dl>
                                 <div>
                                     <dt>assetId</dt>
-                                    <dd>asset.compressor.station-01.unit-01</dd>
+                                    <dd>@SelectedAsset.AssetId</dd>
                                 </div>
                                 <div>
                                     <dt>assetPath</dt>
-                                    <dd>/plant-a/energy/compressor-station-01/unit-01</dd>
+                                    <dd>@SelectedAsset.AssetPath</dd>
                                 </div>
                                 <div>
                                     <dt>points</dt>
-                                    <dd>temperature.outlet, pressure.outlet, state.run</dd>
+                                    <dd>@SelectedAsset.Summary</dd>
                                 </div>
                             </dl>
                         </section>
@@ -132,7 +199,7 @@
                             <span class="workspace-eyebrow">L1 Semantic Point</span>
                             <h3 id="points-title">点位语义</h3>
                         </div>
-                        <button type="button" class="studio-button studio-button-light" title="导入点位草稿">
+                        <button type="button" class="studio-button studio-button-light" title="导入示例点位草稿" @onclick="LoadSamplePointTable">
                             <Icon Type="import" Theme="IconThemeType.Outline" />
                             <span>导入草稿</span>
                         </button>
@@ -149,6 +216,7 @@
                                     <th>访问</th>
                                     <th>资产路径</th>
                                     <th>绑定</th>
+                                    <th>状态</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -165,6 +233,7 @@
                                         <td><span class="@AccessClass(point.Access)">@point.Access</span></td>
                                         <td>@point.AssetPath</td>
                                         <td>@point.BindingId</td>
+                                        <td><span class="@DraftStatusClass(point.Status)">@DraftStatusLabel(point.Status)</span></td>
                                     </tr>
                                 }
                             </tbody>
@@ -178,7 +247,7 @@
                             <span class="workspace-eyebrow">Protocol Binding</span>
                             <h3 id="bindings-title">协议绑定</h3>
                         </div>
-                        <button type="button" class="studio-button studio-button-light" title="添加协议来源">
+                        <button type="button" class="studio-button studio-button-light" title="添加协议来源" @onclick="LoadSamplePointTable">
                             <Icon Type="api" Theme="IconThemeType.Outline" />
                             <span>添加来源</span>
                         </button>
@@ -262,21 +331,20 @@
 
     private readonly IReadOnlyList<SemanticModelingArea> _areas =
     [
+        new("modbus-import", "导入", "CSV / Excel / 手工 Modbus 点表。", "import"),
         new("assets", "资产", "L2 资产层级与归属。", "apartment"),
         new("points", "点位", "L1 点位语义字段。", "dot-chart"),
         new("bindings", "绑定", "协议来源与 semanticId 映射。", "api"),
         new("process", "工艺", "工艺节点、依赖与控制关系。", "share-alt"),
     ];
 
-    private readonly IReadOnlyList<SemanticModelingMetric> _metrics =
-    [
-        new("资产", "5", "site / area / line / device", "apartment"),
-        new("点位", "4", "单位、访问权限、质量字段齐全", "dot-chart"),
-        new("绑定", "3", "Modbus / MQTT / OPC UA 来源可追溯", "api"),
-        new("关系", "3", "上下游、派生变量、控制策略占位", "share-alt"),
-    ];
+    private IReadOnlyList<SemanticModelingMetric> _metrics => BuildMetrics();
 
-    private readonly IReadOnlyList<SemanticAssetNode> _assets =
+    private IReadOnlyList<SemanticAssetNode> _assets => _importResult?.AssetDrafts.Count > 0
+        ? _importResult.AssetDrafts
+        : StaticAssets;
+
+    private static readonly IReadOnlyList<SemanticAssetNode> StaticAssets =
     [
         new(0, "asset.plant-a", "工厂 A", "site", "/plant-a", "语义工程根资产。"),
         new(1, "asset.plant-a.energy", "能源车间", "area", "/plant-a/energy", "能源系统资产域。"),
@@ -285,7 +353,11 @@
         new(4, "asset.plant-a.energy.air.unit-01.outlet", "出口管段", "component", "/plant-a/energy/compressor-station-01/unit-01/outlet", "出口温度和压力归属。"),
     ];
 
-    private readonly IReadOnlyList<SemanticPointDraft> _points =
+    private IReadOnlyList<SemanticPointDraft> _points => _importResult?.PointDrafts.Count > 0
+        ? _importResult.PointDrafts
+        : StaticPoints;
+
+    private static readonly IReadOnlyList<SemanticPointDraft> StaticPoints =
     [
         new("compressor.unit01.outlet.temperature", "出口温度", "temperature", "Cel", "float", "read", "/plant-a/energy/compressor-station-01/unit-01/outlet", "good", "modbus.unit01.temp"),
         new("compressor.unit01.outlet.pressure", "出口压力", "pressure", "bar", "float", "read", "/plant-a/energy/compressor-station-01/unit-01/outlet", "good", "modbus.unit01.pressure"),
@@ -293,7 +365,11 @@
         new("compressor.unit01.start.command", "启动命令", "command", "1", "bool", "command", "/plant-a/energy/compressor-station-01/unit-01", "controlled", "opcua.unit01.start"),
     ];
 
-    private readonly IReadOnlyList<ProtocolBindingDraft> _bindings =
+    private IReadOnlyList<ProtocolBindingDraft> _bindings => _importResult?.BindingDrafts.Count > 0
+        ? _importResult.BindingDrafts
+        : StaticBindings;
+
+    private static readonly IReadOnlyList<ProtocolBindingDraft> StaticBindings =
     [
         new("modbus.unit01.temp", "Modbus TCP", "holding-register 40001, scale 0.1", "compressor.unit01.outlet.temperature", "保留寄存器地址、字节序和缩放规则。", "valid"),
         new("mqtt.unit01.state", "MQTT UNS", "plant-a/energy/air/unit-01/state", "compressor.unit01.running.state", "Topic 只作为来源，不替代 semanticId。", "draft"),
@@ -315,8 +391,100 @@
         new("维护工艺关系", "表达上下游、派生变量、状态机、报警和控制策略。", "草稿", "share-alt"),
     ];
 
+    private string _manualPointTable = ModbusPointTableImporter.SampleCsv;
+    private ModbusPointTableImportResult? _importResult;
+    private string? _importMessage = "已载入示例点表，点击导入草稿可生成本地语义草稿。";
+
+    private SemanticAssetNode SelectedAsset => _assets.FirstOrDefault(asset => asset.IsSelected) ?? _assets.FirstOrDefault() ?? new(0, "pending", "待补全", "custom", "待补全", "尚未导入资产。");
+
+    private string ImportMessageClass => _importResult?.HasErrors == true
+        ? "semantic-import-message is-error"
+        : "semantic-import-message";
+
     private static string Indent(int level) => $"--semantic-indent: {Math.Max(0, level) * 18}px;";
-    private static string AccessClass(string access) => $"semantic-access is-{access.ToLowerInvariant()}";
+    private static string AccessClass(string access) => $"semantic-access is-{access.Replace(" ", string.Empty, StringComparison.Ordinal).ToLowerInvariant()}";
+
+    private async Task ImportPointTableFileAsync(InputFileChangeEventArgs args)
+    {
+        var file = args.File;
+        try
+        {
+            if (file.Name.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+            {
+                await using var stream = file.OpenReadStream(ModbusPointTableImporter.DefaultMaxFileSize);
+                ApplyImportResult(await ModbusImporter.ImportXlsxAsync(stream));
+                return;
+            }
+
+            await using var textStream = file.OpenReadStream(ModbusPointTableImporter.DefaultMaxFileSize);
+            using var reader = new StreamReader(textStream);
+            _manualPointTable = await reader.ReadToEndAsync();
+            ApplyImportResult(ModbusImporter.ImportText(_manualPointTable));
+        }
+        catch (Exception exception) when (exception is IOException or InvalidDataException or NotSupportedException)
+        {
+            _importMessage = $"导入失败：{exception.Message}";
+        }
+    }
+
+    private void ImportManualPointTable()
+        => ApplyImportResult(ModbusImporter.ImportText(_manualPointTable));
+
+    private void LoadSamplePointTable()
+    {
+        _manualPointTable = ModbusPointTableImporter.SampleCsv;
+        ImportManualPointTable();
+    }
+
+    private void ApplyImportResult(ModbusPointTableImportResult result)
+    {
+        _importResult = result;
+        _importMessage = result.HasErrors
+            ? $"已读取 {result.Rows.Count} 行，存在 {result.Issues.Count(issue => issue.Severity == ModbusPointTableImportIssueSeverity.Error)} 个错误。"
+            : $"已生成 {result.PointDrafts.Count} 个 SemanticPoint 草稿和 {result.BindingDrafts.Count} 个 Modbus Binding 草稿，待补全 {result.PendingCompletionCount} 项。";
+    }
+
+    private IReadOnlyList<SemanticModelingMetric> BuildMetrics()
+    {
+        if (_importResult is null)
+        {
+            return
+            [
+                new("资产", StaticAssets.Count.ToString(), "site / area / line / device", "apartment"),
+                new("点位", StaticPoints.Count.ToString(), "单位、访问权限、质量字段齐全", "dot-chart"),
+                new("绑定", StaticBindings.Count.ToString(), "Modbus / MQTT / OPC UA 来源可追溯", "api"),
+                new("待补全", "0", "导入后显示单位、量纲、资产归属缺失", "warning"),
+            ];
+        }
+
+        return
+        [
+            new("资产", _importResult.AssetDrafts.Count.ToString(), "从 assetPath / assetId 生成草稿", "apartment"),
+            new("点位", _importResult.PointDrafts.Count.ToString(), "SemanticPoint draft", "dot-chart"),
+            new("绑定", _importResult.BindingDrafts.Count.ToString(), "Modbus source binding draft", "api"),
+            new("待补全", _importResult.PendingCompletionCount.ToString(), "不静默猜测缺失语义", "warning"),
+        ];
+    }
+
+    private static string DraftStatusClass(string status) => $"semantic-draft-status is-{status.ToLowerInvariant()}";
+
+    private static string DraftStatusLabel(string status) => status switch
+    {
+        "ready" => "就绪",
+        "pending" => "待补全",
+        "error" => "错误",
+        _ => status
+    };
+
+    private static string IssueClass(ModbusPointTableImportIssueSeverity severity)
+        => $"semantic-issue is-{severity.ToString().ToLowerInvariant()}";
+
+    private static string IssueLabel(ModbusPointTableImportIssueSeverity severity) => severity switch
+    {
+        ModbusPointTableImportIssueSeverity.Error => "错误",
+        ModbusPointTableImportIssueSeverity.Warning => "待补全",
+        _ => "信息"
+    };
 
     private static string AssetIcon(string assetType) => assetType switch
     {
