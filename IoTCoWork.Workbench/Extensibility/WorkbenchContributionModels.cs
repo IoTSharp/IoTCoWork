@@ -35,6 +35,7 @@ public sealed record NavigationContribution(
     : WorkbenchContribution(Id, Title, Description, Icon, Order)
 {
     public string? ActionId { get; init; }
+    public string? TargetUrl { get; init; }
     public bool IsPrimary { get; init; }
 }
 

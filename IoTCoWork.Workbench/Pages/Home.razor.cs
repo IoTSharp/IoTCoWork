@@ -349,7 +349,7 @@ public partial class Home
                 _ => _saasGenerationTask.Status.ToString()
             };
     private string SaaSGenerationDetail => _saasGenerationTask is null
-        ? "加载示例工程模型后，可调用 SaaS Workspace 生成任务 API。"
+        ? "加载示例语义工程后，可调用工作区生成任务端点。"
         : _saasGenerationTask.Status == WorkspaceGenerationTaskStatus.Failed
             ? _saasGenerationTask.ErrorMessage ?? "任务失败。"
             : $"{_saasGenerationTask.TargetKind} · {_saasGenerationTask.RuntimeProfile} · {SaaSGenerationArtifacts.Count} artifacts";
@@ -1759,9 +1759,9 @@ public partial class Home
             ActiveSession.Messages.Add(new StudioMessage
             {
                 Role = "system",
-                Content = $"SaaS 生成任务完成：{task.Status}，工件 {task.Artifacts.Count} 个。"
+                Content = $"工作区生成任务完成：{task.Status}，工件 {task.Artifacts.Count} 个。"
             });
-            TouchActiveSession("SaaS Workspace 生成任务");
+            TouchActiveSession("Semantic Workspace 生成任务");
             await SaveAsync();
         }
         catch (OperationCanceledException) when (_cts?.IsCancellationRequested == true)
@@ -1815,7 +1815,7 @@ public partial class Home
                 userId);
             if (task is null)
             {
-                _saasGenerationError = "未找到生成任务，可能是租户头不匹配或服务已重启。";
+                _saasGenerationError = "未找到生成任务，可能是请求头不匹配或服务已重启。";
                 return;
             }
 

@@ -1,0 +1,339 @@
+@page "/semantic-modeling"
+@using IoTCoWork.Workbench.Models
+
+<PageTitle>语义建模 - IoTCoWork</PageTitle>
+
+<XProvider Theme="light" Tokens="@ThemeTokens" Class="semantic-provider">
+    <main class="semantic-shell">
+        <header class="semantic-topbar">
+            <a class="semantic-brand" href="./" title="返回工作台总览">
+                <span class="semantic-logo" aria-hidden="true">
+                    <img src="favicon.svg" alt="" />
+                </span>
+                <span>
+                    <strong>IoTCoWork</strong>
+                    <small>Semantic Modeling</small>
+                </span>
+            </a>
+
+            <nav class="semantic-topnav" aria-label="语义建模导航">
+                @foreach (var area in _areas)
+                {
+                    <a href="@($"#{area.Id}")" title="@area.Description">
+                        <Icon Type="@area.Icon" Theme="IconThemeType.Outline" />
+                        <span>@area.Title</span>
+                    </a>
+                }
+            </nav>
+        </header>
+
+        <section class="semantic-layout">
+            <aside class="semantic-nav" aria-label="建模对象">
+                <div class="semantic-panel-title">
+                    <span class="workspace-eyebrow">语义工程</span>
+                    <h1>建模工作台</h1>
+                </div>
+
+                <nav class="semantic-object-nav" aria-label="建模层级">
+                    @foreach (var area in _areas)
+                    {
+                        <a href="@($"#{area.Id}")" title="@area.Description">
+                            <Icon Type="@area.Icon" Theme="IconThemeType.Outline" />
+                            <span>
+                                <strong>@area.Title</strong>
+                                <small>@area.Description</small>
+                            </span>
+                        </a>
+                    }
+                </nav>
+
+                <section class="semantic-boundary-note" aria-label="开源边界">
+                    <Icon Type="safety-certificate" Theme="IconThemeType.Outline" />
+                    <p>本页只承载本地语义建模信息架构。设备接入、业务遥测与设备生命周期由用户自有 IoTSharp 实例承担。</p>
+                </section>
+            </aside>
+
+            <section class="semantic-workspace">
+                <section class="semantic-summary" aria-labelledby="semantic-title">
+                    <div class="semantic-summary-copy">
+                        <span class="workspace-eyebrow">Semantic Core v1</span>
+                        <h2 id="semantic-title">资产、点位、绑定、工艺关系</h2>
+                        <p>从协议来源录入升级为语义模型编排：先定位资产归属，再定义点位含义，最后维护协议来源和工艺依赖。</p>
+                    </div>
+
+                    <dl class="semantic-metrics" aria-label="语义模型摘要">
+                        @foreach (var metric in _metrics)
+                        {
+                            <div>
+                                <dt>
+                                    <Icon Type="@metric.Icon" Theme="IconThemeType.Outline" />
+                                    <span>@metric.Label</span>
+                                </dt>
+                                <dd>@metric.Value</dd>
+                                <small>@metric.Detail</small>
+                            </div>
+                        }
+                    </dl>
+                </section>
+
+                <section id="assets" class="semantic-band" aria-labelledby="assets-title">
+                    <header class="semantic-section-header">
+                        <div>
+                            <span class="workspace-eyebrow">L2 Asset Model</span>
+                            <h3 id="assets-title">资产结构</h3>
+                        </div>
+                        <button type="button" class="studio-button studio-button-light" title="添加资产草稿">
+                            <Icon Type="plus" Theme="IconThemeType.Outline" />
+                            <span>添加资产</span>
+                        </button>
+                    </header>
+
+                    <div class="semantic-asset-board">
+                        <ol class="semantic-asset-tree" aria-label="资产树">
+                            @foreach (var asset in _assets)
+                            {
+                                <li class="@(asset.IsSelected ? "active" : null)" style="@Indent(asset.Level)">
+                                    <button type="button" title="@asset.Summary">
+                                        <Icon Type="@AssetIcon(asset.AssetType)" Theme="IconThemeType.Outline" />
+                                        <span>
+                                            <strong>@asset.DisplayName</strong>
+                                            <small>@asset.AssetPath</small>
+                                        </span>
+                                        <em>@asset.AssetType</em>
+                                    </button>
+                                </li>
+                            }
+                        </ol>
+
+                        <section class="semantic-inspector" aria-label="资产详情">
+                            <span class="workspace-eyebrow">Selected Asset</span>
+                            <h4>空压站 1 号机</h4>
+                            <dl>
+                                <div>
+                                    <dt>assetId</dt>
+                                    <dd>asset.compressor.station-01.unit-01</dd>
+                                </div>
+                                <div>
+                                    <dt>assetPath</dt>
+                                    <dd>/plant-a/energy/compressor-station-01/unit-01</dd>
+                                </div>
+                                <div>
+                                    <dt>points</dt>
+                                    <dd>temperature.outlet, pressure.outlet, state.run</dd>
+                                </div>
+                            </dl>
+                        </section>
+                    </div>
+                </section>
+
+                <section id="points" class="semantic-band" aria-labelledby="points-title">
+                    <header class="semantic-section-header">
+                        <div>
+                            <span class="workspace-eyebrow">L1 Semantic Point</span>
+                            <h3 id="points-title">点位语义</h3>
+                        </div>
+                        <button type="button" class="studio-button studio-button-light" title="导入点位草稿">
+                            <Icon Type="import" Theme="IconThemeType.Outline" />
+                            <span>导入草稿</span>
+                        </button>
+                    </header>
+
+                    <div class="semantic-table-wrap">
+                        <table class="semantic-table">
+                            <thead>
+                                <tr>
+                                    <th>semanticId</th>
+                                    <th>显示名</th>
+                                    <th>量纲 / 单位</th>
+                                    <th>类型</th>
+                                    <th>访问</th>
+                                    <th>资产路径</th>
+                                    <th>绑定</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var point in _points)
+                                {
+                                    <tr>
+                                        <td><code>@point.SemanticId</code></td>
+                                        <td>
+                                            <strong>@point.DisplayName</strong>
+                                            <small>@point.Quality</small>
+                                        </td>
+                                        <td>@point.QuantityKind / @point.Unit</td>
+                                        <td>@point.DataType</td>
+                                        <td><span class="@AccessClass(point.Access)">@point.Access</span></td>
+                                        <td>@point.AssetPath</td>
+                                        <td>@point.BindingId</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="bindings" class="semantic-band" aria-labelledby="bindings-title">
+                    <header class="semantic-section-header">
+                        <div>
+                            <span class="workspace-eyebrow">Protocol Binding</span>
+                            <h3 id="bindings-title">协议绑定</h3>
+                        </div>
+                        <button type="button" class="studio-button studio-button-light" title="添加协议来源">
+                            <Icon Type="api" Theme="IconThemeType.Outline" />
+                            <span>添加来源</span>
+                        </button>
+                    </header>
+
+                    <ol class="semantic-binding-list">
+                        @foreach (var binding in _bindings)
+                        {
+                            <li>
+                                <Icon Type="@BindingIcon(binding.Protocol)" Theme="IconThemeType.Outline" />
+                                <div>
+                                    <strong>@binding.BindingId</strong>
+                                    <span>@binding.Protocol · @binding.Source</span>
+                                    <small>@binding.Traceability</small>
+                                </div>
+                                <em>@binding.Status</em>
+                            </li>
+                        }
+                    </ol>
+                </section>
+
+                <section id="process" class="semantic-band" aria-labelledby="process-title">
+                    <header class="semantic-section-header">
+                        <div>
+                            <span class="workspace-eyebrow">L3 Process Graph</span>
+                            <h3 id="process-title">工艺关系</h3>
+                        </div>
+                        <button type="button" class="studio-button studio-button-light" title="添加工艺关系">
+                            <Icon Type="share-alt" Theme="IconThemeType.Outline" />
+                            <span>添加关系</span>
+                        </button>
+                    </header>
+
+                    <div class="semantic-process-grid">
+                        @foreach (var relation in _relations)
+                        {
+                            <article>
+                                <span>@relation.RelationType</span>
+                                <h4>@relation.From -> @relation.To</h4>
+                                <p>@relation.DependsOn</p>
+                                <small>@relation.ControlPolicy</small>
+                            </article>
+                        }
+                    </div>
+                </section>
+
+                <section id="workflow" class="semantic-band semantic-workflow" aria-labelledby="workflow-title">
+                    <header class="semantic-section-header">
+                        <div>
+                            <span class="workspace-eyebrow">Workflow</span>
+                            <h3 id="workflow-title">建模流程</h3>
+                        </div>
+                    </header>
+
+                    <ol class="semantic-step-list">
+                        @foreach (var step in _steps)
+                        {
+                            <li>
+                                <Icon Type="@step.Icon" Theme="IconThemeType.Outline" />
+                                <div>
+                                    <strong>@step.Title</strong>
+                                    <small>@step.Detail</small>
+                                </div>
+                                <em>@step.State</em>
+                            </li>
+                        }
+                    </ol>
+                </section>
+            </section>
+        </section>
+    </main>
+</XProvider>
+
+@code {
+    private static readonly XThemeTokens ThemeTokens = new()
+    {
+        PrimaryColor = "#007f73",
+        BorderRadius = "8px",
+        FontFamily = "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
+    };
+
+    private readonly IReadOnlyList<SemanticModelingArea> _areas =
+    [
+        new("assets", "资产", "L2 资产层级与归属。", "apartment"),
+        new("points", "点位", "L1 点位语义字段。", "dot-chart"),
+        new("bindings", "绑定", "协议来源与 semanticId 映射。", "api"),
+        new("process", "工艺", "工艺节点、依赖与控制关系。", "share-alt"),
+    ];
+
+    private readonly IReadOnlyList<SemanticModelingMetric> _metrics =
+    [
+        new("资产", "5", "site / area / line / device", "apartment"),
+        new("点位", "4", "单位、访问权限、质量字段齐全", "dot-chart"),
+        new("绑定", "3", "Modbus / MQTT / OPC UA 来源可追溯", "api"),
+        new("关系", "3", "上下游、派生变量、控制策略占位", "share-alt"),
+    ];
+
+    private readonly IReadOnlyList<SemanticAssetNode> _assets =
+    [
+        new(0, "asset.plant-a", "工厂 A", "site", "/plant-a", "语义工程根资产。"),
+        new(1, "asset.plant-a.energy", "能源车间", "area", "/plant-a/energy", "能源系统资产域。"),
+        new(2, "asset.plant-a.energy.air", "空压站 1 号", "line", "/plant-a/energy/compressor-station-01", "压缩空气工艺段。"),
+        new(3, "asset.plant-a.energy.air.unit-01", "空压站 1 号机", "device", "/plant-a/energy/compressor-station-01/unit-01", "当前选中的设备资产。", true),
+        new(4, "asset.plant-a.energy.air.unit-01.outlet", "出口管段", "component", "/plant-a/energy/compressor-station-01/unit-01/outlet", "出口温度和压力归属。"),
+    ];
+
+    private readonly IReadOnlyList<SemanticPointDraft> _points =
+    [
+        new("compressor.unit01.outlet.temperature", "出口温度", "temperature", "Cel", "float", "read", "/plant-a/energy/compressor-station-01/unit-01/outlet", "good", "modbus.unit01.temp"),
+        new("compressor.unit01.outlet.pressure", "出口压力", "pressure", "bar", "float", "read", "/plant-a/energy/compressor-station-01/unit-01/outlet", "good", "modbus.unit01.pressure"),
+        new("compressor.unit01.running.state", "运行状态", "state", "1", "bool", "read", "/plant-a/energy/compressor-station-01/unit-01", "uncertain", "mqtt.unit01.state"),
+        new("compressor.unit01.start.command", "启动命令", "command", "1", "bool", "command", "/plant-a/energy/compressor-station-01/unit-01", "controlled", "opcua.unit01.start"),
+    ];
+
+    private readonly IReadOnlyList<ProtocolBindingDraft> _bindings =
+    [
+        new("modbus.unit01.temp", "Modbus TCP", "holding-register 40001, scale 0.1", "compressor.unit01.outlet.temperature", "保留寄存器地址、字节序和缩放规则。", "valid"),
+        new("mqtt.unit01.state", "MQTT UNS", "plant-a/energy/air/unit-01/state", "compressor.unit01.running.state", "Topic 只作为来源，不替代 semanticId。", "draft"),
+        new("opcua.unit01.start", "OPC UA", "ns=2;s=Air.Unit01.Start", "compressor.unit01.start.command", "写入命令需要控制策略引用。", "review"),
+    ];
+
+    private readonly IReadOnlyList<ProcessRelationDraft> _relations =
+    [
+        new("flow.air.01", "空压站 1 号机", "出口管段", "output", "出口温度、出口压力参与供气质量判断。", "read-only"),
+        new("derived.efficiency.01", "出口压力", "能效指标", "derivedPoint", "由压力、功率和运行状态计算单位能耗。", "read-only"),
+        new("control.start.01", "启动命令", "运行状态", "control", "启动命令只能影响状态机，不直接表示业务遥测。", "manual-approval"),
+    ];
+
+    private readonly IReadOnlyList<SemanticModelingStep> _steps =
+    [
+        new("建立资产路径", "先定义 site / area / line / device / component。", "已就绪", "apartment"),
+        new("补齐点位语义", "为每个点声明 semanticId、单位、量纲、访问权限和质量。", "进行中", "dot-chart"),
+        new("映射协议来源", "把寄存器、Topic、NodeId 作为 source 绑定到语义点。", "待校验", "api"),
+        new("维护工艺关系", "表达上下游、派生变量、状态机、报警和控制策略。", "草稿", "share-alt"),
+    ];
+
+    private static string Indent(int level) => $"--semantic-indent: {Math.Max(0, level) * 18}px;";
+    private static string AccessClass(string access) => $"semantic-access is-{access.ToLowerInvariant()}";
+
+    private static string AssetIcon(string assetType) => assetType switch
+    {
+        "site" => "bank",
+        "area" => "cluster",
+        "line" => "branches",
+        "device" => "control",
+        "component" => "partition",
+        _ => "apartment",
+    };
+
+    private static string BindingIcon(string protocol) => protocol switch
+    {
+        string value when value.Contains("MQTT", StringComparison.OrdinalIgnoreCase) => "deployment-unit",
+        string value when value.Contains("OPC", StringComparison.OrdinalIgnoreCase) => "nodes-collapse",
+        _ => "api",
+    };
+
+    private sealed record SemanticModelingArea(string Id, string Title, string Description, string Icon);
+}

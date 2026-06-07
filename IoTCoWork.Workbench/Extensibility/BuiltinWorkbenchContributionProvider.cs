@@ -32,7 +32,13 @@ public sealed class BuiltinWorkbenchContributionProvider : IWorkbenchContributio
             Group = "workspace",
             IsPrimary = true,
         };
-        yield return new("capabilities", "能力中心", "本地智能体、技能、MCP 与插件占位。", "appstore", 20)
+        yield return new("semantic-modeling", "语义模型", "资产、点位、绑定、工艺关系建模。", "apartment", 20)
+        {
+            Group = "workspace",
+            TargetUrl = "semantic-modeling",
+            IsPrimary = true,
+        };
+        yield return new("capabilities", "能力中心", "本地智能体、技能、MCP 与插件占位。", "appstore", 30)
         {
             Group = "workspace",
             ActionId = "open-capabilities",
@@ -41,30 +47,50 @@ public sealed class BuiltinWorkbenchContributionProvider : IWorkbenchContributio
 
     private static IEnumerable<ContextTabContribution> GetContextTabs(WorkbenchContributionContext context)
     {
-        yield return new("tree", "工程树", "本地 workspace 结构。", "folder-open", 10)
+        yield return new("assets", "资产", "L2 资产结构与归属。", "apartment", 10)
+        {
+            Badge = "5",
+            Kind = "semantic",
+        };
+        yield return new("points", "点位", "L1 点位语义字段。", "dot-chart", 20)
+        {
+            Badge = "4",
+            Kind = "semantic",
+        };
+        yield return new("bindings", "绑定", "协议来源与 semanticId 映射。", "api", 30)
+        {
+            Badge = "3",
+            Kind = "semantic",
+        };
+        yield return new("process", "工艺", "工艺节点、依赖与控制关系。", "share-alt", 40)
+        {
+            Badge = "3",
+            Kind = "semantic",
+        };
+        yield return new("tree", "工程树", "Semantic Workspace 结构。", "folder-open", 50)
         {
             Kind = "builtin",
         };
-        yield return new("artifacts", "产物", "当前会话产物摘要。", "file-done", 20)
+        yield return new("artifacts", "产物", "当前会话产物摘要。", "file-done", 60)
         {
             Badge = context.ArtifactCount > 0 ? context.ArtifactCount.ToString() : null,
             Kind = "builtin",
         };
-        yield return new("generation", "生成任务", "SaaS Workspace 生成任务状态。", "cloud-sync", 30)
+        yield return new("generation", "生成任务", "工作区生成任务状态。", "cloud-sync", 70)
         {
             Badge = context.IsRunning ? "运行" : null,
             Kind = "builtin",
         };
-        yield return new("tools", "工具运行", "本地任务计划与工具运行。", "tool", 40)
+        yield return new("tools", "工具运行", "本地任务计划与工具运行。", "tool", 80)
         {
             Badge = context.IsRunning ? "运行" : null,
             Kind = "builtin",
         };
-        yield return new("logs", "日志", "本地工作台日志。", "profile", 50)
+        yield return new("logs", "日志", "本地工作台日志。", "profile", 90)
         {
             Kind = "builtin",
         };
-        yield return new("risk", "风险", "边界与安全风险。", "safety", 60)
+        yield return new("risk", "风险", "边界与安全风险。", "safety", 100)
         {
             Badge = "2",
             Kind = "builtin",
@@ -106,22 +132,27 @@ public sealed class BuiltinWorkbenchContributionProvider : IWorkbenchContributio
             Value = context.WorkspaceName,
             IsStatic = true,
         };
-        yield return new("edge-target", "边缘", "边缘目标端。", "thunderbolt", 20)
+        yield return new("semantic-model", "语义", "当前语义模型范围。", "apartment", 20)
+        {
+            Value = "L1-L3",
+            IsStatic = true,
+        };
+        yield return new("edge-target", "边缘", "边缘目标端。", "thunderbolt", 30)
         {
             Value = "C# AOT",
             ActionId = "cycle-edge-target",
         };
-        yield return new("model", "模型", "当前模型。", "experiment", 30)
+        yield return new("model", "模型", "当前模型。", "experiment", 40)
         {
             Value = context.Model,
             ActionId = "cycle-model",
         };
-        yield return new("approval", "审批", "本地审批模式。", "safety", 40)
+        yield return new("approval", "审批", "本地审批模式。", "safety", 50)
         {
             Value = "每次审批",
             ActionId = "cycle-approval",
         };
-        yield return new("output", "输出", "本地输出位置。", "file-done", 50)
+        yield return new("output", "输出", "本地输出位置。", "file-done", 60)
         {
             Value = "当前会话",
             ActionId = "cycle-output",

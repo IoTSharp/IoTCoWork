@@ -11,7 +11,7 @@
 - 当前 workspace
 - 业务方案状态
 - 进行中的任务
-- 设备/协议/边缘连接状态
+- 资产、点位、协议绑定、工艺关系建模状态
 - 最近产物和告警
 - 可直接发起的 AI 动作
 
@@ -92,15 +92,15 @@ AI 页不是独立的聊天区，而是工作流的右侧操作面：
 
 ### 4.5 业务方案页
 
-业务方案页是 workspace 的必填入口，应该编辑：
+语义建模页是 workspace 的必填入口，应该编辑：
 
-- 数据接收终点
-- 采集器 / 网关
-- 来源协议与物理链路
-- 转换规则
-- 上传通道
+- L2 资产结构：site、area、line、device、component 与 `assetPath`
+- L1 点位语义：`semanticId`、单位、量纲、访问权限、质量、正常范围
+- Protocol Binding：Modbus register、MQTT Topic、OPC UA NodeId 等来源映射
+- L3 工艺关系：上下游、派生变量、状态、报警与控制策略
+- 生成目标：C# AOT、IoTEmbedded、BASIC 等后续输出占位
 
-这一页必须支持模板化创建和后续调整。
+点表、Topic 样例和 NodeSet 可作为导入来源，但不能再作为内部主模型。
 
 ## 5. 交互流
 
@@ -152,6 +152,7 @@ AI 页不是独立的聊天区，而是工作流的右侧操作面：
 
 - [组件映射](ai-workbench-component-mapping.md)
 - [插件与工具契约](ai-workbench-plugin-tool-contract.md)
+- [语义建模信息架构](semantic-modeling-information-architecture.md)
 - [业务方案蓝图](iot-workspace-business-model.md)
 - [业务方案字段表](iot-workspace-business-profile-fields.md)
 - [业务方案 JSON Schema](../schemas/iot-workspace-business-profile.schema.json)

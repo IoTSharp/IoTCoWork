@@ -28,23 +28,23 @@
 
 | 场景 | 组件 |
 | --- | --- |
-| 项目/设备树 | `Tree` |
+| 资产树 | `Tree` |
 | 列表与筛选 | `Table`, `Pagination`, `Input.Search`, `Select` |
 | 配置编辑 | `Form`, `Input`, `TextArea`, `Switch`, `Upload` |
 | 详情查看 | `Descriptions`, `Card`, `Tabs`, `Drawer` |
 | 风险确认 | `Modal`, `Popconfirm`, `Result` |
 | 运行监控 | `Steps`, `Timeline`, `Progress`, `Spin`, `Empty` |
-| 业务方案向导 | `Steps`, `Form`, `Select`, `TreeSelect`, `Table`, `Drawer` |
+| 语义建模向导 | `Steps`, `Form`, `Select`, `TreeSelect`, `Table`, `Drawer` |
 
 页面 section 尽量做成清晰的工作带，不要把整个页面包成一层层浮卡。
 
-业务方案向导至少要覆盖：
+语义建模向导至少要覆盖：
 
-- 数据接收终点
-- 采集器 / 网关
-- 来源协议
-- 转换规则
-- 上传通道
+- L2 资产结构
+- L1 点位语义字段
+- Protocol Binding 来源映射
+- L3 工艺关系
+- 生成目标与产物占位
 
 ## 4. AI 交互区
 

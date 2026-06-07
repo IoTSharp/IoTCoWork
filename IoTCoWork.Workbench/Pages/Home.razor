@@ -238,8 +238,8 @@
                                 <div class="workspace-overview-section workspace-overview-section-wide saas-generation-panel">
                                     <header>
                                         <div>
-                                            <span class="workspace-eyebrow">SaaS Workspace</span>
-                                            <h4>生成任务</h4>
+                                            <span class="workspace-eyebrow">Semantic Workspace</span>
+                                            <h4>工作区生成任务</h4>
                                         </div>
                                         <small>@SaaSGenerationStatusLabel</small>
                                     </header>
@@ -250,7 +250,7 @@
                                                 <dd>@ExampleWorkspaceLabel</dd>
                                             </div>
                                             <div>
-                                                <dt>API</dt>
+                                                <dt>端点</dt>
                                                 <dd>@Settings.SaaSWorkspaceBaseUrl</dd>
                                             </div>
                                             <div>
@@ -259,7 +259,7 @@
                                             </div>
                                         </dl>
                                         <div class="saas-generation-actions">
-                                            <button type="button" class="studio-button studio-button-primary" title="调用 SaaS Workspace 生成任务 API" disabled="@_saasGenerationBusy" @onclick="RunSaaSGenerationAsync">
+                                            <button type="button" class="studio-button studio-button-primary" title="调用工作区生成任务端点" disabled="@_saasGenerationBusy" @onclick="RunSaaSGenerationAsync">
                                                 <Icon Type="@(_saasGenerationBusy ? "loading" : "cloud-upload")" Theme="IconThemeType.Outline" />
                                                 <span>@(_saasGenerationBusy ? "提交中" : "触发生成")</span>
                                             </button>
@@ -997,7 +997,7 @@
                                         <div class="settings-divider"></div>
 
                                         <div class="studio-field">
-                                            <label class="studio-label">SaaS Workspace API</label>
+                                            <label class="studio-label">工作区生成端点</label>
                                             <input class="studio-input" autocomplete="off" placeholder="http://localhost:5091/" value="@Settings.SaaSWorkspaceBaseUrl" @onchange="UpdateSaaSWorkspaceBaseUrl" />
                                         </div>
 

@@ -39,6 +39,102 @@
              aria-labelledby="@TabId(_activeTab)">
         @switch (_activeTab)
         {
+            case "assets":
+                <section class="context-section context-section-open" aria-labelledby="context-assets-title">
+                    <div class="context-section-title">
+                        <Icon Type="apartment" Theme="IconThemeType.Outline" />
+                        <strong id="context-assets-title">资产结构</strong>
+                    </div>
+                    <dl class="context-facts">
+                        <div>
+                            <dt>L2</dt>
+                            <dd>site / area / line / device / component</dd>
+                        </div>
+                        <div>
+                            <dt>路径</dt>
+                            <dd>/plant-a/energy/compressor-station-01</dd>
+                        </div>
+                        <div>
+                            <dt>归属</dt>
+                            <dd>点位必须归属到资产路径</dd>
+                        </div>
+                    </dl>
+                    <ul class="context-tree-list">
+                        @foreach (var asset in SemanticAssets)
+                        {
+                            <li style="@TreeNodeStyle(asset.Level)">
+                                <Icon Type="@asset.Icon" Theme="IconThemeType.Outline" />
+                                <span>@asset.Name</span>
+                                <small>@asset.Meta</small>
+                            </li>
+                        }
+                    </ul>
+                </section>
+                break;
+
+            case "points":
+                <section class="context-section context-section-open" aria-labelledby="context-points-title">
+                    <div class="context-section-title">
+                        <Icon Type="dot-chart" Theme="IconThemeType.Outline" />
+                        <strong id="context-points-title">点位语义</strong>
+                    </div>
+                    <ol class="context-artifact-list">
+                        @foreach (var point in SemanticPoints)
+                        {
+                            <li>
+                                <div>
+                                    <span>@point.Name</span>
+                                    <small>@point.Detail</small>
+                                </div>
+                                <em>@point.Kind</em>
+                            </li>
+                        }
+                    </ol>
+                </section>
+                break;
+
+            case "bindings":
+                <section class="context-section context-section-open" aria-labelledby="context-bindings-title">
+                    <div class="context-section-title">
+                        <Icon Type="api" Theme="IconThemeType.Outline" />
+                        <strong id="context-bindings-title">协议绑定</strong>
+                    </div>
+                    <ol class="context-artifact-list">
+                        @foreach (var binding in SemanticBindings)
+                        {
+                            <li>
+                                <div>
+                                    <span>@binding.Name</span>
+                                    <small>@binding.Detail</small>
+                                </div>
+                                <em>@binding.Kind</em>
+                            </li>
+                        }
+                    </ol>
+                </section>
+                break;
+
+            case "process":
+                <section class="context-section context-section-open" aria-labelledby="context-process-title">
+                    <div class="context-section-title">
+                        <Icon Type="share-alt" Theme="IconThemeType.Outline" />
+                        <strong id="context-process-title">工艺关系</strong>
+                    </div>
+                    <ol class="context-risk-list">
+                        @foreach (var relation in ProcessRelations)
+                        {
+                            <li class="is-low">
+                                <span>@relation.Kind</span>
+                                <div>
+                                    <strong>@relation.Name</strong>
+                                    <small>@relation.Detail</small>
+                                </div>
+                            </li>
+                        }
+                    </ol>
+                </section>
+                break;
+
             case "artifacts":
                 <section class="context-section context-section-open" aria-labelledby="context-artifacts-title">
                     <div class="context-section-title">
@@ -72,12 +168,12 @@
                 <section class="context-section context-section-open" aria-labelledby="context-generation-title">
                     <div class="context-section-title">
                         <Icon Type="cloud-sync" Theme="IconThemeType.Outline" />
-                        <strong id="context-generation-title">SaaS 生成任务</strong>
+                        <strong id="context-generation-title">工作区生成任务</strong>
                     </div>
 
                     <dl class="context-facts">
                         <div>
-                            <dt>API</dt>
+                            <dt>端点</dt>
                             <dd>@SaaSWorkspaceBaseUrl</dd>
                         </div>
                         <div>
@@ -117,7 +213,7 @@
                     {
                         <div class="context-plugin-placeholder">
                             <strong>等待生成任务</strong>
-                            <span>在主工作区调用 SaaS Workspace API 后，这里会同步展示运行中、失败或成功状态。</span>
+                            <span>在主工作区调用生成端点后，这里会同步展示运行中、失败或成功状态。</span>
                         </div>
                     }
                 </section>
@@ -169,7 +265,7 @@
                 <section class="context-section context-section-open" aria-labelledby="context-tree-title">
                     <div class="context-section-title">
                         <Icon Type="folder-open" Theme="IconThemeType.Outline" />
-                        <strong id="context-tree-title">工程树</strong>
+                        <strong id="context-tree-title">Semantic Workspace</strong>
                     </div>
                     <dl class="context-facts">
                         <div>
@@ -237,7 +333,7 @@
     [Parameter] public bool IsSaaSGenerationBusy { get; set; }
     [Parameter] public string? SaaSGenerationError { get; set; }
 
-    private string _activeTab = "tree";
+    private string _activeTab = "assets";
 
     private IReadOnlyList<ContextTabContribution> ContextTabs =>
         Tabs.Count == 0 ? BuiltinTabs : Tabs;
@@ -245,25 +341,41 @@
     private ContextTabContribution ActiveTabContribution =>
         ContextTabs.FirstOrDefault(tab => string.Equals(tab.Id, _activeTab, StringComparison.Ordinal))
         ?? ContextTabs.FirstOrDefault()
-        ?? new("tree", "工程树", "本地 workspace 结构。", "folder-open");
+        ?? new("assets", "资产", "L2 资产结构与归属。", "apartment");
 
     private IReadOnlyList<ContextTabContribution> BuiltinTabs =>
     [
-        new("tree", "工程树", "本地 workspace 结构。", "folder-open", 10),
-        new("artifacts", "产物", "当前会话产物摘要。", "file-done", 20)
+        new("assets", "资产", "L2 资产结构与归属。", "apartment", 10)
+        {
+            Badge = "5",
+        },
+        new("points", "点位", "L1 点位语义字段。", "dot-chart", 20)
+        {
+            Badge = "4",
+        },
+        new("bindings", "绑定", "协议来源与 semanticId 映射。", "api", 30)
+        {
+            Badge = "3",
+        },
+        new("process", "工艺", "工艺节点、依赖与控制关系。", "share-alt", 40)
+        {
+            Badge = "3",
+        },
+        new("tree", "工程树", "Semantic Workspace 结构。", "folder-open", 50),
+        new("artifacts", "产物", "当前会话产物摘要。", "file-done", 60)
         {
             Badge = ArtifactCount > 0 ? ArtifactCount.ToString() : null,
         },
-        new("generation", "生成任务", "SaaS Workspace 生成任务状态。", "cloud-sync", 30)
+        new("generation", "生成任务", "工作区生成任务状态。", "cloud-sync", 70)
         {
             Badge = IsSaaSGenerationBusy ? "运行" : null,
         },
-        new("tools", "工具运行", "本地任务计划与工具运行。", "tool", 40)
+        new("tools", "工具运行", "本地任务计划与工具运行。", "tool", 80)
         {
             Badge = IsHostLoading ? "运行" : null,
         },
-        new("logs", "日志", "本地工作台日志。", "profile", 50),
-        new("risk", "风险", "边界与安全风险。", "safety", 60)
+        new("logs", "日志", "本地工作台日志。", "profile", 90),
+        new("risk", "风险", "边界与安全风险。", "safety", 100)
         {
             Badge = HighRiskCount.ToString(),
         },
@@ -271,13 +383,15 @@
 
     private IReadOnlyList<ProjectTreeNode> ProjectTreeItems =>
     [
-        new(0, WorkspaceName, "本地 workspace", "project"),
-        new(1, "sessions", $"{ActiveSessionTitle} · {ModeLabel}", "message"),
+        new(0, WorkspaceName, "Semantic Workspace", "project"),
+        new(1, "assets", "资产结构 · site/area/line/device", "apartment"),
+        new(1, "points", "点位语义 · semanticId/unit/access", "dot-chart"),
+        new(1, "bindings", "协议绑定 · Modbus/MQTT/OPC UA", "api"),
+        new(1, "process", "工艺关系 · flow/derived/control", "share-alt"),
         new(1, "targets", "C# AOT / Linux C / STM32 BASIC", "branches"),
-        new(1, "artifacts", ArtifactCount > 0 ? $"{ArtifactCount} 个会话产物/云端工件" : "等待生成", "file-done"),
-        new(1, "saas-generation", SaaSGenerationTask is null ? "SaaS 生成任务待触发" : SaaSGenerationStatusLabel, "cloud-sync"),
-        new(1, "policies", "本地审批与风险占位", "safety"),
-        new(1, "public-model", $"{Model} · {TargetSize}", "experiment"),
+        new(1, "artifacts", ArtifactCount > 0 ? $"{ArtifactCount} 个会话产物/生成工件" : "等待生成", "file-done"),
+        new(1, "generation", SaaSGenerationTask is null ? "生成任务待触发" : SaaSGenerationStatusLabel, "cloud-sync"),
+        new(1, "policies", "本地审批与控制策略占位", "safety"),
     ];
 
     private IReadOnlyList<ArtifactItem> ArtifactItems =>
@@ -293,16 +407,47 @@
     [
         new("09:20", "info", "加载 workspace", $"已读取 {WorkspaceName} 本地上下文。"),
         new("09:21", "info", "同步会话状态", WorkspaceStatus),
-        new("09:22", IsHostLoading ? "running" : "info", "工具运行视图", IsHostLoading ? "本地或云端任务运行中。" : "暂无活跃运行。"),
+        new("09:22", IsHostLoading ? "running" : "info", "工具运行视图", IsHostLoading ? "本地或生成任务运行中。" : "暂无活跃运行。"),
         new("09:23", "warning", "边界检查", "设备生命周期由用户自有 IoTSharp 承担，未接收业务遥测数据。"),
     ];
 
     private IReadOnlyList<RiskItem> RiskItems =>
     [
         new("高", "禁止接收业务遥测", "右侧面板只能展示本地占位或公开工程模型，不展示真实上行业务数据。"),
-        new("高", "禁止 SaaS 设备生命周期管理", "设备注册、心跳、配置、命令与固件入口必须由用户自有 IoTSharp 实例承载。"),
-        new("中", "产物仅为本地草稿", "生成摘要保存在当前会话，不在工作台外壳实现租户、计费或 License。"),
+        new("高", "禁止云端设备生命周期管理", "设备注册、心跳、配置、命令与固件入口必须由用户自有 IoTSharp 实例承载。"),
+        new("中", "产物仅为本地草稿", "生成摘要保存在当前会话，不在工作台外壳实现商业账号或授权策略。"),
         new("低", "工具运行是本地预览", "工具状态来自本组件占位与会话参数，不代表云端编排结果。"),
+    ];
+
+    private IReadOnlyList<ProjectTreeNode> SemanticAssets =>
+    [
+        new(0, "工厂 A", "site · /plant-a", "bank"),
+        new(1, "能源车间", "area · /plant-a/energy", "cluster"),
+        new(2, "空压站 1 号", "line · compressor-station-01", "branches"),
+        new(3, "空压站 1 号机", "device · unit-01", "control"),
+        new(4, "出口管段", "component · outlet", "partition"),
+    ];
+
+    private IReadOnlyList<ArtifactItem> SemanticPoints =>
+    [
+        new("compressor.unit01.outlet.temperature", "temperature · Cel · read · good", "point"),
+        new("compressor.unit01.outlet.pressure", "pressure · bar · read · good", "point"),
+        new("compressor.unit01.running.state", "state · bool · read · uncertain", "state"),
+        new("compressor.unit01.start.command", "command · bool · command · controlled", "command"),
+    ];
+
+    private IReadOnlyList<ArtifactItem> SemanticBindings =>
+    [
+        new("modbus.unit01.temp", "holding-register 40001 -> compressor.unit01.outlet.temperature", "Modbus"),
+        new("mqtt.unit01.state", "plant-a/energy/air/unit-01/state -> compressor.unit01.running.state", "MQTT"),
+        new("opcua.unit01.start", "ns=2;s=Air.Unit01.Start -> compressor.unit01.start.command", "OPC UA"),
+    ];
+
+    private IReadOnlyList<ArtifactItem> ProcessRelations =>
+    [
+        new("空压站 1 号机 -> 出口管段", "output flow · 依赖出口温度和出口压力", "L3"),
+        new("出口压力 -> 能效指标", "derivedPoint · 用于计算单位能耗", "L3"),
+        new("启动命令 -> 运行状态", "control · 需要人工确认策略", "L3"),
     ];
 
     private int HighRiskCount => RiskItems.Count(item => item.Level == "高");

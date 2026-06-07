@@ -7,11 +7,11 @@
 IoTCoWork 是 IoTSharp 生态中的本地开发与运维工作台，基于 .NET / Blazor Hybrid 构建。它在用户本机提供：
 
 - 本地建模、调试、生成、发布的统一入口
-- 设备/协议/点位等工程模型的本地编辑器
+- 资产、点位语义、协议绑定、工艺关系等 Semantic Workspace 的本地建模入口
 - 本地调试控制台、协议联调、串口/TCP/MQTT/Modbus 实验室
 - 与 IoTSharp 平台、IoTEdge 系列基座的桥接
 
-> 本仓库只承载**开源外壳**与插件 SDK。多租户、Copilot 编排、付费模板、企业交付流程等商业能力位于上层 `IoTSharp.SaaS` 仓库的 `src/IoTCoWork.*` 模块内，通过插件接口叠加。
+> 本仓库只承载**开源外壳**与插件 SDK。多租户、Copilot 编排、付费模板、企业交付流程等商业能力位于上层 `IoTSharp.SaaS` 仓库的 `src/*` 模块内，通过插件接口叠加。
 
 ## 当前骨架
 
@@ -42,7 +42,7 @@ VS Code 调试可直接使用 `IoTCoWork: 一键运行桌面版`。该配置会�
 
 ```
 ┌──────────────────────────────────────────────┐
-│ IoTSharp.SaaS（商业叠加：Copilot/计费/审计） │  src/IoTCoWork.*
+│ IoTSharp.SaaS（商业叠加：Copilot/计量/审计） │  src/*
 └──────────────────────────────────────────────┘
                    ▲ 插件 SDK
 ┌──────────────────────────────────────────────┐
@@ -68,6 +68,7 @@ VS Code 调试可直接使用 `IoTCoWork: 一键运行桌面版`。该配置会�
 - [组件映射](docs/ai-workbench-component-mapping.md)
 - [插件与工具契约](docs/ai-workbench-plugin-tool-contract.md)
 - [插件贡献点](docs/ai-workbench-contribution-points.md)
+- [语义建模信息架构](docs/semantic-modeling-information-architecture.md)
 - [物联网业务方案蓝图](docs/iot-workspace-business-model.md)
 - [物联网业务方案字段表](docs/iot-workspace-business-profile-fields.md)
 - [物联网业务方案 JSON Schema](schemas/iot-workspace-business-profile.schema.json)

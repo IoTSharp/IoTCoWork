@@ -40,13 +40,26 @@
                 <nav class="sidebar-contribution-list" aria-label="导航贡献点">
                     @foreach (var item in Contributions)
                     {
-                        <button type="button" title="@item.Description" disabled="@string.IsNullOrWhiteSpace(item.ActionId)">
-                            <Icon Type="@item.Icon" Theme="IconThemeType.Outline" />
-                            <span>
-                                <strong>@item.Title</strong>
-                                <small>@item.Description</small>
-                            </span>
-                        </button>
+                        @if (!string.IsNullOrWhiteSpace(item.TargetUrl))
+                        {
+                            <a class="sidebar-contribution-link" href="@item.TargetUrl" title="@item.Description">
+                                <Icon Type="@item.Icon" Theme="IconThemeType.Outline" />
+                                <span>
+                                    <strong>@item.Title</strong>
+                                    <small>@item.Description</small>
+                                </span>
+                            </a>
+                        }
+                        else
+                        {
+                            <button type="button" title="@item.Description" disabled="@string.IsNullOrWhiteSpace(item.ActionId)">
+                                <Icon Type="@item.Icon" Theme="IconThemeType.Outline" />
+                                <span>
+                                    <strong>@item.Title</strong>
+                                    <small>@item.Description</small>
+                                </span>
+                            </button>
+                        }
                     }
                 </nav>
             }
