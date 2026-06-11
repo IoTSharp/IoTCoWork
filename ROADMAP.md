@@ -161,6 +161,20 @@
 - 验收：UNS Topic、非标准 Topic、缺 timestamp、嵌套 payload 均有测试覆盖；导入结果生成 assetPath、valueField、timestampField、qualityField 候选；缺失单位、量纲、资产归属时显式标记待补全。
 - 闭环记录：新增 `MqttTopicPayloadImporter`，`/semantic-modeling` 页面新增 D3 导入区；Payload 样本只在本地输入框参与推导，模型元数据仅记录 `payloadSampleStored=false`。
 
+### UI-014 ✅ D4 OPC UA 浏览/导入入口
+
+- 目标：支持离线 OPC UA NodeSet 导入入口，生成本地资产、SemanticPoint 与 OPC UA Binding 草稿。
+- 边界：只解析本地 NodeSet 文本和样例；不连接真实现场、不接收业务遥测、不加入租户、计费、License 或付费模板逻辑。
+- 验收：导入结果保留 NodeId、BrowseName、DataType、EngineeringUnits、References；缺失工程单位、重复节点和非法 XML 有结构化诊断；覆盖对应测试。
+- 闭环记录：新增 `OpcUaNodeSetImporter`，`/semantic-modeling` 页面新增 D4 离线导入区，测试覆盖样例导入、追溯字段、缺单位诊断和无效 NodeSet。
+
+### UI-015 ✅ D5 工作台触发语义生成任务
+
+- 目标：工作台可把本地 Semantic Workspace 提交到 SaaS Workspace API，并展示校验结果、生成任务状态和工件引用。
+- 边界：只消费 SaaS Workspace 契约；不在开源工作台实现云端设备管理、遥测接收、计费、License 或商业 Copilot 编排。
+- 验收：覆盖任务创建、运行中刷新、成功返回工件、失败、校验失败和不支持目标预览；设备入口只能跳转用户自有 IoTSharp 实例。
+- 闭环记录：新增 `SemanticWorkspaceGenerationCoordinator`，`/semantic-modeling` 页面新增生成任务区，测试覆盖任务状态和工件引用。
+
 ## 4. 当前执行顺序
 
 1. ✅ UI-001：三栏骨架已固定。
@@ -171,10 +185,12 @@
 6. ✅ UI-011 / D1：语义建模 UI 信息架构已落地。
 7. ✅ UI-012 / D2：Modbus 点表导入已落地。
 8. ✅ UI-013 / D3：MQTT Topic / Payload 导入已落地。
+9. ✅ UI-014 / D4：OPC UA 离线 NodeSet 导入已落地。
+10. ✅ UI-015 / D5：Semantic Workspace 生成任务触发已落地。
 
 ## 5. 商业能力迁出记录
 
 - `external/IoTCoWork` 不再包含账户余额、充值、支付二维码、订单轮询或 SaaS 账号客户端实现。
 - `IoTCoWork.App` 仅保留本地 AI Gateway 代理 `/api/iotsharp/ai/{**path}`，请求头统一为 `X-IoTCoWork-AI-*`。
 - 商业账户、钱包、充值订单和用量摘要的扩展骨架位于上层仓库 `src/IoTSharp.SaaS/Identity/Workbench`。
-- 构建验证：`dotnet build .\external\IoTCoWork\IoTCoWork.Workbench\IoTCoWork.Workbench.csproj --no-restore`、`dotnet build .\external\IoTCoWork\IoTCoWork.App\IoTCoWork.App.csproj --no-restore`、`dotnet build .\IoTSharp.SaaS.slnx --no-restore -m:1` 均已通过；全仓构建仅保留既有 NuGet 版本解析与 `System.Security.Cryptography.Xml` 漏洞告警。
+- 构建验证：`dotnet test external\IoTCoWork\tests\IoTCoWork.Workbench.Core.Tests\IoTCoWork.Workbench.Core.Tests.csproj --no-restore` 通过，19 passed；此前 `dotnet build .\external\IoTCoWork\IoTCoWork.Workbench\IoTCoWork.Workbench.csproj --no-restore`、`dotnet build .\external\IoTCoWork\IoTCoWork.App\IoTCoWork.App.csproj --no-restore`、`dotnet build .\IoTSharp.SaaS.slnx --no-restore -m:1` 均已通过；全仓构建仅保留既有 NuGet 版本解析与 `System.Security.Cryptography.Xml` 漏洞告警。
